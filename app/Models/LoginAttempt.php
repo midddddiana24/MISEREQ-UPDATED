@@ -21,6 +21,7 @@ class LoginAttempt extends Model
     ];
 
     public $timestamps = false;
+
     public const CREATED_AT = 'created_at';
 
     public function user()

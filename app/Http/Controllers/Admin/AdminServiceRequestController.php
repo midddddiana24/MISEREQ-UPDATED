@@ -3,19 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ServiceRequest;
+use App\Jobs\SendRequestRejectedNotification;
 use App\Models\Notification;
-use App\Models\Technician;
+use App\Models\ServiceRequest;
 use App\Models\Setting;
+use App\Models\Technician;
 use App\Services\AdminActivityLogger;
 use App\Services\EmailNotificationService;
 use App\Services\FileUploadService;
 use App\Services\ServiceRequestWorkflow;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -41,12 +45,11 @@ class AdminServiceRequestController extends Controller
     /**
      * Store service request created by admin on behalf of user
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function storeOnBehalf(Request $request)
     {
-        $allowedServices = collect($this->clientServiceOptions())->flatMap(fn($options) => array_keys($options))->all();
+        $allowedServices = collect($this->clientServiceOptions())->flatMap(fn ($options) => array_keys($options))->all();
         $validated = $request->validate([
             'requester_name' => 'required|string|max:255',
             'requester_designation' => 'nullable|string|max:255',
@@ -61,11 +64,11 @@ class AdminServiceRequestController extends Controller
             'description' => 'nullable|string|max:5000',
             'property_no' => 'nullable|string|max:255',
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:' . $this->uploadMaxKilobytes(),
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
         ]);
 
         // Generate unique control number
-        $controlNumber = 'SR-' . strtoupper(Str::random(4)) . '-' . date('YmdHis');
+        $controlNumber = 'SR-'.strtoupper(Str::random(4)).'-'.date('YmdHis');
 
         $storedAttachments = collect($request->file('attachments', []))
             ->map(function ($file) {
@@ -83,7 +86,7 @@ class AdminServiceRequestController extends Controller
 
         // Create service request
         // Note: Observer will automatically create initial status log
-        $authId = \Illuminate\Support\Facades\Auth::id();
+        $authId = Auth::id();
         $serviceRequest = ServiceRequest::create([
             'control_number' => $controlNumber,
             'user_id' => null,
@@ -123,7 +126,7 @@ class AdminServiceRequestController extends Controller
         );
 
         return redirect()->route('admin.service-requests.show', $serviceRequest->id)
-            ->with('success', 'Walk-in request created successfully for ' . $serviceRequest->requester_name . '.');
+            ->with('success', 'Walk-in request created successfully for '.$serviceRequest->requester_name.'.');
     }
 
     /**
@@ -139,12 +142,13 @@ class AdminServiceRequestController extends Controller
         ]);
 
         // Get available technicians for assignment
-        $technicians = \App\Models\Technician::where('is_active', true)->where('status', '!=', 'on_leave')
+        $technicians = Technician::where('is_active', true)->where('status', '!=', 'on_leave')
             ->with('user')
             ->withCount(['activeAssignments'])
             ->orderBy('status', 'asc')
             ->orderBy('current_workload')
             ->get();
+
         return view('admin.service-requests.show', compact('serviceRequest', 'technicians'));
     }
 
@@ -164,7 +168,7 @@ class AdminServiceRequestController extends Controller
      */
     public function update(Request $request, ServiceRequest $serviceRequest)
     {
-        $allowedServices = collect($this->serviceOptions())->flatMap(fn($options) => array_keys($options))->all();
+        $allowedServices = collect($this->serviceOptions())->flatMap(fn ($options) => array_keys($options))->all();
         $validated = $request->validate([
             'requester_name' => 'required|string|max:255',
             'requester_designation' => 'nullable|string|max:255',
@@ -222,7 +226,7 @@ class AdminServiceRequestController extends Controller
             $serviceRequest,
             'status_update',
             'Service request details updated',
-            'MIS updated the form details for request ' . $serviceRequest->control_number . '.'
+            'MIS updated the form details for request '.$serviceRequest->control_number.'.'
         );
 
         return redirect()
@@ -250,20 +254,20 @@ class AdminServiceRequestController extends Controller
 
         return back()->with(
             'success',
-            'Request status updated to ' . str($validated['status'])->replace('_', ' ')->title() . '.'
+            'Request status updated to '.str($validated['status'])->replace('_', ' ')->title().'.'
         );
     }
 
     public function markCompleted(Request $request, ServiceRequest $serviceRequest)
     {
-        if (!$serviceRequest->assigned_technician_id) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+        if (! $serviceRequest->assigned_technician_id) {
+            throw ValidationException::withMessages([
                 'assigned_technician_id' => 'Assign a technician before completing this request.',
             ]);
         }
 
         if ($serviceRequest->status !== 'processing') {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'status' => 'This request must be In Progress before it can be completed.',
             ]);
         }
@@ -283,8 +287,8 @@ class AdminServiceRequestController extends Controller
                 'comments' => $validated['comments'] ?? null,
                 'mis_head_signature' => $validated['mis_head_signature'] ?? null,
                 'end_user_signature' => $validated['end_user_signature'] ?? null,
-                'acceptance_date' => !empty($validated['acceptance_date'])
-                    ? \Carbon\Carbon::parse($validated['acceptance_date'])
+                'acceptance_date' => ! empty($validated['acceptance_date'])
+                    ? Carbon::parse($validated['acceptance_date'])
                     : now(),
             ]
         );
@@ -296,10 +300,10 @@ class AdminServiceRequestController extends Controller
     {
         $validated = $request->validate(['reason' => 'required|string|max:2000']);
         $user = Auth::user();
-        $reason = 'Rejected by ' . ($user->full_name ?? $user->name) . ': ' . $validated['reason'];
+        $reason = 'Rejected by '.($user->full_name ?? $user->name).': '.$validated['reason'];
         $this->workflow->transition($serviceRequest, 'rejected', $reason, [], false);
         if ($serviceRequest->user?->email) {
-            dispatch(new \App\Jobs\SendRequestRejectedNotification($serviceRequest, $validated['reason']));
+            dispatch(new SendRequestRejectedNotification($serviceRequest, $validated['reason']));
         }
 
         return back()->with('success', 'Request rejected.');
@@ -308,7 +312,7 @@ class AdminServiceRequestController extends Controller
     public function triage(Request $request, ServiceRequest $serviceRequest)
     {
         $validated = $request->validate([
-            'assigned_technician_id' => ['nullable', Rule::exists('technicians', 'id')->where(fn($query) => $query->where('is_active', true)->where('status', '!=', 'on_leave'))],
+            'assigned_technician_id' => ['nullable', Rule::exists('technicians', 'id')->where(fn ($query) => $query->where('is_active', true)->where('status', '!=', 'on_leave'))],
             'technician_notes' => 'nullable|string|max:2000',
             'start_processing' => 'nullable|boolean',
         ]);
@@ -325,7 +329,7 @@ class AdminServiceRequestController extends Controller
         $serviceRequest->update([
             'assigned_technician_id' => $validated['assigned_technician_id'] ?? null,
             'assigned_by' => Auth::id(),
-            'assigned_date' => !empty($validated['assigned_technician_id']) ? now() : null,
+            'assigned_date' => ! empty($validated['assigned_technician_id']) ? now() : null,
             'technician_notes' => $validated['technician_notes'] ?? null,
         ]);
 
@@ -437,7 +441,7 @@ class AdminServiceRequestController extends Controller
         ]);
         $serviceRequest->statusLogs()->create([
             'status' => $serviceRequest->status,
-            'remarks' => 'MIS update: ' . $validated['client_update'],
+            'remarks' => 'MIS update: '.$validated['client_update'],
             'updated_by' => Auth::id(),
         ]);
         $this->notifyClient($serviceRequest, 'client_update', 'New MIS progress update', $validated['client_update']);
@@ -453,7 +457,7 @@ class AdminServiceRequestController extends Controller
             'scheduled_location' => 'required|string|max:255',
         ]);
         if ($serviceRequest->assigned_technician_id) {
-            $scheduledAt = \Carbon\Carbon::parse($validated['scheduled_visit_at']);
+            $scheduledAt = Carbon::parse($validated['scheduled_visit_at']);
             $conflict = ServiceRequest::where('assigned_technician_id', $serviceRequest->assigned_technician_id)
                 ->whereKeyNot($serviceRequest->id)
                 ->whereIn('status', ServiceRequest::OPEN_STATUSES)
@@ -463,7 +467,7 @@ class AdminServiceRequestController extends Controller
                 ])->first();
             if ($conflict) {
                 throw ValidationException::withMessages([
-                    'scheduled_visit_at' => 'This technician already has a nearby visit for ' . $conflict->control_number . '.',
+                    'scheduled_visit_at' => 'This technician already has a nearby visit for '.$conflict->control_number.'.',
                 ]);
             }
         }
@@ -477,8 +481,8 @@ class AdminServiceRequestController extends Controller
             $serviceRequest,
             'visit_scheduled',
             'MIS service visit scheduled',
-            'A service visit is scheduled for ' . $serviceRequest->scheduled_visit_at->format('M d, Y g:i A')
-                . ' at ' . $serviceRequest->scheduled_location . '.'
+            'A service visit is scheduled for '.$serviceRequest->scheduled_visit_at->format('M d, Y g:i A')
+                .' at '.$serviceRequest->scheduled_location.'.'
         );
 
         return back()->with('success', 'Service visit scheduled and requester notified.');
@@ -486,7 +490,7 @@ class AdminServiceRequestController extends Controller
 
     private function notifyClient(ServiceRequest $serviceRequest, string $type, string $subject, string $message): void
     {
-        if (!$serviceRequest->user_id) {
+        if (! $serviceRequest->user_id) {
             return;
         }
 
@@ -576,13 +580,13 @@ class AdminServiceRequestController extends Controller
     {
         $serviceSet = collect($services);
 
-        if ($serviceSet->contains(fn($service) => str_contains($service, 'network') || str_contains($service, 'telephone') || str_contains($service, 'cabling') || $service === 'move_new_location')) {
+        if ($serviceSet->contains(fn ($service) => str_contains($service, 'network') || str_contains($service, 'telephone') || str_contains($service, 'cabling') || $service === 'move_new_location')) {
             return 'Network';
         }
-        if ($serviceSet->contains(fn($service) => str_contains($service, 'troubleshoot') || str_contains($service, 'hardware') || str_contains($service, 'installation') || $service === 'inspection_equipment' || $service === 'others_ict')) {
+        if ($serviceSet->contains(fn ($service) => str_contains($service, 'troubleshoot') || str_contains($service, 'hardware') || str_contains($service, 'installation') || $service === 'inspection_equipment' || $service === 'others_ict')) {
             return 'ICT';
         }
-        if ($serviceSet->contains(fn($service) => in_array($service, ['account_creation', 'password_reset', 'software_problem', 'data_repair', 'copy_data', 'system_access', 'others_mis'], true))) {
+        if ($serviceSet->contains(fn ($service) => in_array($service, ['account_creation', 'password_reset', 'software_problem', 'data_repair', 'copy_data', 'system_access', 'others_mis'], true))) {
             return 'MIS';
         }
 
@@ -599,7 +603,7 @@ class AdminServiceRequestController extends Controller
      */
     private function generatePDF(ServiceRequest $serviceRequest): string
     {
-        $cacheKey = 'pdf_v11_' . $serviceRequest->id . '_' . $serviceRequest->updated_at->timestamp;
+        $cacheKey = 'pdf_v11_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
 
         // Try to get from cache first - instant delivery on subsequent requests
         // Keep generated document bytes out of the database cache. Large PDFs
@@ -608,7 +612,7 @@ class AdminServiceRequestController extends Controller
             $html = \view('pdf.service-request', ['request' => $serviceRequest])->render();
 
             // Optimize DomPDF for speed
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+            $pdf = Pdf::loadHTML($html);
             $pdf->setPaper('A4', 'portrait');
 
             // Disable slow features
@@ -637,10 +641,10 @@ class AdminServiceRequestController extends Controller
             // Get cached or newly generated PDF - cached PDFs are instant
             $pdfContent = $this->generatePDF($serviceRequest);
 
-            $etag = '"' . sha1($pdfContent) . '"';
+            $etag = '"'.sha1($pdfContent).'"';
             $headers = [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="MIS-Request-' . $serviceRequest->control_number . '.pdf"',
+                'Content-Disposition' => 'inline; filename="MIS-Request-'.$serviceRequest->control_number.'.pdf"',
                 'Cache-Control' => 'private, max-age=0, must-revalidate',
                 'ETag' => $etag,
             ];
@@ -652,6 +656,7 @@ class AdminServiceRequestController extends Controller
             return response($pdfContent, 200, $headers);
         } catch (\Throwable $e) {
             $this->logPdfFailure('view', $e, $serviceRequest ?? null);
+
             return redirect()->back()->with('error', 'The PDF could not be generated. Please try again.');
         }
     }
@@ -670,10 +675,11 @@ class AdminServiceRequestController extends Controller
 
             return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="MIS-Request-' . $serviceRequest->control_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="MIS-Request-'.$serviceRequest->control_number.'.pdf"',
             ]);
         } catch (\Throwable $e) {
             $this->logPdfFailure('download', $e, $serviceRequest ?? null);
+
             return redirect()->back()->with('error', 'The PDF could not be downloaded. Please try again.');
         }
     }

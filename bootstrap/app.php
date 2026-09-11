@@ -1,5 +1,11 @@
 <?php
 
+use App\Exceptions\Handler;
+use App\Http\Kernel;
+use Illuminate\Config\Repository;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Application;
+
 /*
 |--------------------------------------------------------------------------
 | Create The Application
@@ -11,7 +17,7 @@
 |
 */
 
-$app = new Illuminate\Foundation\Application(
+$app = new Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 
@@ -29,7 +35,7 @@ $app = new Illuminate\Foundation\Application(
 
 $app->singleton(
     Illuminate\Contracts\Http\Kernel::class,
-    App\Http\Kernel::class
+    Kernel::class
 );
 
 $app->singleton(
@@ -38,8 +44,8 @@ $app->singleton(
 );
 
 $app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
+    ExceptionHandler::class,
+    Handler::class
 );
 
 /*
@@ -54,12 +60,12 @@ $app->singleton(
 
 // Load and register configuration repository
 $app->singleton('config', function ($app) {
-    $config = new Illuminate\Config\Repository;
+    $config = new Repository;
 
     // Load all config files
-    $configPath = __DIR__ . '/../config';
+    $configPath = __DIR__.'/../config';
     if (is_dir($configPath)) {
-        foreach (glob($configPath . '/*.php') as $file) {
+        foreach (glob($configPath.'/*.php') as $file) {
             $key = basename($file, '.php');
             $config->set($key, require $file);
         }
@@ -68,7 +74,7 @@ $app->singleton('config', function ($app) {
     return $config;
 });
 
-$providers = require __DIR__ . '/providers.php';
+$providers = require __DIR__.'/providers.php';
 
 // Now register all providers
 foreach ($providers as $provider) {

@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\AdminDeviceChallenge;
-use App\Models\TrustedAdminDevice;
 use App\Models\Notification;
+use App\Models\TrustedAdminDevice;
 use App\Services\AdminDeviceTrustService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;

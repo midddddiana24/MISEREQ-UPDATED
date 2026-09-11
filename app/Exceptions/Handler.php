@@ -28,7 +28,7 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->renderable(function (HttpException $exception, Request $request) {
-            if ($exception->getStatusCode() !== 419 || !$request->is('login')) {
+            if ($exception->getStatusCode() !== 419 || ! $request->is('login')) {
                 return null;
             }
 
@@ -44,7 +44,7 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (ThrottleRequestsException $exception, Request $request) {
-            if (!$request->expectsJson()) {
+            if (! $request->expectsJson()) {
                 return null;
             }
 

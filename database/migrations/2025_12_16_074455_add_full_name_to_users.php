@@ -1,9 +1,9 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\User;
 
 return new class extends Migration
 {
@@ -15,8 +15,8 @@ return new class extends Migration
 
         // Populate full_name from existing data
         User::all()->each(function ($user) {
-            $middle = $user->middle_initial ? $user->middle_initial . '. ' : '';
-            $user->full_name = $user->first_name . ' ' . $middle . $user->last_name;
+            $middle = $user->middle_initial ? $user->middle_initial.'. ' : '';
+            $user->full_name = $user->first_name.' '.$middle.$user->last_name;
             $user->save();
         });
     }

@@ -2,16 +2,16 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\URL;
-use App\Models\User;
 use App\Models\ServiceRequest;
-use App\Policies\UserPolicy;
-use App\Policies\ServiceRequestPolicy;
-use App\Rules\ScanMalware;
+use App\Models\User;
 use App\Observers\ServiceRequestObserver;
+use App\Policies\ServiceRequestPolicy;
+use App\Policies\UserPolicy;
+use App\Rules\ScanMalware;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,7 +37,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Register custom validation rules
         Validator::extend('scan_malware', function ($attribute, $value, $parameters, $validator) {
-            $rule = new ScanMalware();
+            $rule = new ScanMalware;
+
             // The rule will be invoked during validation
             return true; // Laravel will call the rule's validate method
         });

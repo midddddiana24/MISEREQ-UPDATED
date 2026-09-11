@@ -5,16 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\IctIncidentReport;
 use App\Models\Notification;
 use App\Models\PreventiveMaintenanceChecklist;
-use App\Services\EmailNotificationService;
 use App\Models\ServiceRequest;
+use App\Services\EmailNotificationService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
 class AdminDashboardController extends Controller implements HasMiddleware
 {
-    public function __construct(private readonly EmailNotificationService $emailNotifications)
-    {
-    }
+    public function __construct(private readonly EmailNotificationService $emailNotifications) {}
+
     public static function middleware(): array
     {
         return [
@@ -75,6 +74,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
                 $request->dashboard_owner = $request->requester_name ?? ($request->user->full_name ?? '-');
                 $request->dashboard_meta = $request->office ?? 'No office set';
                 $request->dashboard_url = route('admin.service-requests.show', $request);
+
                 return $request;
             })
             ->merge($recentIncidentReports->map(function ($report) {
@@ -83,6 +83,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
                 $report->dashboard_owner = $report->reported_by ?? ($report->user->full_name ?? '-');
                 $report->dashboard_meta = $report->department ?: 'No department set';
                 $report->dashboard_url = route('admin.incident-reports.show', $report);
+
                 return $report;
             }))
             ->merge($recentPmChecklists->map(function ($checklist) {
@@ -91,6 +92,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
                 $checklist->dashboard_owner = $checklist->system_owner ?? ($checklist->user->full_name ?? '-');
                 $checklist->dashboard_meta = $checklist->office_department ?: 'No department set';
                 $checklist->dashboard_url = route('admin.pm-checklists.show', $checklist);
+
                 return $checklist;
             }))
             ->sortByDesc('updated_at')
@@ -113,7 +115,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
             ->limit(10)
             ->get()
             ->map(fn (Notification $notification) => [
-                'id' => 'action-' . $notification->id,
+                'id' => 'action-'.$notification->id,
                 'title' => $notification->subject ?: 'Client action required',
                 'message' => $notification->message,
                 'type' => 'warning',
@@ -142,6 +144,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
             ->with('user:id,first_name,last_name,email')
             ->latest()
             ->paginate(25);
+
         return view('admin.notifications.index', compact('notifications'));
     }
 
@@ -149,6 +152,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
         $sent = $this->emailNotifications->retryNotification($notification);
+
         return back()->with($sent ? 'success' : 'error', $sent ? 'Notification sent successfully.' : 'Notification could not be sent. Review its delivery error.');
     }
 

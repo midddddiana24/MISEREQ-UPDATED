@@ -19,10 +19,6 @@ class SecurityHeaders
 {
     /**
      * Handle an incoming request
-     *
-     * @param  Request  $request
-     * @param  Closure  $next
-     * @return Response
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -36,13 +32,13 @@ class SecurityHeaders
         // Content Security Policy - Prevent inline scripts
         $response->header(
             'Content-Security-Policy',
-            "default-src 'self'; " .
-                "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; " .
-                "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com; " .
-                "font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; " .
-                "img-src 'self' data: https:; " .
-                "frame-ancestors 'none'; " .
-                "base-uri 'self'; " .
+            "default-src 'self'; ".
+                "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; ".
+                "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com; ".
+                "font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; ".
+                "img-src 'self' data: https:; ".
+                "frame-ancestors 'none'; ".
+                "base-uri 'self'; ".
                 "form-action 'self'"
         );
 

@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Notification;
-use App\Models\User;
 use App\Models\Setting;
+use App\Models\User;
 
 class AdminActionNotificationService
 {
@@ -14,7 +14,7 @@ class AdminActionNotificationService
         string $actionUrl,
         ?int $serviceRequestId = null
     ): void {
-        if (!Setting::get('notify_admin_alerts', true)) {
+        if (! Setting::get('notify_admin_alerts', true)) {
             return;
         }
 

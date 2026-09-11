@@ -44,25 +44,26 @@ $requirements = [
 
 $failures = [];
 foreach ($requirements as $relativePath => $needles) {
-    $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+    $path = $root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
     $contents = is_file($path) ? file_get_contents($path) : false;
     if ($contents === false) {
         $failures[] = "{$relativePath}: file missing";
+
         continue;
     }
 
     foreach ($needles as $needle) {
-        if (!str_contains($contents, $needle)) {
+        if (! str_contains($contents, $needle)) {
             $failures[] = "{$relativePath}: missing {$needle}";
         }
     }
 }
 
 if ($failures) {
-    fwrite(STDERR, "Responsive source audit failed:\n- " . implode("\n- ", $failures) . "\n");
+    fwrite(STDERR, "Responsive source audit failed:\n- ".implode("\n- ", $failures)."\n");
     exit(1);
 }
 
 echo 'Responsive source audit passed for '
-    . count($requirements)
-    . " shared/public interfaces.\n";
+    .count($requirements)
+    ." shared/public interfaces.\n";

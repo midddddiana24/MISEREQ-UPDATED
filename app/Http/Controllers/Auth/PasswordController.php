@@ -20,7 +20,7 @@ class PasswordController
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'confirmed', new StrongPassword(), new NotInPasswordHistory($request->user()->id)],
+            'password' => ['required', 'string', 'confirmed', new StrongPassword, new NotInPasswordHistory($request->user()->id)],
         ]);
 
         $hashedPassword = Hash::make($validated['password']);

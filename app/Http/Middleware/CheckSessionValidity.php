@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +13,9 @@ class CheckSessionValidity
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
-            if (!$user->last_activity || $user->last_activity->lt(now()->subMinutes(5))) {
+            if (! $user->last_activity || $user->last_activity->lt(now()->subMinutes(5))) {
                 $user->updateLastActivity($request->ip(), $request->userAgent());
             }
 

@@ -23,7 +23,7 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() === 'mysql') {
-            $statuses = "'" . implode("','", self::STATUSES) . "'";
+            $statuses = "'".implode("','", self::STATUSES)."'";
             DB::statement("ALTER TABLE service_requests MODIFY COLUMN status ENUM({$statuses}) NOT NULL DEFAULT 'submitted'");
             DB::statement("ALTER TABLE request_status_logs MODIFY COLUMN status ENUM({$statuses}) NOT NULL");
         }

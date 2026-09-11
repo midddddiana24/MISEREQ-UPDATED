@@ -17,7 +17,7 @@ class RequiredPasswordController extends Controller
 {
     public function edit(Request $request): View|RedirectResponse
     {
-        if (!$request->user()->must_change_password) {
+        if (! $request->user()->must_change_password) {
             return redirect()->route($request->user()->isAdmin() ? 'admin.dashboard' : 'dashboard');
         }
 
@@ -31,7 +31,7 @@ class RequiredPasswordController extends Controller
             'password' => [
                 'required',
                 'confirmed',
-                new StrongPassword(),
+                new StrongPassword,
                 new NotInPasswordHistory($request->user()->id),
             ],
         ]);

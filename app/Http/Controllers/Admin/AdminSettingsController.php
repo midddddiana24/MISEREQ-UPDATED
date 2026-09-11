@@ -130,7 +130,7 @@ class AdminSettingsController extends Controller
     {
         $recipient = (string) Setting::get('support_email', config('mail.from.address'));
 
-        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
             return redirect()
                 ->route('admin.settings')
                 ->with('error', 'Save a valid MIS support email before sending a test.');
@@ -138,7 +138,7 @@ class AdminSettingsController extends Controller
 
         try {
             Mail::raw(
-                "This test confirms that the WVSU MIS Service Request System can send email using the current server configuration.\n\nSent: " . now()->format('M d, Y h:i A'),
+                "This test confirms that the WVSU MIS Service Request System can send email using the current server configuration.\n\nSent: ".now()->format('M d, Y h:i A'),
                 function ($message) use ($recipient) {
                     $message->to($recipient)
                         ->subject('WVSU MIS email configuration test')

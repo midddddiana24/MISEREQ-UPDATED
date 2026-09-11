@@ -2,15 +2,15 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Message;
+use App\Models\User;
 
 class MessagePolicy
 {
     /**
      * Determine if the user can view messages for a service request.
      */
-    public function viewAny(User $user, int $serviceRequestId = null): bool
+    public function viewAny(User $user, ?int $serviceRequestId = null): bool
     {
         if ($serviceRequestId === null) {
             return true; // Can view messages if authorized for specific request
@@ -25,7 +25,7 @@ class MessagePolicy
     public function view(User $user, Message $message): bool
     {
         $serviceRequest = $message->serviceRequest;
-        if (!$serviceRequest) {
+        if (! $serviceRequest) {
             return false;
         }
 
@@ -48,7 +48,7 @@ class MessagePolicy
      */
     public function create(User $user): bool
     {
-        return !$user->isAccountLocked();
+        return ! $user->isAccountLocked();
     }
 
     /**

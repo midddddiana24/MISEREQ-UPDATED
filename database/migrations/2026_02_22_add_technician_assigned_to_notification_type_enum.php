@@ -18,7 +18,7 @@ return new class extends Migration
                 'request_created',
                 'request_completed',
                 'request_rejected',
-                'technician_assigned'
+                'technician_assigned',
             ])->change();
         });
     }
@@ -34,7 +34,7 @@ return new class extends Migration
                 'status_update',
                 'request_created',
                 'request_completed',
-                'request_rejected'
+                'request_rejected',
             ])->change();
         });
     }

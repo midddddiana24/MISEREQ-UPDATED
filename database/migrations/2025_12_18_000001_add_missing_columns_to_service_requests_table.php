@@ -13,61 +13,61 @@ return new class extends Migration
     {
         Schema::table('service_requests', function (Blueprint $table) {
             // Add missing columns if they don't exist
-            if (!Schema::hasColumn('service_requests', 'requester_designation')) {
+            if (! Schema::hasColumn('service_requests', 'requester_designation')) {
                 $table->string('requester_designation')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'requester_office')) {
+            if (! Schema::hasColumn('service_requests', 'requester_office')) {
                 $table->string('requester_office')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'network_services')) {
+            if (! Schema::hasColumn('service_requests', 'network_services')) {
                 $table->json('network_services')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'ict_equipment_services')) {
+            if (! Schema::hasColumn('service_requests', 'ict_equipment_services')) {
                 $table->json('ict_equipment_services')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'mis_software_services')) {
+            if (! Schema::hasColumn('service_requests', 'mis_software_services')) {
                 $table->json('mis_software_services')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'web_admin_services')) {
+            if (! Schema::hasColumn('service_requests', 'web_admin_services')) {
                 $table->json('web_admin_services')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'property_number')) {
+            if (! Schema::hasColumn('service_requests', 'property_number')) {
                 $table->string('property_number')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'priority')) {
+            if (! Schema::hasColumn('service_requests', 'priority')) {
                 $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('low');
             }
-            if (!Schema::hasColumn('service_requests', 'unit_head_name')) {
+            if (! Schema::hasColumn('service_requests', 'unit_head_name')) {
                 $table->string('unit_head_name')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'unit_head_phone')) {
+            if (! Schema::hasColumn('service_requests', 'unit_head_phone')) {
                 $table->string('unit_head_phone')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'responded_by')) {
+            if (! Schema::hasColumn('service_requests', 'responded_by')) {
                 $table->string('responded_by')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'prr_number')) {
+            if (! Schema::hasColumn('service_requests', 'prr_number')) {
                 $table->string('prr_number')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'date_responded')) {
+            if (! Schema::hasColumn('service_requests', 'date_responded')) {
                 $table->dateTime('date_responded')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'major_repair')) {
+            if (! Schema::hasColumn('service_requests', 'major_repair')) {
                 $table->boolean('major_repair')->default(false);
             }
-            if (!Schema::hasColumn('service_requests', 'date_completed')) {
+            if (! Schema::hasColumn('service_requests', 'date_completed')) {
                 $table->dateTime('date_completed')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'mis_head_signature')) {
+            if (! Schema::hasColumn('service_requests', 'mis_head_signature')) {
                 $table->text('mis_head_signature')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'comments')) {
+            if (! Schema::hasColumn('service_requests', 'comments')) {
                 $table->text('comments')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'end_user_signature')) {
+            if (! Schema::hasColumn('service_requests', 'end_user_signature')) {
                 $table->text('end_user_signature')->nullable();
             }
-            if (!Schema::hasColumn('service_requests', 'acceptance_date')) {
+            if (! Schema::hasColumn('service_requests', 'acceptance_date')) {
                 $table->dateTime('acceptance_date')->nullable();
             }
         });

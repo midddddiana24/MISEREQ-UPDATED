@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\PreventiveMaintenanceChecklist;
+use App\Models\User;
 
 class PreventiveMaintenanceChecklistPolicy
 {
@@ -29,7 +29,7 @@ class PreventiveMaintenanceChecklistPolicy
     public function create(User $user): bool
     {
         return ($user->role === 'user' || $user->isAdmin())
-            && !$user->isAccountLocked();
+            && ! $user->isAccountLocked();
     }
 
     /**

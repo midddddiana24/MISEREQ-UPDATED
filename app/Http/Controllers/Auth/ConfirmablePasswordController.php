@@ -31,6 +31,7 @@ class ConfirmablePasswordController
 
         if ($request->user()->isAdmin()) {
             $request->session()->forget('url.intended');
+
             return redirect()->route('admin.dashboard');
         }
 

@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\ServiceRequest;
 use App\Models\Notification;
+use App\Models\ServiceRequest;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendRequestRejectedNotification implements ShouldQueue
 {
@@ -26,8 +26,9 @@ class SendRequestRejectedNotification implements ShouldQueue
     {
         $request = $this->serviceRequest;
 
-        if (!$request->user || !$request->user->email) {
-            Log::warning("Cannot send rejection notification: user not found", ['request_id' => $request->id]);
+        if (! $request->user || ! $request->user->email) {
+            Log::warning('Cannot send rejection notification: user not found', ['request_id' => $request->id]);
+
             return;
         }
 
@@ -36,8 +37,8 @@ class SendRequestRejectedNotification implements ShouldQueue
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'request_rejected',
-            'subject' => "Service Request Rejected - Control #" . $request->control_number,
-            'message' => "Your service request has been rejected. Reason: " . $this->reason,
+            'subject' => 'Service Request Rejected - Control #'.$request->control_number,
+            'message' => 'Your service request has been rejected. Reason: '.$this->reason,
             'status' => 'pending',
         ]);
 
@@ -48,16 +49,16 @@ class SendRequestRejectedNotification implements ShouldQueue
                 'reason' => $this->reason,
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Rejected - Control #" . $request->control_number)
+                    ->subject('Service Request Rejected - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
 
             $notification->markAsSent('Rejection email sent');
-            Log::info("Request rejected notification sent", ['request_id' => $request->id]);
+            Log::info('Request rejected notification sent', ['request_id' => $request->id]);
         } catch (\Exception $e) {
             $notification->markAsFailed($e->getMessage());
-            Log::error("Failed to send rejection notification", [
+            Log::error('Failed to send rejection notification', [
                 'request_id' => $request->id,
                 'error' => $e->getMessage(),
             ]);

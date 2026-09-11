@@ -1,27 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\RequestController;
-use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminIncidentReportController;
+use App\Http\Controllers\Admin\AdminMessengerController;
+use App\Http\Controllers\Admin\AdminOperationsController;
+use App\Http\Controllers\Admin\AdminPreventiveMaintenanceChecklistController;
 use App\Http\Controllers\Admin\AdminRequestController;
 use App\Http\Controllers\Admin\AdminServiceRequestController;
-use App\Http\Controllers\Admin\AdminTechnicianController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminSystemOperationsController;
+use App\Http\Controllers\Admin\AdminTechnicianController;
 use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Admin\AdminMessengerController;
-use App\Http\Controllers\Admin\AdminIncidentReportController;
-use App\Http\Controllers\Admin\AdminPreventiveMaintenanceChecklistController;
-use App\Http\Controllers\Admin\AdminOperationsController;
-use App\Http\Controllers\UserDashboardController;
-use App\Http\Controllers\IctIncidentReportController;
-use App\Http\Controllers\PreventiveMaintenanceChecklistController;
-use App\Http\Controllers\ServiceRequestDraftController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Auth\TwoFactorAuthController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IctIncidentReportController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PreventiveMaintenanceChecklistController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RequestController;
+use App\Http\Controllers\ServiceRequestDraftController;
+use App\Http\Controllers\UserDashboardController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,7 +104,7 @@ Route::middleware(['auth', 'verified', '2fa', 'throttle:authenticated'])->group(
 
     Route::get('/user/security', [ProfileController::class, 'security'])->name('user.security');
     Route::post('/user/password', [ProfileController::class, 'updatePassword'])->name('user.password.update');
-    Route::get('/user/messenger', [App\Http\Controllers\MessageController::class, 'userMessenger'])->name('user.messenger');
+    Route::get('/user/messenger', [MessageController::class, 'userMessenger'])->name('user.messenger');
 
     // API endpoints for AJAX/modals
     Route::get('/api/user/notifications', [UserDashboardController::class, 'getNotifications'])
@@ -128,12 +128,12 @@ Route::middleware(['auth', 'verified', '2fa', 'throttle:authenticated'])->group(
     Route::delete('/api/request-draft', [ServiceRequestDraftController::class, 'destroy'])->name('request-draft.destroy');
 
     // Messenger API Endpoints (User)
-    Route::get('/api/messages/request/{id}', [\App\Http\Controllers\MessageController::class, 'getMessages']);
-    Route::get('/api/messages/request/{id}/new', [\App\Http\Controllers\MessageController::class, 'getNewMessages']);
-    Route::post('/api/messages/send', [\App\Http\Controllers\MessageController::class, 'sendMessage'])->middleware('throttle:messages');
-    Route::post('/api/messages/{id}/read', [\App\Http\Controllers\MessageController::class, 'markAsRead']);
-    Route::get('/api/messages/request/{id}/unread', [\App\Http\Controllers\MessageController::class, 'getUnreadCount']);
-    Route::get('/messages/attachments/{attachment}', [\App\Http\Controllers\MessageController::class, 'downloadAttachment'])
+    Route::get('/api/messages/request/{id}', [MessageController::class, 'getMessages']);
+    Route::get('/api/messages/request/{id}/new', [MessageController::class, 'getNewMessages']);
+    Route::post('/api/messages/send', [MessageController::class, 'sendMessage'])->middleware('throttle:messages');
+    Route::post('/api/messages/{id}/read', [MessageController::class, 'markAsRead']);
+    Route::get('/api/messages/request/{id}/unread', [MessageController::class, 'getUnreadCount']);
+    Route::get('/messages/attachments/{attachment}', [MessageController::class, 'downloadAttachment'])
         ->name('messages.attachments.download');
 });
 
@@ -162,7 +162,6 @@ Route::middleware(['auth', 'verified', '2fa', 'throttle:authenticated'])->group(
     Route::get('pm-checklists/{pmChecklist}', [PreventiveMaintenanceChecklistController::class, 'show'])
         ->name('pm-checklists.show');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -270,9 +269,8 @@ Route::middleware(['auth', 'admin', '2fa', 'throttle:authenticated'])
             ->name('messenger');
         Route::get('/api/messages/unread-summary', [AdminMessengerController::class, 'unreadSummary'])
             ->name('messenger.unread-summary');
-        Route::get('/messages/attachments/{attachment}', [\App\Http\Controllers\MessageController::class, 'downloadAttachment'])
+        Route::get('/messages/attachments/{attachment}', [MessageController::class, 'downloadAttachment'])
             ->name('messages.attachments.download');
-
 
         Route::get('/settings', [AdminSettingsController::class, 'index'])
             ->name('settings');
@@ -318,11 +316,11 @@ Route::middleware(['auth', 'admin', '2fa', 'throttle:authenticated'])
         Route::resource('pm-checklists', AdminPreventiveMaintenanceChecklistController::class);
 
         // Messenger API Endpoints (Admin)
-        Route::get('/api/messages/request/{id}', [\App\Http\Controllers\MessageController::class, 'getMessages']);
-        Route::get('/api/messages/request/{id}/new', [\App\Http\Controllers\MessageController::class, 'getNewMessages']);
-        Route::post('/api/messages/send', [\App\Http\Controllers\MessageController::class, 'sendMessage'])->middleware('throttle:messages');
-        Route::post('/api/messages/{id}/read', [\App\Http\Controllers\MessageController::class, 'markAsRead']);
-        Route::get('/api/messages/request/{id}/unread', [\App\Http\Controllers\MessageController::class, 'getUnreadCount']);
+        Route::get('/api/messages/request/{id}', [MessageController::class, 'getMessages']);
+        Route::get('/api/messages/request/{id}/new', [MessageController::class, 'getNewMessages']);
+        Route::post('/api/messages/send', [MessageController::class, 'sendMessage'])->middleware('throttle:messages');
+        Route::post('/api/messages/{id}/read', [MessageController::class, 'markAsRead']);
+        Route::get('/api/messages/request/{id}/unread', [MessageController::class, 'getUnreadCount']);
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Message;
 use App\Models\Notification;
 use App\Models\ServiceRequest;
 use App\Models\Setting;
-use App\Models\Message;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class EmailNotificationService
 {
@@ -22,13 +23,14 @@ class EmailNotificationService
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'request_created',
-            'subject' => "Service Request Submitted - Control #" . $request->control_number,
-            'message' => "Your service request has been successfully submitted.",
+            'subject' => 'Service Request Submitted - Control #'.$request->control_number,
+            'message' => 'Your service request has been successfully submitted.',
             'status' => 'pending',
         ]);
 
-        if (!Setting::get('notify_new_requests', true) || !$this->allowsEmail($request)) {
+        if (! Setting::get('notify_new_requests', true) || ! $this->allowsEmail($request)) {
             $notification->markAsSent('Email disabled by administrator setting; in-app notification retained.');
+
             return $notification;
         }
 
@@ -38,7 +40,7 @@ class EmailNotificationService
                 'request' => $request,
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Submitted - Control #" . $request->control_number)
+                    ->subject('Service Request Submitted - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
@@ -75,14 +77,15 @@ class EmailNotificationService
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'status_update',
-            'subject' => "Service Request Status Update - Control #" . $request->control_number,
+            'subject' => 'Service Request Status Update - Control #'.$request->control_number,
             'message' => $statusMessages[$newStatus] ?? "Your request status has been updated to: $newStatus",
             'status' => 'pending',
         ]);
 
         $isReminder = in_array($newStatus, ['awaiting_requester_info', 'awaiting_confirmation'], true);
-        if (!Setting::get('notify_request_updates', true) || !$this->allowsEmail($request, true, $isReminder)) {
+        if (! Setting::get('notify_request_updates', true) || ! $this->allowsEmail($request, true, $isReminder)) {
             $notification->markAsSent('Email disabled by administrator setting; in-app notification retained.');
+
             return $notification;
         }
 
@@ -96,7 +99,7 @@ class EmailNotificationService
                 'statusMessage' => $statusMessages[$newStatus] ?? "Status: $newStatus",
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Status Update - Control #" . $request->control_number)
+                    ->subject('Service Request Status Update - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
@@ -119,13 +122,14 @@ class EmailNotificationService
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'request_completed',
-            'subject' => "Service Request Completed - Control #" . $request->control_number,
-            'message' => "Your service request has been completed successfully.",
+            'subject' => 'Service Request Completed - Control #'.$request->control_number,
+            'message' => 'Your service request has been completed successfully.',
             'status' => 'pending',
         ]);
 
-        if (!Setting::get('notify_completed_requests', true) || !$this->allowsEmail($request, true)) {
+        if (! Setting::get('notify_completed_requests', true) || ! $this->allowsEmail($request, true)) {
             $notification->markAsSent('Email disabled by administrator setting; in-app notification retained.');
+
             return $notification;
         }
 
@@ -135,7 +139,7 @@ class EmailNotificationService
                 'request' => $request,
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Completed - Control #" . $request->control_number)
+                    ->subject('Service Request Completed - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
@@ -158,13 +162,14 @@ class EmailNotificationService
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'request_rejected',
-            'subject' => "Service Request Cannot Be Processed - Control #" . $request->control_number,
+            'subject' => 'Service Request Cannot Be Processed - Control #'.$request->control_number,
             'message' => "Your service request could not be processed. Reason: $reason",
             'status' => 'pending',
         ]);
 
-        if (!Setting::get('notify_request_updates', true) || !$this->allowsEmail($request, true)) {
+        if (! Setting::get('notify_request_updates', true) || ! $this->allowsEmail($request, true)) {
             $notification->markAsSent('Email disabled by administrator setting; in-app notification retained.');
+
             return $notification;
         }
 
@@ -175,7 +180,7 @@ class EmailNotificationService
                 'reason' => $reason,
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Cannot Be Processed - Control #" . $request->control_number)
+                    ->subject('Service Request Cannot Be Processed - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
@@ -197,11 +202,11 @@ class EmailNotificationService
         $requestUser = $request->user;
 
         // Validate email address
-        if (!$technicianUser || !$technicianUser->email) {
+        if (! $technicianUser || ! $technicianUser->email) {
             Log::error('Cannot send technician assignment email: Missing technician user or email', [
                 'technician_id' => $technician->id,
-                'has_user' => (bool)$technicianUser,
-                'has_email' => $technicianUser ? (bool)$technicianUser->email : false,
+                'has_user' => (bool) $technicianUser,
+                'has_email' => $technicianUser ? (bool) $technicianUser->email : false,
             ]);
             throw new Exception('Technician has no email address configured');
         }
@@ -211,8 +216,8 @@ class EmailNotificationService
             'user_id' => $technicianUser->id,
             'recipient_email' => $technicianUser->email,
             'notification_type' => 'technician_assigned',
-            'subject' => "New Service Request Assigned - Control #" . $request->control_number,
-            'message' => "You have been assigned to handle a new service request.",
+            'subject' => 'New Service Request Assigned - Control #'.$request->control_number,
+            'message' => 'You have been assigned to handle a new service request.',
             'status' => 'pending',
         ]);
 
@@ -229,7 +234,7 @@ class EmailNotificationService
                 'requester' => $requestUser,
             ], function ($message) use ($technicianUser, $request) {
                 $message->to($technicianUser->email)
-                    ->subject("New Service Request Assigned - Control #" . $request->control_number)
+                    ->subject('New Service Request Assigned - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
@@ -260,13 +265,14 @@ class EmailNotificationService
             'recipient_email' => $request->user?->email,
             'notification_type' => 'client_update',
             'subject' => 'New message from MIS',
-            'message' => $request->control_number . ': ' . \Illuminate\Support\Str::limit($message->message, 180),
+            'message' => $request->control_number.': '.Str::limit($message->message, 180),
             'action_url' => route('user.messenger', ['request' => $request->id]),
             'status' => 'pending',
         ]);
 
-        if (!Setting::get('notify_request_updates', true) || !$this->allowsEmail($request, true)) {
+        if (! Setting::get('notify_request_updates', true) || ! $this->allowsEmail($request, true)) {
             $notification->markAsSent('Email disabled; in-app notification retained.');
+
             return $notification;
         }
 
@@ -307,7 +313,7 @@ class EmailNotificationService
                 $notification->markAsSent('Resent successfully');
                 $successCount++;
             } catch (Exception $e) {
-                $notification->markAsFailed('Retry failed: ' . $e->getMessage());
+                $notification->markAsFailed('Retry failed: '.$e->getMessage());
             }
         }
 
@@ -316,8 +322,12 @@ class EmailNotificationService
 
     public function retryNotification(Notification $notification): bool
     {
-        if ($notification->status !== 'failed' || !$notification->recipient_email) return false;
-        if ($notification->user && $notification->user->notify_email_enabled === false) return false;
+        if ($notification->status !== 'failed' || ! $notification->recipient_email) {
+            return false;
+        }
+        if ($notification->user && $notification->user->notify_email_enabled === false) {
+            return false;
+        }
 
         try {
             Mail::send('emails.generic-notification', ['notification' => $notification], function ($message) use ($notification) {
@@ -327,9 +337,11 @@ class EmailNotificationService
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
             $notification->markAsSent('Retried successfully by administrator.');
+
             return true;
         } catch (Exception $e) {
             $notification->markAsFailed($e->getMessage());
+
             return false;
         }
     }
@@ -337,8 +349,13 @@ class EmailNotificationService
     private function allowsEmail(ServiceRequest $request, bool $requestUpdate = false, bool $reminder = false): bool
     {
         $user = $request->user;
-        if (!$user || $user->notify_email_enabled === false) return false;
-        if ($reminder && $user->notify_request_reminders === false) return false;
-        return !$requestUpdate || $user->notify_request_updates !== false;
+        if (! $user || $user->notify_email_enabled === false) {
+            return false;
+        }
+        if ($reminder && $user->notify_request_reminders === false) {
+            return false;
+        }
+
+        return ! $requestUpdate || $user->notify_request_updates !== false;
     }
 }

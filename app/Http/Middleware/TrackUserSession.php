@@ -13,7 +13,7 @@ class TrackUserSession
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -38,7 +38,7 @@ class TrackUserSession
                 ->with('warning', 'Your session ended for security. Please sign in again.');
         }
 
-        if (!$record) {
+        if (! $record) {
             $record = UserSession::create([
                 'user_id' => $user->id,
                 'session_id' => $sessionId,
@@ -48,7 +48,7 @@ class TrackUserSession
                 'last_activity_at' => now(),
             ]);
 
-            if (!$user->isAdmin()) {
+            if (! $user->isAdmin()) {
                 $this->enforceSessionLimit($record);
             }
         } elseif ($record->last_activity_at->lt(now()->subMinute())) {

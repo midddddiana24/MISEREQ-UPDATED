@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\ServiceRequest;
 use App\Models\Notification;
+use App\Models\ServiceRequest;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendRequestCreatedNotification implements ShouldQueue
 {
@@ -30,13 +30,14 @@ class SendRequestCreatedNotification implements ShouldQueue
             'user_id' => $request->user_id,
             'recipient_email' => $request->user->email,
             'notification_type' => 'request_created',
-            'subject' => "Service Request Submitted - Control #" . $request->control_number,
-            'message' => "Your service request has been successfully submitted.",
+            'subject' => 'Service Request Submitted - Control #'.$request->control_number,
+            'message' => 'Your service request has been successfully submitted.',
             'status' => 'pending',
         ]);
 
-        if (!Setting::get('notify_new_requests', true) || !$request->user) {
+        if (! Setting::get('notify_new_requests', true) || ! $request->user) {
             $notification->markAsSent('Email disabled or user not found.');
+
             return;
         }
 
@@ -46,16 +47,16 @@ class SendRequestCreatedNotification implements ShouldQueue
                 'request' => $request,
             ], function ($message) use ($request) {
                 $message->to($request->user->email)
-                    ->subject("Service Request Submitted - Control #" . $request->control_number)
+                    ->subject('Service Request Submitted - Control #'.$request->control_number)
                     ->replyTo(Setting::get('support_email', config('mail.from.address')))
                     ->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'MIS Service Request'));
             });
 
             $notification->markAsSent('Email sent successfully');
-            Log::info("Request created notification sent", ['request_id' => $request->id]);
+            Log::info('Request created notification sent', ['request_id' => $request->id]);
         } catch (\Exception $e) {
             $notification->markAsFailed($e->getMessage());
-            Log::error("Failed to send request created notification", [
+            Log::error('Failed to send request created notification', [
                 'request_id' => $request->id,
                 'error' => $e->getMessage(),
             ]);

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class TempAdminSeeder extends Seeder
@@ -17,10 +17,11 @@ class TempAdminSeeder extends Seeder
     {
         $email = 'admin+dev@local.test';
         // generate a short random password
-        $password = 'Adm!' . substr(bin2hex(random_bytes(3)), 0, 8);
+        $password = 'Adm!'.substr(bin2hex(random_bytes(3)), 0, 8);
 
         if (User::where('email', $email)->exists()) {
             $this->command->info("Temp admin already exists: {$email}");
+
             return;
         }
 

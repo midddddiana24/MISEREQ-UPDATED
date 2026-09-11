@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('technicians', function (Blueprint $table) {
-            if (!Schema::hasColumn('technicians', 'job_assignment')) {
+            if (! Schema::hasColumn('technicians', 'job_assignment')) {
                 $table->enum('job_assignment', [
                     'Network Administrator',
                     'Technical Staff',
                     'Web Administrator',
-                    'Computer Programmer'
+                    'Computer Programmer',
                 ])->nullable()->after('specialization');
             }
         });

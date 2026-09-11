@@ -16,16 +16,16 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->change();
 
             // Add email field
-            if (!Schema::hasColumn('technicians', 'email')) {
+            if (! Schema::hasColumn('technicians', 'email')) {
                 $table->string('email')->nullable()->after('user_id');
             }
 
             // Add first_name and last_name for independent technicians
-            if (!Schema::hasColumn('technicians', 'first_name')) {
+            if (! Schema::hasColumn('technicians', 'first_name')) {
                 $table->string('first_name')->nullable()->after('email');
             }
 
-            if (!Schema::hasColumn('technicians', 'last_name')) {
+            if (! Schema::hasColumn('technicians', 'last_name')) {
                 $table->string('last_name')->nullable()->after('first_name');
             }
         });

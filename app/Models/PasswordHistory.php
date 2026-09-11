@@ -14,6 +14,7 @@ class PasswordHistory extends Model
     ];
 
     public $timestamps = false;
+
     public const CREATED_AT = 'changed_at';
 
     public function user()

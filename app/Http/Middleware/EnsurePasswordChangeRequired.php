@@ -11,7 +11,7 @@ class EnsurePasswordChangeRequired
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if (!$user?->must_change_password) {
+        if (! $user?->must_change_password) {
             return $next($request);
         }
 
@@ -19,7 +19,7 @@ class EnsurePasswordChangeRequired
             return $next($request);
         }
 
-        if ($user->isTwoFactorEnabled() && !(bool) $request->session()->get('2fa_verified', false)) {
+        if ($user->isTwoFactorEnabled() && ! (bool) $request->session()->get('2fa_verified', false)) {
             return $next($request);
         }
 

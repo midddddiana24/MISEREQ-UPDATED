@@ -28,7 +28,7 @@ class Setting extends Model
     {
         $setting = self::where('key', $key)->first();
 
-        if (!$setting) {
+        if (! $setting) {
             return $default;
         }
 
@@ -43,7 +43,7 @@ class Setting extends Model
         return self::updateOrCreate(
             ['key' => $key],
             [
-                'value' => is_array($value) ? json_encode($value) : (string)$value,
+                'value' => is_array($value) ? json_encode($value) : (string) $value,
                 'type' => $type,
                 'category' => $category,
                 'description' => $description,
@@ -73,14 +73,14 @@ class Setting extends Model
     {
         switch ($type) {
             case 'integer':
-                return (int)$value;
+                return (int) $value;
             case 'boolean':
                 return filter_var($value, FILTER_VALIDATE_BOOLEAN);
             case 'json':
                 return json_decode($value, true);
             case 'string':
             default:
-                return (string)$value;
+                return (string) $value;
         }
     }
 

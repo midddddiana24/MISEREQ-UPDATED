@@ -10,11 +10,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('service_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('service_requests', 'sla_paused_at')) $table->timestamp('sla_paused_at')->nullable()->after('expected_completion_change_reason');
-            if (!Schema::hasColumn('service_requests', 'sla_total_paused_seconds')) $table->unsignedBigInteger('sla_total_paused_seconds')->default(0)->after('sla_paused_at');
+            if (! Schema::hasColumn('service_requests', 'sla_paused_at')) {
+                $table->timestamp('sla_paused_at')->nullable()->after('expected_completion_change_reason');
+            }
+            if (! Schema::hasColumn('service_requests', 'sla_total_paused_seconds')) {
+                $table->unsignedBigInteger('sla_total_paused_seconds')->default(0)->after('sla_paused_at');
+            }
         });
 
-        if (!Schema::hasTable('clarification_attachments')) {
+        if (! Schema::hasTable('clarification_attachments')) {
             Schema::create('clarification_attachments', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('service_request_clarification_id');
@@ -30,14 +34,14 @@ return new class extends Migration
         if (DB::getDriverName() === 'mysql') {
             $constraints = collect(DB::select("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clarification_attachments'"))
                 ->pluck('CONSTRAINT_NAME');
-            if (!$constraints->contains('clarification_parent_fk')) {
+            if (! $constraints->contains('clarification_parent_fk')) {
                 DB::statement('ALTER TABLE clarification_attachments ADD CONSTRAINT clarification_parent_fk FOREIGN KEY (service_request_clarification_id) REFERENCES service_request_clarifications(id) ON DELETE CASCADE');
             }
-            if (!$constraints->contains('clarification_uploader_fk')) {
+            if (! $constraints->contains('clarification_uploader_fk')) {
                 DB::statement('ALTER TABLE clarification_attachments ADD CONSTRAINT clarification_uploader_fk FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL');
             }
-            $indexes = collect(DB::select("SHOW INDEX FROM clarification_attachments"))->pluck('Key_name');
-            if (!$indexes->contains('clarification_attachment_parent_idx')) {
+            $indexes = collect(DB::select('SHOW INDEX FROM clarification_attachments'))->pluck('Key_name');
+            if (! $indexes->contains('clarification_attachment_parent_idx')) {
                 DB::statement('ALTER TABLE clarification_attachments ADD INDEX clarification_attachment_parent_idx (service_request_clarification_id)');
             }
             DB::statement("ALTER TABLE notifications MODIFY COLUMN notification_type ENUM('status_update','request_created','request_completed','request_rejected','technician_assigned','clarification_requested','client_update','target_date_updated','visit_scheduled','incident_report_update','maintenance_update','admin_action_required') NOT NULL");

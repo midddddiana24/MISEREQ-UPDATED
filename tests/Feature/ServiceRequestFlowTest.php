@@ -7,9 +7,9 @@ use App\Http\Middleware\CheckTwoFactorAuth;
 use App\Http\Middleware\TrackUserSession;
 use App\Models\ServiceRequest;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class ServiceRequestFlowTest extends TestCase
@@ -90,7 +90,7 @@ class ServiceRequestFlowTest extends TestCase
     {
         $owner = $this->createUser();
         $request = $this->makeRequest($owner);
-        $cacheKey = 'pdf_v11_' . $request->id . '_' . $request->updated_at->timestamp;
+        $cacheKey = 'pdf_v11_'.$request->id.'_'.$request->updated_at->timestamp;
 
         // Match production's database default. PDF bytes must still use the
         // dedicated file store instead of being inserted into MySQL.
@@ -107,7 +107,7 @@ class ServiceRequestFlowTest extends TestCase
                 ->get(route('request.download-pdf', $request))
                 ->assertOk()
                 ->assertHeader('Content-Type', 'application/pdf')
-                ->assertDownload('MIS-Request-' . $request->control_number . '.pdf');
+                ->assertDownload('MIS-Request-'.$request->control_number.'.pdf');
         } finally {
             Cache::store('file')->forget($cacheKey);
         }
@@ -116,7 +116,7 @@ class ServiceRequestFlowTest extends TestCase
     private function makeRequest($owner): ServiceRequest
     {
         return ServiceRequest::create([
-            'control_number' => 'TEST-' . $owner->id . '-' . now()->format('Hisv'),
+            'control_number' => 'TEST-'.$owner->id.'-'.now()->format('Hisv'),
             'user_id' => $owner->id,
             'requester_name' => $owner->full_name,
             'requester_office' => $owner->office,

@@ -4,13 +4,14 @@ namespace App\Http\Requests\Auth;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\StrongPassword;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class RegisterRequest extends BaseFormRequest
 {
     /**
      * Get the validation rules that apply to the request
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
@@ -38,7 +39,7 @@ class RegisterRequest extends BaseFormRequest
                 'required',
                 'string',
                 'confirmed',
-                new StrongPassword(),
+                new StrongPassword,
             ],
             'password_confirmation' => [
                 'required',
@@ -74,8 +75,6 @@ class RegisterRequest extends BaseFormRequest
 
     /**
      * Prepare data for validation - sanitize inputs
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {

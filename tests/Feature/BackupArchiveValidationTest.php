@@ -11,13 +11,13 @@ class BackupArchiveValidationTest extends TestCase
 {
     public function test_valid_backup_archive_can_be_verified_without_restoring(): void
     {
-        $filename = 'mis-backup-test-' . Str::lower(Str::random(10)) . '.zip';
-        $path = storage_path('app/backups/' . $filename);
+        $filename = 'mis-backup-test-'.Str::lower(Str::random(10)).'.zip';
+        $path = storage_path('app/backups/'.$filename);
         File::ensureDirectoryExists(dirname($path));
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $this->assertTrue($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE));
-        $zip->addFromString('database.sql', str_repeat('-- safe test database content' . PHP_EOL, 10));
+        $zip->addFromString('database.sql', str_repeat('-- safe test database content'.PHP_EOL, 10));
         $zip->addFromString('manifest.json', json_encode([
             'application' => 'MIS Service Request',
             'created_at' => now()->toIso8601String(),
@@ -38,11 +38,11 @@ class BackupArchiveValidationTest extends TestCase
 
     public function test_incomplete_backup_archive_is_rejected(): void
     {
-        $filename = 'mis-backup-test-' . Str::lower(Str::random(10)) . '.zip';
-        $path = storage_path('app/backups/' . $filename);
+        $filename = 'mis-backup-test-'.Str::lower(Str::random(10)).'.zip';
+        $path = storage_path('app/backups/'.$filename);
         File::ensureDirectoryExists(dirname($path));
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $this->assertTrue($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE));
         $zip->addFromString('manifest.json', '{}');
         $zip->close();

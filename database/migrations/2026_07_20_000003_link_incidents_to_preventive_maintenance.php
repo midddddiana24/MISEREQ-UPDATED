@@ -9,16 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ict_incident_reports', function (Blueprint $table) {
-            if (!Schema::hasColumn('ict_incident_reports', 'requester_position')) {
+            if (! Schema::hasColumn('ict_incident_reports', 'requester_position')) {
                 $table->string('requester_position')->nullable()->after('department');
             }
-            if (!Schema::hasColumn('ict_incident_reports', 'received_time')) {
+            if (! Schema::hasColumn('ict_incident_reports', 'received_time')) {
                 $table->time('received_time')->nullable()->after('received_date');
             }
         });
 
         Schema::table('preventive_maintenance_checklists', function (Blueprint $table) {
-            if (!Schema::hasColumn('preventive_maintenance_checklists', 'incident_report_id')) {
+            if (! Schema::hasColumn('preventive_maintenance_checklists', 'incident_report_id')) {
                 $table->foreignId('incident_report_id')
                     ->nullable()
                     ->unique()

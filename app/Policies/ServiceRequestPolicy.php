@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\ServiceRequest;
+use App\Models\User;
 
 class ServiceRequestPolicy
 {
@@ -30,7 +30,7 @@ class ServiceRequestPolicy
     public function create(User $user): bool
     {
         return ($user->role === 'user' || $user->isAdmin())
-            && !$user->isAccountLocked();
+            && ! $user->isAccountLocked();
     }
 
     /**

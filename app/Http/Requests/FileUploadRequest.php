@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 class FileUploadRequest extends BaseFormRequest
 {
     /**
      * Get the validation rules that apply to the request
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
@@ -46,8 +48,6 @@ class FileUploadRequest extends BaseFormRequest
 
     /**
      * Prepare data for validation
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {

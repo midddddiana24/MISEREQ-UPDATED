@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\ClarificationAttachment;
-use App\Models\ServiceRequest;
+use App\Models\User;
 
 class ClarificationAttachmentPolicy
 {
@@ -14,12 +13,12 @@ class ClarificationAttachmentPolicy
     public function view(User $user, ClarificationAttachment $attachment): bool
     {
         $clarification = $attachment->clarification;
-        if (!$clarification) {
+        if (! $clarification) {
             return false;
         }
 
         $request = $clarification->serviceRequest;
-        if (!$request) {
+        if (! $request) {
             return false;
         }
 

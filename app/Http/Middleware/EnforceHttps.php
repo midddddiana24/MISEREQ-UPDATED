@@ -10,16 +10,16 @@ class EnforceHttps
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!config('security.force_https', false) || $request->isSecure()) {
+        if (! config('security.force_https', false) || $request->isSecure()) {
             return $next($request);
         }
 
         $configuredBase = rtrim((string) config('app.url'), '/');
         $base = str_starts_with($configuredBase, 'https://')
             ? $configuredBase
-            : 'https://' . $request->getHost();
+            : 'https://'.$request->getHost();
         $status = in_array($request->method(), ['GET', 'HEAD'], true) ? 301 : 307;
 
-        return redirect()->away($base . $request->getRequestUri(), $status);
+        return redirect()->away($base.$request->getRequestUri(), $status);
     }
 }

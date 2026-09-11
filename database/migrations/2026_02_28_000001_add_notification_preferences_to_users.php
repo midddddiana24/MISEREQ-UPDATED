@@ -21,12 +21,12 @@ return new class extends Migration
             $table->boolean('email_verified')->default(false)->after('language');
 
             // Add failed_login_attempts if not exists
-            if (!Schema::hasColumn('users', 'failed_login_attempts')) {
+            if (! Schema::hasColumn('users', 'failed_login_attempts')) {
                 $table->integer('failed_login_attempts')->default(0)->after('email_verified');
             }
 
             // Add locked_until if not exists
-            if (!Schema::hasColumn('users', 'locked_until')) {
+            if (! Schema::hasColumn('users', 'locked_until')) {
                 $table->timestamp('locked_until')->nullable()->after('failed_login_attempts');
             }
         });

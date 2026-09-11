@@ -2,7 +2,7 @@
 
 /**
  * PERFORMANCE OPTIMIZATION MIDDLEWARE
- * 
+ *
  * Implements response compression, caching headers, and request throttling
  */
 
@@ -51,7 +51,7 @@ class PerformanceOptimization
         $path = $request->path();
 
         foreach ($staticExtensions as $ext) {
-            if (str_ends_with($path, '.' . $ext)) {
+            if (str_ends_with($path, '.'.$ext)) {
                 return true;
             }
         }
@@ -65,6 +65,7 @@ class PerformanceOptimization
     private function shouldCompress(BaseResponse $response): bool
     {
         $size = strlen($response->getContent());
+
         return $size > 1024; // Compress responses larger than 1KB
     }
 }

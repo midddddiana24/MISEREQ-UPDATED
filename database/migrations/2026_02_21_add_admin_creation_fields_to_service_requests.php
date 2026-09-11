@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::table('service_requests', function (Blueprint $table) {
             // Track who actually created the request (admin might create on behalf of user)
-            if (!Schema::hasColumn('service_requests', 'created_by')) {
+            if (! Schema::hasColumn('service_requests', 'created_by')) {
                 $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null')->after('user_id');
             }
 
             // Track if this was created by admin on behalf of someone
-            if (!Schema::hasColumn('service_requests', 'is_admin_created')) {
+            if (! Schema::hasColumn('service_requests', 'is_admin_created')) {
                 $table->boolean('is_admin_created')->default(false)->after('created_by');
             }
         });

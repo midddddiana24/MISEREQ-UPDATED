@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('preventive_maintenance_checklists', 'incident_report_id')) {
+        if (! Schema::hasColumn('preventive_maintenance_checklists', 'incident_report_id')) {
             return;
         }
 

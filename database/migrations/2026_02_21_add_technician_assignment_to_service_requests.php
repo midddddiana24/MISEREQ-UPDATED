@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('service_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('service_requests', 'assigned_technician_id')) {
+            if (! Schema::hasColumn('service_requests', 'assigned_technician_id')) {
                 $table->foreignId('assigned_technician_id')
                     ->nullable()
                     ->constrained('technicians')
@@ -20,7 +20,7 @@ return new class extends Migration
                     ->after('assigned_to');
             }
 
-            if (!Schema::hasColumn('service_requests', 'assigned_by')) {
+            if (! Schema::hasColumn('service_requests', 'assigned_by')) {
                 $table->foreignId('assigned_by')
                     ->nullable()
                     ->constrained('users')
@@ -28,13 +28,13 @@ return new class extends Migration
                     ->after('assigned_technician_id');
             }
 
-            if (!Schema::hasColumn('service_requests', 'assigned_date')) {
+            if (! Schema::hasColumn('service_requests', 'assigned_date')) {
                 $table->timestamp('assigned_date')
                     ->nullable()
                     ->after('assigned_by');
             }
 
-            if (!Schema::hasColumn('service_requests', 'technician_notes')) {
+            if (! Schema::hasColumn('service_requests', 'technician_notes')) {
                 $table->text('technician_notes')->nullable()->after('assigned_date');
             }
         });

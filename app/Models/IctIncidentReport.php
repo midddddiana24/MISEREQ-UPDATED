@@ -3,11 +3,12 @@
 // ============================================================
 // FILE 1: app/Models/IctIncidentReport.php
 // ============================================================
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class IctIncidentReport extends Model
 {
@@ -55,8 +56,8 @@ class IctIncidentReport extends Model
 
     protected $casts = [
         'nature_of_incident' => 'array',
-        'date_of_incident'   => 'date',
-        'received_date'      => 'date',
+        'date_of_incident' => 'date',
+        'received_date' => 'date',
         'archived_at' => 'datetime',
     ];
 
@@ -65,7 +66,7 @@ class IctIncidentReport extends Model
     {
         static::creating(function (self $model) {
             if (empty($model->document_number)) {
-                $year  = now()->format('Y');
+                $year = now()->format('Y');
                 $month = now()->format('m');
                 $count = self::whereYear('created_at', $year)
                     ->whereMonth('created_at', $month)

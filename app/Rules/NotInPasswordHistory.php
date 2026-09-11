@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 class NotInPasswordHistory implements ValidationRule
 {
     private $userId;
+
     private $historyLimit = 5; // User cannot reuse last 5 passwords
 
     public function __construct(?int $userId = null)
@@ -22,7 +23,7 @@ class NotInPasswordHistory implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->userId) {
+        if (! $this->userId) {
             return;
         }
 
@@ -34,6 +35,7 @@ class NotInPasswordHistory implements ValidationRule
         foreach ($oldPassword as $history) {
             if (Hash::check($value, $history->password_hash)) {
                 $fail('The :attribute cannot be one of your last 5 passwords.');
+
                 return;
             }
         }

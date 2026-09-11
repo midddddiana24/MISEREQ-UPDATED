@@ -35,7 +35,7 @@ class NewPasswordController
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'confirmed', new StrongPassword(), new NotInPasswordHistory($resetUser?->id)],
+            'password' => ['required', 'string', 'confirmed', new StrongPassword, new NotInPasswordHistory($resetUser?->id)],
         ]);
 
         $status = Password::reset(
@@ -66,6 +66,6 @@ class NewPasswordController
         return $status === Password::PASSWORD_RESET
             ? redirect()->route('login')->with('status', __($status))
             : back()->withInput($request->only('email'))
-            ->withErrors(['email' => __($status)]);
+                ->withErrors(['email' => __($status)]);
     }
 }

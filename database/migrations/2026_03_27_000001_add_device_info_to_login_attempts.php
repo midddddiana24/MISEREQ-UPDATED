@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::table('login_attempts', function (Blueprint $table) {
             // Add device/browser information if not exists
-            if (!Schema::hasColumn('login_attempts', 'user_agent')) {
+            if (! Schema::hasColumn('login_attempts', 'user_agent')) {
                 $table->text('user_agent')->nullable()->after('ip_address');
             }
 
-            if (!Schema::hasColumn('login_attempts', 'device_info')) {
+            if (! Schema::hasColumn('login_attempts', 'device_info')) {
                 $table->string('device_info')->nullable()->default('Unknown Device')->after('user_agent');
             }
         });

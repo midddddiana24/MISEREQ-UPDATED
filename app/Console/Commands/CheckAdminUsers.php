@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class CheckAdminUsers extends Command
 {
     protected $signature = 'check:admin-users';
+
     protected $description = 'Check admin users in the database';
 
     public function handle()
@@ -20,12 +21,13 @@ class CheckAdminUsers extends Command
 
         if ($admins->isEmpty()) {
             $this->warn('No admin users found!');
+
             return;
         }
 
         $this->table(
             ['ID', 'Username', 'Email', 'is_admin', 'role'],
-            $admins->map(fn($u) => [$u->id, $u->username, $u->email, $u->is_admin ? 'true' : 'false', $u->role])
+            $admins->map(fn ($u) => [$u->id, $u->username, $u->email, $u->is_admin ? 'true' : 'false', $u->role])
         );
     }
 }

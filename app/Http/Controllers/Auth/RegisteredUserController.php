@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\PasswordHistory;
+use App\Models\User;
 use App\Rules\StrongPassword;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
@@ -36,7 +36,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'office' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'unique:users,username'],
-            'password' => ['required', 'confirmed', new StrongPassword()],
+            'password' => ['required', 'confirmed', new StrongPassword],
         ]);
 
         $hashedPassword = Hash::make($request->password);
@@ -48,7 +48,7 @@ class RegisteredUserController extends Controller
             'office' => $request->office,
             'username' => $request->username,
             'password' => $hashedPassword,
-            'full_name' => trim($request->first_name . ' ' . ($request->middle_initial ? $request->middle_initial . '. ' : '') . $request->last_name),
+            'full_name' => trim($request->first_name.' '.($request->middle_initial ? $request->middle_initial.'. ' : '').$request->last_name),
             'role' => 'user',
             'is_admin' => false,
             'is_active' => true,

@@ -16,31 +16,53 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() === 'mysql') {
-            $statuses = "'" . implode("','", self::STATUSES) . "'";
+            $statuses = "'".implode("','", self::STATUSES)."'";
             DB::statement("ALTER TABLE service_requests MODIFY COLUMN status ENUM({$statuses}) NOT NULL DEFAULT 'submitted'");
             DB::statement("ALTER TABLE request_status_logs MODIFY COLUMN status ENUM({$statuses}) NOT NULL");
             DB::statement("ALTER TABLE notifications MODIFY COLUMN notification_type ENUM('status_update','request_created','request_completed','request_rejected','technician_assigned','clarification_requested','client_update','target_date_updated','visit_scheduled') NOT NULL");
         }
 
         Schema::table('service_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('service_requests', 'requested_urgency')) $table->string('requested_urgency', 20)->nullable()->after('priority');
-            if (!Schema::hasColumn('service_requests', 'status_before_clarification')) $table->string('status_before_clarification', 40)->nullable()->after('status');
-            if (!Schema::hasColumn('service_requests', 'client_update')) $table->text('client_update')->nullable()->after('technician_notes');
-            if (!Schema::hasColumn('service_requests', 'client_update_at')) $table->timestamp('client_update_at')->nullable()->after('client_update');
-            if (!Schema::hasColumn('service_requests', 'client_update_by')) $table->foreignId('client_update_by')->nullable()->after('client_update_at')->constrained('users')->nullOnDelete();
-            if (!Schema::hasColumn('service_requests', 'expected_completion_change_reason')) $table->text('expected_completion_change_reason')->nullable()->after('expected_completion_at');
-            if (!Schema::hasColumn('service_requests', 'scheduled_visit_at')) $table->timestamp('scheduled_visit_at')->nullable()->after('expected_completion_change_reason');
-            if (!Schema::hasColumn('service_requests', 'scheduled_location')) $table->string('scheduled_location')->nullable()->after('scheduled_visit_at');
-            if (!Schema::hasColumn('service_requests', 'schedule_response')) $table->string('schedule_response', 30)->nullable()->after('scheduled_location');
-            if (!Schema::hasColumn('service_requests', 'schedule_response_note')) $table->text('schedule_response_note')->nullable()->after('schedule_response');
-            if (!Schema::hasColumn('service_requests', 'schedule_responded_at')) $table->timestamp('schedule_responded_at')->nullable()->after('schedule_response_note');
+            if (! Schema::hasColumn('service_requests', 'requested_urgency')) {
+                $table->string('requested_urgency', 20)->nullable()->after('priority');
+            }
+            if (! Schema::hasColumn('service_requests', 'status_before_clarification')) {
+                $table->string('status_before_clarification', 40)->nullable()->after('status');
+            }
+            if (! Schema::hasColumn('service_requests', 'client_update')) {
+                $table->text('client_update')->nullable()->after('technician_notes');
+            }
+            if (! Schema::hasColumn('service_requests', 'client_update_at')) {
+                $table->timestamp('client_update_at')->nullable()->after('client_update');
+            }
+            if (! Schema::hasColumn('service_requests', 'client_update_by')) {
+                $table->foreignId('client_update_by')->nullable()->after('client_update_at')->constrained('users')->nullOnDelete();
+            }
+            if (! Schema::hasColumn('service_requests', 'expected_completion_change_reason')) {
+                $table->text('expected_completion_change_reason')->nullable()->after('expected_completion_at');
+            }
+            if (! Schema::hasColumn('service_requests', 'scheduled_visit_at')) {
+                $table->timestamp('scheduled_visit_at')->nullable()->after('expected_completion_change_reason');
+            }
+            if (! Schema::hasColumn('service_requests', 'scheduled_location')) {
+                $table->string('scheduled_location')->nullable()->after('scheduled_visit_at');
+            }
+            if (! Schema::hasColumn('service_requests', 'schedule_response')) {
+                $table->string('schedule_response', 30)->nullable()->after('scheduled_location');
+            }
+            if (! Schema::hasColumn('service_requests', 'schedule_response_note')) {
+                $table->text('schedule_response_note')->nullable()->after('schedule_response');
+            }
+            if (! Schema::hasColumn('service_requests', 'schedule_responded_at')) {
+                $table->timestamp('schedule_responded_at')->nullable()->after('schedule_response_note');
+            }
         });
 
         DB::table('service_requests')
             ->whereNull('requested_urgency')
             ->update(['requested_urgency' => DB::raw('priority')]);
 
-        if (!Schema::hasTable('service_request_clarifications')) {
+        if (! Schema::hasTable('service_request_clarifications')) {
             Schema::create('service_request_clarifications', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('service_request_id')->constrained()->cascadeOnDelete();

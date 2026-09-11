@@ -84,7 +84,7 @@ class MessageConversationDiscoveryTest extends TestCase
     private function makeRequest($owner): ServiceRequest
     {
         return ServiceRequest::create([
-            'control_number' => 'TEST-CHAT-' . Str::upper(Str::random(8)),
+            'control_number' => 'TEST-CHAT-'.Str::upper(Str::random(8)),
             'user_id' => $owner->id,
             'requester_name' => $owner->full_name,
             'requester_office' => $owner->office,

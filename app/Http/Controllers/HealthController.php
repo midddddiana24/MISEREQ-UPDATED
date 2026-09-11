@@ -16,12 +16,13 @@ class HealthController extends Controller
             'database' => $this->check(fn () => DB::select('select 1')),
             'cache' => $this->check(function () {
                 Cache::put('health:last_check', now()->toIso8601String(), 60);
+
                 return Cache::get('health:last_check');
             }),
             'storage' => $this->check(fn () => Storage::disk('secure')->exists('.health') || Storage::disk('secure')->put('.health', now()->toIso8601String())),
         ];
 
-        $healthy = !in_array(false, $checks, true);
+        $healthy = ! in_array(false, $checks, true);
 
         return response()->json([
             'status' => $healthy ? 'ok' : 'degraded',
@@ -34,6 +35,7 @@ class HealthController extends Controller
     {
         try {
             $callback();
+
             return true;
         } catch (Throwable) {
             return false;

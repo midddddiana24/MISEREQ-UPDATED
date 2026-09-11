@@ -10,19 +10,19 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Add columns if they don't exist
-            if (!Schema::hasColumn('users', 'first_name')) {
+            if (! Schema::hasColumn('users', 'first_name')) {
                 $table->string('first_name')->after('id');
             }
-            if (!Schema::hasColumn('users', 'middle_initial')) {
+            if (! Schema::hasColumn('users', 'middle_initial')) {
                 $table->string('middle_initial', 10)->nullable()->after('first_name');
             }
-            if (!Schema::hasColumn('users', 'last_name')) {
+            if (! Schema::hasColumn('users', 'last_name')) {
                 $table->string('last_name')->after('middle_initial');
             }
-            if (!Schema::hasColumn('users', 'office')) {
+            if (! Schema::hasColumn('users', 'office')) {
                 $table->string('office')->after('last_name');
             }
-            if (!Schema::hasColumn('users', 'username')) {
+            if (! Schema::hasColumn('users', 'username')) {
                 $table->string('username')->unique()->after('office');
             }
 

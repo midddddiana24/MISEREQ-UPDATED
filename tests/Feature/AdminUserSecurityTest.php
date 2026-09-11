@@ -8,11 +8,11 @@ use App\Http\Middleware\TrackUserSession;
 use App\Models\AdminActivityLog;
 use App\Models\LoginAttempt;
 use App\Models\Notification;
+use App\Models\TrustedAdminDevice;
+use App\Models\UserSession;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Models\UserSession;
-use App\Models\TrustedAdminDevice;
 use Tests\TestCase;
 
 class AdminUserSecurityTest extends TestCase
@@ -45,7 +45,7 @@ class AdminUserSecurityTest extends TestCase
             'failure_reason' => 'Invalid credentials',
         ]);
 
-        $rateKey = 'login:' . strtolower($user->username) . '|' . $address;
+        $rateKey = 'login:'.strtolower($user->username).'|'.$address;
         RateLimiter::hit($rateKey, 1800);
         $this->assertTrue(RateLimiter::tooManyAttempts($rateKey, 1));
 

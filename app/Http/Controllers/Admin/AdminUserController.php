@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\AdminActivityLog;
 use App\Models\LoginAttempt;
+use App\Models\TrustedAdminDevice;
+use App\Models\User;
+use App\Models\UserSession;
+use App\Services\SecurityNotificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
-use App\Models\AdminActivityLog;
-use App\Services\SecurityNotificationService;
-use App\Models\UserSession;
-use App\Models\TrustedAdminDevice;
-use Illuminate\Support\Facades\Password as PasswordBroker;
 use Throwable;
 
 class AdminUserController extends Controller
@@ -26,6 +27,7 @@ class AdminUserController extends Controller
     {
         // Fetch all users from database
         $users = User::all();
+
         return view('admin.users.index', ['users' => $users]);
     }
 
@@ -52,6 +54,7 @@ class AdminUserController extends Controller
         $validated['is_admin'] = $validated['role'] === 'admin';
         $user = User::create($validated);
         $this->audit('user_created', "Account {$user->username} created.", ['user_id' => $user->id, 'role' => $user->role]);
+
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
 
@@ -71,6 +74,7 @@ class AdminUserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
+
         return view('admin.users.edit', ['user' => $user]);
     }
 
@@ -82,8 +86,8 @@ class AdminUserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'office' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'username' => 'required|string|unique:users,username,' . $id,
+            'email' => 'required|email|unique:users,email,'.$id,
+            'username' => 'required|string|unique:users,username,'.$id,
             'role' => 'required|in:user,admin',
         ]);
 
@@ -99,6 +103,7 @@ class AdminUserController extends Controller
             'old_role' => $oldRole,
             'new_role' => $user->role,
         ]);
+
         return back()->with('success', 'User updated successfully');
     }
 
@@ -113,7 +118,7 @@ class AdminUserController extends Controller
         if ($user->isAdmin() && $this->activeAdminCount() <= 1) {
             return back()->with('error', 'The final active administrator cannot be disabled.');
         }
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->with('info', 'This account is already disabled.');
         }
 
@@ -146,11 +151,11 @@ class AdminUserController extends Controller
             'unlock_reason' => ['required', 'string', 'min:5', 'max:500'],
         ]);
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->with('error', 'Reactivate this account before removing its login lock.');
         }
 
-        if (!$user->isAccountLocked() && (int) $user->failed_login_attempts === 0) {
+        if (! $user->isAccountLocked() && (int) $user->failed_login_attempts === 0) {
             return back()->with('info', 'This account is not locked and has no failed-attempt counter to clear.');
         }
 
@@ -177,7 +182,7 @@ class AdminUserController extends Controller
 
     public function sendPasswordReset(User $user)
     {
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->with('error', 'Reactivate this account before sending a password reset link.');
         }
 
@@ -185,6 +190,7 @@ class AdminUserController extends Controller
             $status = PasswordBroker::sendResetLink(['email' => $user->email]);
         } catch (Throwable $exception) {
             report($exception);
+
             return back()->with('error', 'The reset email could not be sent. Check the mail settings and try again.');
         }
 
@@ -227,7 +233,7 @@ class AdminUserController extends Controller
 
     public function requirePasswordChange(User $user)
     {
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->with('error', 'Reactivate this account before requiring a password change.');
         }
 
@@ -285,16 +291,16 @@ class AdminUserController extends Controller
 
     /**
      * Get user details with login logs for modal view
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     *
+     * @return JsonResponse
      */
     public function getDetails($id)
     {
         try {
-            Log::info('Fetching user details for ID: ' . $id);
+            Log::info('Fetching user details for ID: '.$id);
 
             $user = User::findOrFail($id);
-            Log::info('User found: ' . $user->username);
+            Log::info('User found: '.$user->username);
 
             // Get login attempts for this user - wrapped in try-catch to avoid crashing
             $logs = [];
@@ -304,7 +310,7 @@ class AdminUserController extends Controller
                     ->limit(10)
                     ->get();
 
-                Log::info('Found ' . count($loginAttempts) . ' login attempts');
+                Log::info('Found '.count($loginAttempts).' login attempts');
 
                 $logs = $loginAttempts->map(function ($log) {
                     $createdAtFormatted = 'Unknown';
@@ -320,20 +326,20 @@ class AdminUserController extends Controller
                         'ip_address' => isset($log->ip_address) ? $log->ip_address : 'Unknown',
                         'device_info' => isset($log->device_info) ? $log->device_info : 'Unknown',
                         'user_agent' => isset($log->user_agent) ? $log->user_agent : 'Unknown',
-                        'success' => isset($log->success) ? (bool)$log->success : false,
+                        'success' => isset($log->success) ? (bool) $log->success : false,
                         'failure_reason' => isset($log->failure_reason) ? $log->failure_reason : null,
                         'created_at' => $createdAtFormatted,
                     ];
                 })->toArray();
             } catch (\Exception $logError) {
                 // If logs query fails, just return empty logs array
-                Log::warning('Error fetching login logs: ' . $logError->getMessage());
+                Log::warning('Error fetching login logs: '.$logError->getMessage());
                 $logs = [];
             }
 
             $userData = [
                 'id' => $user->id,
-                'full_name' => (isset($user->first_name) ? $user->first_name : '') . ' ' . (isset($user->last_name) ? $user->last_name : ''),
+                'full_name' => (isset($user->first_name) ? $user->first_name : '').' '.(isset($user->last_name) ? $user->last_name : ''),
                 'first_name' => isset($user->first_name) ? $user->first_name : '',
                 'last_name' => isset($user->last_name) ? $user->last_name : '',
                 'email' => isset($user->email) ? $user->email : '',
@@ -349,16 +355,18 @@ class AdminUserController extends Controller
             ];
 
             Log::info('Returning user details successfully');
+
             return response()->json([
                 'success' => true,
                 'user' => $userData,
                 'logs' => $logs,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in getDetails: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+            Log::error('Error in getDetails: '.$e->getMessage().' - '.$e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching user details: ' . $e->getMessage(),
+                'message' => 'Error fetching user details: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -368,7 +376,7 @@ class AdminUserController extends Controller
      */
     private function formatDateTime($dateValue, $defaultValue = 'Unknown', $format = 'M d, Y H:i A')
     {
-        if (!isset($dateValue) || !$dateValue) {
+        if (! isset($dateValue) || ! $dateValue) {
             return $defaultValue;
         }
 

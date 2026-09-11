@@ -2,7 +2,7 @@
 
 /**
  * SECURITY HARDENING MIDDLEWARE
- * 
+ *
  * Implements rate limiting, CSRF protection, and security best practices
  */
 
@@ -11,7 +11,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class SecurityHardening
@@ -30,7 +29,7 @@ class SecurityHardening
     {
         // Rate limiting for sensitive endpoints
         if ($this->isSensitiveEndpoint($request)) {
-            $key = 'security_' . $request->ip() . '_' . $request->path();
+            $key = 'security_'.$request->ip().'_'.$request->path();
 
             if ($this->limiter->tooManyAttempts($key, 5, 1)) { // 5 requests per minute
                 return response('Too many requests. Please try again later.', 429);
@@ -65,7 +64,7 @@ class SecurityHardening
         ];
 
         foreach ($sensitivePaths as $path) {
-            if ($request->is($path) || $request->is($path . '/*')) {
+            if ($request->is($path) || $request->is($path.'/*')) {
                 return true;
             }
         }

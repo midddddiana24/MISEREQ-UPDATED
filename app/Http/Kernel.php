@@ -2,7 +2,34 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CheckSessionValidity;
+use App\Http\Middleware\CheckTwoFactorAuth;
+use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnforceHttps;
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsureAdminDeviceVerified;
+use App\Http\Middleware\EnsurePasswordChangeRequired;
+use App\Http\Middleware\HandleCors;
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TrackUserSession;
+use App\Http\Middleware\TrimStrings;
+use App\Http\Middleware\TrustProxies;
+use App\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
+use Illuminate\Auth\Middleware\RequirePassword;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Routing\Middleware\ValidateSignature;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class Kernel extends HttpKernel
 {
@@ -10,14 +37,14 @@ class Kernel extends HttpKernel
      * Global HTTP middleware stack.
      */
     protected $middleware = [
-        \App\Http\Middleware\TrustProxies::class,
-        \App\Http\Middleware\EnforceHttps::class,
-        \App\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\SecurityHeaders::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        TrustProxies::class,
+        EnforceHttps::class,
+        HandleCors::class,
+        SecurityHeaders::class,
+        PreventRequestsDuringMaintenance::class,
+        ValidatePostSize::class,
+        TrimStrings::class,
+        ConvertEmptyStringsToNull::class,
     ];
 
     /**
@@ -25,24 +52,24 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\EnsureAccountActive::class,
-            \App\Http\Middleware\TrackUserSession::class,
-            \App\Http\Middleware\EnsureAdminDeviceVerified::class,
-            \App\Http\Middleware\EnsurePasswordChangeRequired::class,
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            StartSession::class,
+            EnsureAccountActive::class,
+            TrackUserSession::class,
+            EnsureAdminDeviceVerified::class,
+            EnsurePasswordChangeRequired::class,
 
             // Required for CSRF + Login system
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\CheckSessionValidity::class,
+            ShareErrorsFromSession::class,
+            VerifyCsrfToken::class,
+            SubstituteBindings::class,
+            CheckSessionValidity::class,
         ],
 
         'api' => [
-            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ThrottleRequests::class.':api',
+            SubstituteBindings::class,
         ],
     ];
 
@@ -50,13 +77,13 @@ class Kernel extends HttpKernel
      * Route middleware.
      */
     protected $routeMiddleware = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        '2fa' => \App\Http\Middleware\CheckTwoFactorAuth::class,
+        'auth' => Authenticate::class,
+        'guest' => RedirectIfAuthenticated::class,
+        'password.confirm' => RequirePassword::class,
+        'signed' => ValidateSignature::class,
+        'throttle' => ThrottleRequests::class,
+        'verified' => EnsureEmailIsVerified::class,
+        'admin' => AdminMiddleware::class,
+        '2fa' => CheckTwoFactorAuth::class,
     ];
 }

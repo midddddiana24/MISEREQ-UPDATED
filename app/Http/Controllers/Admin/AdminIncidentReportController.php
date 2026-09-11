@@ -6,25 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\IctIncidentReport;
 use App\Models\Notification;
 use App\Models\ServiceRequest;
-use App\Models\User;
 use App\Models\Technician;
+use App\Models\User;
+use App\Services\AdminActivityLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
-use App\Services\AdminActivityLogger;
 
 class AdminIncidentReportController extends Controller
 {
     public function __construct(private readonly AdminActivityLogger $activityLogger) {}
+
     public function index(Request $request)
     {
         $validated = $request->validate(['status' => ['nullable', 'in:open,in_progress,resolved,closed']]);
         $statusFilter = $validated['status'] ?? null;
         $archived = request()->boolean('archived');
         $query = $archived ? IctIncidentReport::onlyTrashed() : IctIncidentReport::query();
-        if ($statusFilter) $query->where('status', $statusFilter);
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
         $reports = $query->with('user')->latest()->paginate(15)->withQueryString();
         $statusCounts = ($archived ? IctIncidentReport::onlyTrashed() : IctIncidentReport::query())
             ->selectRaw('status, COUNT(*) as aggregate')
@@ -60,7 +63,7 @@ class AdminIncidentReportController extends Controller
     public function store(Request $request)
     {
         $validated = $this->resolveServiceRequestLink($request->validate($this->rules()));
-        $owner = !empty($validated['user_id']) ? User::find($validated['user_id']) : null;
+        $owner = ! empty($validated['user_id']) ? User::find($validated['user_id']) : null;
 
         $report = IctIncidentReport::create($validated + [
             'requester_position' => $owner?->designation,
@@ -113,14 +116,14 @@ class AdminIncidentReportController extends Controller
     public function update(Request $request, IctIncidentReport $incidentReport)
     {
         $validated = $this->resolveServiceRequestLink($request->validate($this->rules($incidentReport)));
-        $owner = !empty($validated['user_id']) ? User::find($validated['user_id']) : null;
+        $owner = ! empty($validated['user_id']) ? User::find($validated['user_id']) : null;
         if ($owner) {
             $validated['requester_position'] = $owner->designation;
             $validated['acknowledged_by_name'] = ($validated['acknowledged_by_name'] ?? null) ?: $owner->full_name;
             $validated['acknowledged_by_role'] = ($validated['acknowledged_by_role'] ?? null) ?: $owner->designation;
         }
 
-        if (!empty($validated['received_by']) && empty($incidentReport->received_by)) {
+        if (! empty($validated['received_by']) && empty($incidentReport->received_by)) {
             $validated['received_date'] ??= now()->toDateString();
             $validated['received_time'] ??= now()->format('H:i:s');
         }
@@ -174,7 +177,7 @@ class AdminIncidentReportController extends Controller
 
     public function pdf(IctIncidentReport $incidentReport)
     {
-        $cacheKey = 'incident_pdf_v2_' . $incidentReport->id . '_' . $incidentReport->updated_at->timestamp;
+        $cacheKey = 'incident_pdf_v2_'.$incidentReport->id.'_'.$incidentReport->updated_at->timestamp;
         $content = Cache::store('file')->remember($cacheKey, now()->addDays(30), function () use ($incidentReport) {
             $pdf = Pdf::loadView('pdf.incident-report', ['report' => $incidentReport])->setPaper('A4', 'portrait');
             $options = $pdf->getDomPDF()->getOptions();
@@ -184,22 +187,26 @@ class AdminIncidentReportController extends Controller
 
             return $pdf->output();
         });
-        $etag = '"' . sha1($content) . '"';
+        $etag = '"'.sha1($content).'"';
         $headers = [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="ICT_Incident_Report_' . $incidentReport->document_number . '.pdf"',
+            'Content-Disposition' => 'inline; filename="ICT_Incident_Report_'.$incidentReport->document_number.'.pdf"',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
             'ETag' => $etag,
         ];
 
-        if (request()->header('If-None-Match') === $etag) return response('', 304, $headers);
+        if (request()->header('If-None-Match') === $etag) {
+            return response('', 304, $headers);
+        }
 
         return response($content, 200, $headers);
     }
 
     private function notifyUser(IctIncidentReport $report, string $message, ?string $actionUrl = null): void
     {
-        if (!$report->user_id) return;
+        if (! $report->user_id) {
+            return;
+        }
         $user = User::find($report->user_id);
         Notification::create([
             'service_request_id' => $report->service_request_id ?? null,
@@ -275,7 +282,9 @@ class AdminIncidentReportController extends Controller
                         ->where('is_admin', false)
                         ->where('role', '!=', 'admin');
                 });
-                if ($currentUserId) $query->orWhere('users.id', $currentUserId);
+                if ($currentUserId) {
+                    $query->orWhere('users.id', $currentUserId);
+                }
             })
             ->orderBy('first_name')->orderBy('last_name')->get();
     }
@@ -294,10 +303,12 @@ class AdminIncidentReportController extends Controller
 
     private function resolveServiceRequestLink(array $validated): array
     {
-        if (empty($validated['service_request_id'])) return $validated;
+        if (empty($validated['service_request_id'])) {
+            return $validated;
+        }
 
         $serviceRequest = ServiceRequest::findOrFail($validated['service_request_id']);
-        if (!empty($validated['user_id']) && $serviceRequest->user_id
+        if (! empty($validated['user_id']) && $serviceRequest->user_id
             && (int) $validated['user_id'] !== (int) $serviceRequest->user_id) {
             throw ValidationException::withMessages([
                 'service_request_id' => 'The linked service request belongs to a different record owner.',
@@ -317,10 +328,10 @@ class AdminIncidentReportController extends Controller
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get()
-            ->map(fn (Technician $technician) => trim($technician->first_name . ' ' . $technician->last_name))
+            ->map(fn (Technician $technician) => trim($technician->first_name.' '.$technician->last_name))
             ->filter();
 
-        if ($currentName && !$staff->contains($currentName)) {
+        if ($currentName && ! $staff->contains($currentName)) {
             $staff->prepend($currentName);
         }
 
@@ -336,6 +347,7 @@ class AdminIncidentReportController extends Controller
     ): void {
         if ($report->serviceRequest) {
             $this->activityLogger->log($report->serviceRequest, $action, $description, $oldValues, $newValues);
+
             return;
         }
 

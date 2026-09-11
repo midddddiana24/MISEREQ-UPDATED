@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\IctIncidentReport;
+use App\Models\User;
 
 class IctIncidentReportPolicy
 {
@@ -29,7 +29,7 @@ class IctIncidentReportPolicy
     public function create(User $user): bool
     {
         return ($user->role === 'user' || $user->isAdmin())
-            && !$user->isAccountLocked();
+            && ! $user->isAccountLocked();
     }
 
     /**

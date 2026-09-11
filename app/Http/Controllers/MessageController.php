@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ServiceRequest;
 use App\Models\Message;
 use App\Models\MessageAttachment;
+use App\Models\ServiceRequest;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\EmailNotificationService;
 use App\Services\FileUploadService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,10 +48,10 @@ class MessageController extends Controller
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($builder) use ($search) {
                 $builder
-                    ->where('control_number', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->where('control_number', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%')
                     ->orWhereHas('messages', fn ($messages) => $messages
-                        ->where('message', 'like', '%' . $search . '%'));
+                        ->where('message', 'like', '%'.$search.'%'));
             });
         }
 
@@ -89,7 +91,7 @@ class MessageController extends Controller
         // Check authorization
         /** @var User|null $user */
         $user = Auth::user();
-        if ($request->user_id !== Auth::id() && !($user instanceof User && $user->isAdmin())) {
+        if ($request->user_id !== Auth::id() && ! ($user instanceof User && $user->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -131,7 +133,7 @@ class MessageController extends Controller
         $validated = $request->validate([
             'service_request_id' => 'required|exists:service_requests,id',
             'message' => 'required|string|min:1|max:5000',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:' . $this->uploadMaxKilobytes(),
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
         ]);
 
         $serviceRequest = ServiceRequest::findOrFail($validated['service_request_id']);
@@ -139,11 +141,11 @@ class MessageController extends Controller
         // Check authorization - user can message their own request, admin can message any request
         /** @var User|null $user */
         $user = Auth::user();
-        if ($serviceRequest->user_id !== Auth::id() && !($user instanceof User && $user->isAdmin())) {
+        if ($serviceRequest->user_id !== Auth::id() && ! ($user instanceof User && $user->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        if ($user instanceof User && $user->isAdmin() && !$serviceRequest->user_id) {
+        if ($user instanceof User && $user->isAdmin() && ! $serviceRequest->user_id) {
             return response()->json([
                 'error' => 'This is an account-free walk-in request. Contact the requester using the recorded phone number.',
             ], 422);
@@ -198,13 +200,13 @@ class MessageController extends Controller
         // Check authorization
         /** @var User|null $user */
         $user = Auth::user();
-        if ($request->user_id !== Auth::id() && !($user instanceof User && $user->isAdmin())) {
+        if ($request->user_id !== Auth::id() && ! ($user instanceof User && $user->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Get unread count
         $unreadCount = Message::where('service_request_id', $requestId)
-            ->where('is_admin', !($user instanceof User && $user->isAdmin()))
+            ->where('is_admin', ! ($user instanceof User && $user->isAdmin()))
             ->whereNull('read_at')
             ->count();
 
@@ -224,7 +226,7 @@ class MessageController extends Controller
         // Check authorization
         /** @var User|null $user */
         $user = Auth::user();
-        if ($serviceRequest->user_id !== Auth::id() && !($user instanceof User && $user->isAdmin())) {
+        if ($serviceRequest->user_id !== Auth::id() && ! ($user instanceof User && $user->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -237,7 +239,7 @@ class MessageController extends Controller
             $query->where('id', '>', $afterId);
         } elseif ($since) {
             try {
-                $query->where('created_at', '>', \Carbon\Carbon::parse($since)->format('Y-m-d H:i:s.u'));
+                $query->where('created_at', '>', Carbon::parse($since)->format('Y-m-d H:i:s.u'));
             } catch (\Throwable) {
                 return response()->json(['error' => 'Invalid message cursor.'], 422);
             }
@@ -276,14 +278,14 @@ class MessageController extends Controller
         $user = Auth::user();
         $serviceRequest = $message->serviceRequest;
 
-        if (!$serviceRequest || ($serviceRequest->user_id !== Auth::id() && !($user instanceof User && $user->isAdmin()))) {
+        if (! $serviceRequest || ($serviceRequest->user_id !== Auth::id() && ! ($user instanceof User && $user->isAdmin()))) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Only the recipient can mark as read
         $isAdmin = $user instanceof User && $user->isAdmin();
-        $isIncoming = $isAdmin ? !$message->is_admin : $message->is_admin;
-        if (!$isIncoming) {
+        $isIncoming = $isAdmin ? ! $message->is_admin : $message->is_admin;
+        if (! $isIncoming) {
             return response()->json(['error' => 'Only a message recipient can mark it as read'], 403);
         }
 
@@ -323,7 +325,7 @@ class MessageController extends Controller
             'id' => $message->id,
             'service_request_id' => $message->service_request_id,
             'sender_id' => $message->sender_id,
-            'sender_name' => trim(($message->sender?->first_name ?? 'Former') . ' ' . ($message->sender?->last_name ?? 'User')),
+            'sender_name' => trim(($message->sender?->first_name ?? 'Former').' '.($message->sender?->last_name ?? 'User')),
             'is_admin' => $message->is_admin,
             'message' => $message->message,
             'read_at' => $message->read_at?->toIso8601String(),
@@ -345,14 +347,13 @@ class MessageController extends Controller
         $isAdmin = $user instanceof User && $user->isAdmin();
 
         Message::where('service_request_id', $requestId)
-            ->where('is_admin', !$isAdmin)
+            ->where('is_admin', ! $isAdmin)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }
 
     private function uploadMaxKilobytes(): int
     {
-        return max(1024, min(20480, (int) \App\Models\Setting::get('max_upload_size', 10) * 1024));
+        return max(1024, min(20480, (int) Setting::get('max_upload_size', 10) * 1024));
     }
-
 }

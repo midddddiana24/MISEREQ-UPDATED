@@ -109,7 +109,7 @@ class ServiceRequestCompletionWorkflowTest extends TestCase
     private function technician(): Technician
     {
         return Technician::create([
-            'email' => Str::lower(Str::random(10)) . '@example.test',
+            'email' => Str::lower(Str::random(10)).'@example.test',
             'first_name' => 'Test',
             'last_name' => 'Technician',
             'job_assignment' => 'Technical Staff',
@@ -124,7 +124,7 @@ class ServiceRequestCompletionWorkflowTest extends TestCase
         $owner = $this->createUser();
 
         return ServiceRequest::create([
-            'control_number' => 'TEST-WORKFLOW-' . Str::upper(Str::random(8)),
+            'control_number' => 'TEST-WORKFLOW-'.Str::upper(Str::random(8)),
             'user_id' => $owner->id,
             'requester_name' => $owner->full_name,
             'requester_office' => $owner->office,

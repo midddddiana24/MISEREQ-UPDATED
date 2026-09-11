@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\ServiceRequest;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class ShowTestData extends Command
@@ -36,6 +36,7 @@ class ShowTestData extends Command
 
         if ($users->isEmpty()) {
             $this->error('No non-admin users found!');
+
             return 1;
         }
 
@@ -52,6 +53,7 @@ class ShowTestData extends Command
 
         if ($requests->isEmpty()) {
             $this->error('No service requests found!');
+
             return 1;
         }
 

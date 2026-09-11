@@ -13,6 +13,7 @@ class BackupSystem extends Command
         {--database-only : Exclude uploaded files}
         {--retention= : Days to retain local archives}
         {--secondary= : Optional secondary directory or network share for a verified copy}';
+
     protected $description = 'Create and verify a database and secure-file backup archive';
 
     public function handle(): int
@@ -21,7 +22,7 @@ class BackupSystem extends Command
         File::ensureDirectoryExists($backupDirectory);
 
         $stamp = now()->format('Ymd-His');
-        $archivePath = $backupDirectory . DIRECTORY_SEPARATOR . "mis-backup-{$stamp}.zip";
+        $archivePath = $backupDirectory.DIRECTORY_SEPARATOR."mis-backup-{$stamp}.zip";
         $sqlPath = storage_path("app/backup-{$stamp}.sql");
 
         try {
@@ -30,14 +31,15 @@ class BackupSystem extends Command
             $process->setEnv(['MYSQL_PWD' => (string) config('database.connections.mysql.password')]);
             $process->run();
 
-            if (!$process->isSuccessful()) {
-                $this->error('Database backup failed: ' . trim($process->getErrorOutput()));
+            if (! $process->isSuccessful()) {
+                $this->error('Database backup failed: '.trim($process->getErrorOutput()));
+
                 return self::FAILURE;
             }
 
             File::put($sqlPath, $process->getOutput());
 
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
                 throw new \RuntimeException('Unable to create the backup archive.');
             }
@@ -51,7 +53,7 @@ class BackupSystem extends Command
                 'format_version' => 1,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-            if (!$this->option('database-only')) {
+            if (! $this->option('database-only')) {
                 $this->addDirectory($zip, storage_path('app/secure'), 'files/secure');
                 $this->addDirectory($zip, storage_path('app/private'), 'files/private', [
                     storage_path('app/backups'),
@@ -61,9 +63,10 @@ class BackupSystem extends Command
             $zip->close();
             File::delete($sqlPath);
 
-            if (!$this->verifyArchive($archivePath)) {
+            if (! $this->verifyArchive($archivePath)) {
                 File::delete($archivePath);
                 $this->error('Backup verification failed; the incomplete archive was removed.');
+
                 return self::FAILURE;
             }
 
@@ -78,11 +81,12 @@ class BackupSystem extends Command
             return self::SUCCESS;
         } catch (\Throwable $exception) {
             File::delete($sqlPath);
-            if (File::exists($archivePath) && !$this->verifyArchive($archivePath)) {
+            if (File::exists($archivePath) && ! $this->verifyArchive($archivePath)) {
                 File::delete($archivePath);
             }
             report($exception);
-            $this->error('Backup failed: ' . $exception->getMessage());
+            $this->error('Backup failed: '.$exception->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -94,9 +98,9 @@ class BackupSystem extends Command
 
         return [
             $binary,
-            '--host=' . env('DB_WRITE_HOST', $connection['host']),
-            '--port=' . $connection['port'],
-            '--user=' . $connection['username'],
+            '--host='.env('DB_WRITE_HOST', $connection['host']),
+            '--port='.$connection['port'],
+            '--user='.$connection['username'],
             '--single-transaction',
             '--routines',
             '--triggers',
@@ -113,13 +117,14 @@ class BackupSystem extends Command
             return $configured;
         }
 
-        $candidate = realpath(dirname(PHP_BINARY) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . $command . '.exe');
+        $candidate = realpath(dirname(PHP_BINARY).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'mysql'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.$command.'.exe');
+
         return $candidate ?: $command;
     }
 
     private function addDirectory(ZipArchive $zip, string $directory, string $prefix, array $excluded = []): void
     {
-        if (!File::isDirectory($directory)) {
+        if (! File::isDirectory($directory)) {
             return;
         }
 
@@ -135,7 +140,7 @@ class BackupSystem extends Command
 
     private function verifyArchive(string $path): bool
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($path) !== true) {
             return false;
         }
@@ -143,12 +148,13 @@ class BackupSystem extends Command
             && $zip->locateName('database.sql') !== false
             && strlen((string) $zip->getFromName('database.sql')) > 100;
         $zip->close();
+
         return $valid;
     }
 
     private function prune(string $directory, int $days, string $current): void
     {
-        foreach (File::glob($directory . DIRECTORY_SEPARATOR . 'mis-backup-*.zip') as $archive) {
+        foreach (File::glob($directory.DIRECTORY_SEPARATOR.'mis-backup-*.zip') as $archive) {
             if ($archive !== $current && File::lastModified($archive) < now()->subDays($days)->timestamp) {
                 File::delete($archive);
             }
@@ -168,16 +174,16 @@ class BackupSystem extends Command
         }
 
         $secondaryPath = rtrim($secondaryDirectory, '\\/')
-            . DIRECTORY_SEPARATOR
-            . basename($archivePath);
+            .DIRECTORY_SEPARATOR
+            .basename($archivePath);
 
-        if (!File::copy($archivePath, $secondaryPath)) {
+        if (! File::copy($archivePath, $secondaryPath)) {
             throw new \RuntimeException('Unable to copy the verified archive to the secondary backup path.');
         }
 
         $localHash = hash_file('sha256', $archivePath);
         $secondaryHash = hash_file('sha256', $secondaryPath);
-        if (!$localHash || !$secondaryHash || !hash_equals($localHash, $secondaryHash)) {
+        if (! $localHash || ! $secondaryHash || ! hash_equals($localHash, $secondaryHash)) {
             File::delete($secondaryPath);
             throw new \RuntimeException('The secondary backup checksum did not match the local archive.');
         }

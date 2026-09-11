@@ -19,10 +19,6 @@ class SanitizeInput
 {
     /**
      * Handle an incoming request
-     *
-     * @param  Request  $request
-     * @param  Closure  $next
-     * @return Response
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -34,9 +30,6 @@ class SanitizeInput
 
     /**
      * Recursively sanitize data
-     *
-     * @param  array  $data
-     * @return array
      */
     private function sanitizeData(array $data): array
     {
@@ -63,9 +56,6 @@ class SanitizeInput
 
     /**
      * Sanitize a string value
-     *
-     * @param  string  $value
-     * @return string
      */
     private function sanitizeString(string $value): string
     {

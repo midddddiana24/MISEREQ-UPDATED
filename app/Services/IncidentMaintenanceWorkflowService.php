@@ -47,12 +47,12 @@ class IncidentMaintenanceWorkflowService
             'acknowledged_by_role' => $report->acknowledged_by_role ?: $report->requester_position,
         ]);
 
-        if (!$checklist->exists || blank($checklist->findings)
+        if (! $checklist->exists || blank($checklist->findings)
             || $this->matchesPrevious($checklist->findings, $previous['details_of_incident'] ?? null)) {
             $checklist->findings = $report->details_of_incident;
         }
 
-        if (!$checklist->exists || blank($checklist->recommendations)
+        if (! $checklist->exists || blank($checklist->recommendations)
             || $this->matchesPrevious($checklist->recommendations, $previous['action_plan'] ?? null)) {
             $checklist->recommendations = $report->action_plan;
         }

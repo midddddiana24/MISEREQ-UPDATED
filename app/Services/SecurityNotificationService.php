@@ -35,8 +35,9 @@ class SecurityNotificationService
             && $user->notify_security_alerts
         );
 
-        if (!$emailAllowed) {
+        if (! $emailAllowed) {
             $notification->markAsSent('Security alert retained in app; email preference is disabled.');
+
             return $notification;
         }
 

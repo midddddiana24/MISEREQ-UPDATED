@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Two-Factor Authentication Security Headers Middleware
- * 
+ *
  * Applies security headers specifically for 2FA verification pages,
  * preventing clickjacking while maintaining proper CSP policies.
  */

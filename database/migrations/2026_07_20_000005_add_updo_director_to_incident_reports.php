@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ict_incident_reports', function (Blueprint $table) {
-            if (!Schema::hasColumn('ict_incident_reports', 'updo_director_name')) {
+            if (! Schema::hasColumn('ict_incident_reports', 'updo_director_name')) {
                 $table->string('updo_director_name')->nullable()->after('noted_by_signature');
                 $table->text('updo_director_signature')->nullable()->after('updo_director_name');
             }

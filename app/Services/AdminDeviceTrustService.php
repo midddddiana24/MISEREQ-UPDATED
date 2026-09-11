@@ -16,7 +16,7 @@ class AdminDeviceTrustService
 
     public function beginLogin(User $user, Request $request): ?AdminDeviceChallenge
     {
-        if (!$user->isAdmin()) {
+        if (! $user->isAdmin()) {
             return null;
         }
 
@@ -24,8 +24,9 @@ class AdminDeviceTrustService
             return null;
         }
 
-        if (!$user->trustedAdminDevices()->whereNull('revoked_at')->exists()) {
+        if (! $user->trustedAdminDevices()->whereNull('revoked_at')->exists()) {
             $request->session()->put('admin_device_bootstrap', true);
+
             return null;
         }
 
@@ -105,6 +106,7 @@ class AdminDeviceTrustService
     public function pendingChallenge(Request $request): ?AdminDeviceChallenge
     {
         $id = $request->session()->get('admin_device_challenge_id');
+
         return $id ? AdminDeviceChallenge::find($id) : null;
     }
 

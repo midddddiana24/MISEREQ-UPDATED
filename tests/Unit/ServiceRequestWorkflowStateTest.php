@@ -6,6 +6,7 @@ use App\Models\ServiceRequest;
 use App\Services\AdminActivityLogger;
 use App\Services\EmailNotificationService;
 use App\Services\ServiceRequestWorkflow;
+use Illuminate\Contracts\Console\Kernel;
 use PHPUnit\Framework\TestCase;
 
 class ServiceRequestWorkflowStateTest extends TestCase
@@ -15,8 +16,8 @@ class ServiceRequestWorkflowStateTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
-        self::$application = require dirname(__DIR__, 2) . '/bootstrap/app.php';
-        self::$application->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        self::$application = require dirname(__DIR__, 2).'/bootstrap/app.php';
+        self::$application->make(Kernel::class)->bootstrap();
     }
 
     private function workflow(): ServiceRequestWorkflow

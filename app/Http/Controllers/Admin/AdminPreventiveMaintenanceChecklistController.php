@@ -3,27 +3,30 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PreventiveMaintenanceChecklist;
 use App\Models\Notification;
+use App\Models\PreventiveMaintenanceChecklist;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Services\AdminActivityLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
-use App\Services\AdminActivityLogger;
 
 class AdminPreventiveMaintenanceChecklistController extends Controller
 {
     public function __construct(private readonly AdminActivityLogger $activityLogger) {}
+
     public function index(Request $request)
     {
         $validated = $request->validate(['status' => ['nullable', 'in:pending,completed,needs_action']]);
         $statusFilter = $validated['status'] ?? null;
         $archived = request()->boolean('archived');
         $query = $archived ? PreventiveMaintenanceChecklist::onlyTrashed() : PreventiveMaintenanceChecklist::query();
-        if ($statusFilter) $query->where('status', $statusFilter);
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
         $checklists = $query->with('user')->latest()->paginate(15)->withQueryString();
         $statusCounts = ($archived ? PreventiveMaintenanceChecklist::onlyTrashed() : PreventiveMaintenanceChecklist::query())
             ->selectRaw('status, COUNT(*) as aggregate')
@@ -148,7 +151,7 @@ class AdminPreventiveMaintenanceChecklistController extends Controller
 
     public function pdf(PreventiveMaintenanceChecklist $pmChecklist)
     {
-        $cacheKey = 'maintenance_pdf_v2_' . $pmChecklist->id . '_' . $pmChecklist->updated_at->timestamp;
+        $cacheKey = 'maintenance_pdf_v2_'.$pmChecklist->id.'_'.$pmChecklist->updated_at->timestamp;
         $content = Cache::store('file')->remember($cacheKey, now()->addDays(30), function () use ($pmChecklist) {
             $pdf = Pdf::loadView('pdf.preventive-maintenance', ['checklist' => $pmChecklist])->setPaper('A4', 'portrait');
             $options = $pdf->getDomPDF()->getOptions();
@@ -158,22 +161,26 @@ class AdminPreventiveMaintenanceChecklistController extends Controller
 
             return $pdf->output();
         });
-        $etag = '"' . sha1($content) . '"';
+        $etag = '"'.sha1($content).'"';
         $headers = [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="PMC_' . $pmChecklist->control_number . '.pdf"',
+            'Content-Disposition' => 'inline; filename="PMC_'.$pmChecklist->control_number.'.pdf"',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
             'ETag' => $etag,
         ];
 
-        if (request()->header('If-None-Match') === $etag) return response('', 304, $headers);
+        if (request()->header('If-None-Match') === $etag) {
+            return response('', 304, $headers);
+        }
 
         return response($content, 200, $headers);
     }
 
     private function notifyUser(PreventiveMaintenanceChecklist $checklist, string $message, ?string $actionUrl = null): void
     {
-        if (!$checklist->user_id) return;
+        if (! $checklist->user_id) {
+            return;
+        }
         $user = User::find($checklist->user_id);
         Notification::create([
             'service_request_id' => $checklist->service_request_id ?? null,
@@ -284,7 +291,9 @@ class AdminPreventiveMaintenanceChecklistController extends Controller
                         ->where('is_admin', false)
                         ->where('role', '!=', 'admin');
                 });
-                if ($currentUserId) $query->orWhere('users.id', $currentUserId);
+                if ($currentUserId) {
+                    $query->orWhere('users.id', $currentUserId);
+                }
             })
             ->orderBy('first_name')->orderBy('last_name')->get();
     }
@@ -303,10 +312,12 @@ class AdminPreventiveMaintenanceChecklistController extends Controller
 
     private function resolveRecordLinks(array $validated): array
     {
-        if (empty($validated['service_request_id'])) return $validated;
+        if (empty($validated['service_request_id'])) {
+            return $validated;
+        }
 
         $serviceRequest = ServiceRequest::findOrFail($validated['service_request_id']);
-        if (!empty($validated['user_id']) && $serviceRequest->user_id
+        if (! empty($validated['user_id']) && $serviceRequest->user_id
             && (int) $validated['user_id'] !== (int) $serviceRequest->user_id) {
             throw ValidationException::withMessages([
                 'service_request_id' => 'The linked service request belongs to a different record owner.',
@@ -327,6 +338,7 @@ class AdminPreventiveMaintenanceChecklistController extends Controller
     ): void {
         if ($checklist->serviceRequest) {
             $this->activityLogger->log($checklist->serviceRequest, $action, $description, $oldValues, $newValues);
+
             return;
         }
 

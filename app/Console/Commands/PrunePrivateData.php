@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class PrunePrivateData extends Command
 {
     protected $signature = 'system:privacy-prune {--dry-run : Report records without deleting them}';
+
     protected $description = 'Apply configured retention periods to temporary security and notification data';
 
     public function handle(): int
@@ -35,7 +36,7 @@ class PrunePrivateData extends Command
         foreach ($targets as $label => [$query]) {
             $count = (clone $query)->count();
             $this->line("{$label}: {$count}");
-            if (!$this->option('dry-run') && $count > 0) {
+            if (! $this->option('dry-run') && $count > 0) {
                 $query->delete();
             }
         }
@@ -44,11 +45,12 @@ class PrunePrivateData extends Command
             ->where('created_at', '<', now()->subHours(24));
         $tokenCount = (clone $expiredTokens)->count();
         $this->line("expired_password_tokens: {$tokenCount}");
-        if (!$this->option('dry-run') && $tokenCount > 0) {
+        if (! $this->option('dry-run') && $tokenCount > 0) {
             $expiredTokens->delete();
         }
 
         $this->info($this->option('dry-run') ? 'Dry run completed; no records were deleted.' : 'Privacy retention completed.');
+
         return self::SUCCESS;
     }
 }

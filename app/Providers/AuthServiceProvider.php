@@ -2,8 +2,19 @@
 
 namespace App\Providers;
 
+use App\Models\ClarificationAttachment;
+use App\Models\IctIncidentReport;
+use App\Models\Message;
+use App\Models\PreventiveMaintenanceChecklist;
+use App\Models\ServiceRequest;
+use App\Models\User;
+use App\Policies\ClarificationAttachmentPolicy;
+use App\Policies\IctIncidentReportPolicy;
+use App\Policies\MessagePolicy;
+use App\Policies\PreventiveMaintenanceChecklistPolicy;
+use App\Policies\ServiceRequestPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -13,12 +24,12 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        \App\Models\User::class => \App\Policies\UserPolicy::class,
-        \App\Models\ServiceRequest::class => \App\Policies\ServiceRequestPolicy::class,
-        \App\Models\IctIncidentReport::class => \App\Policies\IctIncidentReportPolicy::class,
-        \App\Models\PreventiveMaintenanceChecklist::class => \App\Policies\PreventiveMaintenanceChecklistPolicy::class,
-        \App\Models\ClarificationAttachment::class => \App\Policies\ClarificationAttachmentPolicy::class,
-        \App\Models\Message::class => \App\Policies\MessagePolicy::class,
+        User::class => UserPolicy::class,
+        ServiceRequest::class => ServiceRequestPolicy::class,
+        IctIncidentReport::class => IctIncidentReportPolicy::class,
+        PreventiveMaintenanceChecklist::class => PreventiveMaintenanceChecklistPolicy::class,
+        ClarificationAttachment::class => ClarificationAttachmentPolicy::class,
+        Message::class => MessagePolicy::class,
     ];
 
     /**

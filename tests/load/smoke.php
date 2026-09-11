@@ -16,7 +16,7 @@ while ($completed < $requestCount) {
 
     for ($index = 0; $index < $batchSize; $index++) {
         $path = $paths[($completed + $index) % count($paths)];
-        $handle = curl_init($baseUrl . $path);
+        $handle = curl_init($baseUrl.$path);
         curl_setopt_array($handle, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -62,6 +62,6 @@ echo json_encode([
         'p95' => round($percentile(0.95), 2),
         'maximum' => round(max($durations ?: [0]), 2),
     ],
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL;
 
 exit($failures === 0 ? 0 : 1);

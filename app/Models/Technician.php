@@ -106,9 +106,10 @@ class Technician extends Model
     public function getFullNameAttribute(): string
     {
         if ($this->user) {
-            return $this->user->full_name ?? ($this->user->first_name . ' ' . $this->user->last_name);
+            return $this->user->full_name ?? ($this->user->first_name.' '.$this->user->last_name);
         }
-        return ($this->first_name ?? '') . ' ' . ($this->last_name ?? '');
+
+        return ($this->first_name ?? '').' '.($this->last_name ?? '');
     }
 
     /**

@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\PreventiveMaintenanceChecklist;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PreventiveMaintenanceChecklistController extends Controller
@@ -20,10 +21,10 @@ class PreventiveMaintenanceChecklistController extends Controller
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($builder) use ($search) {
                 $builder
-                    ->where('control_number', 'like', '%' . $search . '%')
-                    ->orWhere('system_owner', 'like', '%' . $search . '%')
-                    ->orWhere('office_department', 'like', '%' . $search . '%')
-                    ->orWhere('property_number', 'like', '%' . $search . '%');
+                    ->where('control_number', 'like', '%'.$search.'%')
+                    ->orWhere('system_owner', 'like', '%'.$search.'%')
+                    ->orWhere('office_department', 'like', '%'.$search.'%')
+                    ->orWhere('property_number', 'like', '%'.$search.'%');
             });
         }
 
@@ -31,6 +32,7 @@ class PreventiveMaintenanceChecklistController extends Controller
             ->latest()
             ->paginate(15);
         $checklists->appends($request->query());
+
         return view('mis.pm-checklists.index', compact('checklists'));
     }
 
@@ -75,7 +77,7 @@ class PreventiveMaintenanceChecklistController extends Controller
         $pdf = Pdf::loadView('pdf.preventive-maintenance', ['checklist' => $pmChecklist])
             ->setPaper('A4', 'portrait');
 
-        $response = $pdf->stream('PMC_' . $pmChecklist->control_number . '.pdf');
+        $response = $pdf->stream('PMC_'.$pmChecklist->control_number.'.pdf');
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');
@@ -86,9 +88,8 @@ class PreventiveMaintenanceChecklistController extends Controller
     private function ensureOwner(PreventiveMaintenanceChecklist $pmChecklist): void
     {
         $user = Auth::user();
-        $isAdmin = $user instanceof \App\Models\User ? $user->isAdmin() : false;
+        $isAdmin = $user instanceof User ? $user->isAdmin() : false;
 
         abort_unless($pmChecklist->user_id === Auth::id() || $isAdmin, 403);
     }
-
 }

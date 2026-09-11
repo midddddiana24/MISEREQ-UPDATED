@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Carbon\Carbon;
 
 /**
  * @method bool isTwoFactorEnabled()
@@ -92,8 +92,9 @@ class User extends Authenticatable implements MustVerifyEmail
     // Add accessor for full name
     public function getFullNameAttribute(): string
     {
-        $middle = $this->middle_initial ? $this->middle_initial . '. ' : '';
-        return $this->first_name . ' ' . $middle . $this->last_name;
+        $middle = $this->middle_initial ? $this->middle_initial.'. ' : '';
+
+        return $this->first_name.' '.$middle.$this->last_name;
     }
 
     // Helper method
@@ -151,9 +152,10 @@ class User extends Authenticatable implements MustVerifyEmail
     // Password Management Methods
     public function isPasswordExpired(): bool
     {
-        if (!$this->password_expires_at) {
+        if (! $this->password_expires_at) {
             return false;
         }
+
         return $this->password_expires_at->isPast();
     }
 
@@ -189,37 +191,37 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Relationships
-    public function serviceRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function serviceRequests(): HasMany
     {
         return $this->hasMany(ServiceRequest::class);
     }
 
-    public function sentMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function sentMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
 
-    public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function sessions(): HasMany
     {
         return $this->hasMany(UserSession::class);
     }
 
-    public function trustedAdminDevices(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function trustedAdminDevices(): HasMany
     {
         return $this->hasMany(TrustedAdminDevice::class);
     }
 
-    public function adminDeviceChallenges(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function adminDeviceChallenges(): HasMany
     {
         return $this->hasMany(AdminDeviceChallenge::class);
     }
 
-    public function passwordHistory(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function passwordHistory(): HasMany
     {
         return $this->hasMany(PasswordHistory::class);
     }
 
-    public function loginAttempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function loginAttempts(): HasMany
     {
         return $this->hasMany(LoginAttempt::class, 'username', 'username');
     }

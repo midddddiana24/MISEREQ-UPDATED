@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\ServiceRequest;
+use App\Models\User;
 use App\Services\EmailNotificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -33,23 +33,25 @@ class TestUserStatusNotification extends Command
         $requestId = (int) $this->argument('request_id');
         $newStatus = $this->argument('new_status') ?? 'processing';
 
-        $this->info("🔍 Testing user status update email notification...");
+        $this->info('🔍 Testing user status update email notification...');
         $this->info("User ID: $userId");
         $this->info("Request ID: $requestId");
         $this->info("New Status: $newStatus");
 
         // Get user
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             $this->error("❌ User not found with ID: $userId");
+
             return 1;
         }
 
         $this->info("✅ User found: {$user->first_name} {$user->last_name}");
 
         // Check email
-        if (!$user->email) {
-            $this->error("❌ User has no email address configured");
+        if (! $user->email) {
+            $this->error('❌ User has no email address configured');
+
             return 1;
         }
 
@@ -57,8 +59,9 @@ class TestUserStatusNotification extends Command
 
         // Get service request
         $serviceRequest = ServiceRequest::find($requestId);
-        if (!$serviceRequest) {
+        if (! $serviceRequest) {
             $this->error("❌ Service request not found with ID: $requestId");
+
             return 1;
         }
 
@@ -67,25 +70,26 @@ class TestUserStatusNotification extends Command
 
         // Verify request belongs to user
         if ($serviceRequest->user_id !== $userId) {
-            $this->error("❌ Service request does not belong to this user!");
+            $this->error('❌ Service request does not belong to this user!');
+
             return 1;
         }
 
-        $this->info("✅ Request verified as belonging to user");
+        $this->info('✅ Request verified as belonging to user');
 
         // Test mail configuration
         $this->info("\n📧 Mail Configuration:");
-        $this->info("  MAIL_MAILER: " . config('mail.default'));
-        $this->info("  MAIL_HOST: " . config('mail.mailers.smtp.host'));
-        $this->info("  MAIL_PORT: " . config('mail.mailers.smtp.port'));
-        $this->info("  MAIL_ENCRYPTION: " . config('mail.mailers.smtp.encryption'));
-        $this->info("  MAIL_FROM_ADDRESS: " . config('mail.from.address'));
+        $this->info('  MAIL_MAILER: '.config('mail.default'));
+        $this->info('  MAIL_HOST: '.config('mail.mailers.smtp.host'));
+        $this->info('  MAIL_PORT: '.config('mail.mailers.smtp.port'));
+        $this->info('  MAIL_ENCRYPTION: '.config('mail.mailers.smtp.encryption'));
+        $this->info('  MAIL_FROM_ADDRESS: '.config('mail.from.address'));
 
         // Attempt to send email
         try {
             $this->info("\n📤 Triggering status update and sending notification email...");
 
-            $emailService = new EmailNotificationService();
+            $emailService = new EmailNotificationService;
             $oldStatus = $serviceRequest->status;
 
             // Update status
@@ -99,7 +103,7 @@ class TestUserStatusNotification extends Command
                 'Test status update notification'
             );
 
-            $this->info("✅ Email sent successfully!");
+            $this->info('✅ Email sent successfully!');
             $this->info("   Notification ID: {$notification->id}");
             $this->info("   Status: {$notification->status}");
             $this->info("   Recipient: {$notification->recipient_email}");
@@ -110,13 +114,14 @@ class TestUserStatusNotification extends Command
 
             return 0;
         } catch (\Exception $e) {
-            $this->error("❌ Error sending email: " . $e->getMessage());
+            $this->error('❌ Error sending email: '.$e->getMessage());
             $this->error($e->getTraceAsString());
-            Log::error('Test user status notification error: ' . $e->getMessage(), [
+            Log::error('Test user status notification error: '.$e->getMessage(), [
                 'user_id' => $userId,
                 'request_id' => $requestId,
-                'exception' => $e
+                'exception' => $e,
             ]);
+
             return 1;
         }
     }

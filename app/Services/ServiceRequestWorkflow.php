@@ -25,8 +25,7 @@ class ServiceRequestWorkflow
     public function __construct(
         private readonly EmailNotificationService $notifications,
         private readonly AdminActivityLogger $activityLogger
-    ) {
-    }
+    ) {}
 
     public function allowedTransitions(ServiceRequest $serviceRequest): array
     {
@@ -46,14 +45,14 @@ class ServiceRequestWorkflow
             return $serviceRequest;
         }
 
-        if (!in_array($newStatus, $this->allowedTransitions($serviceRequest), true)) {
+        if (! in_array($newStatus, $this->allowedTransitions($serviceRequest), true)) {
             throw ValidationException::withMessages([
                 'status' => "A request cannot move from {$this->label($oldStatus)} to {$this->label($newStatus)}.",
             ]);
         }
 
         if (in_array($newStatus, ['processing', 'awaiting_confirmation', 'completed', 'closed'], true)
-            && !$serviceRequest->assigned_technician_id) {
+            && ! $serviceRequest->assigned_technician_id) {
             throw ValidationException::withMessages([
                 'status' => 'Assign a technician before moving this request to the selected status.',
             ]);

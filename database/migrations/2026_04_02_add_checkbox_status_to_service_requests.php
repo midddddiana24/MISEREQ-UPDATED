@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('service_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('service_requests', 'checkbox_status')) {
+            if (! Schema::hasColumn('service_requests', 'checkbox_status')) {
                 $table->boolean('checkbox_status')->default(false)->after('assigned_technician_id');
             }
         });

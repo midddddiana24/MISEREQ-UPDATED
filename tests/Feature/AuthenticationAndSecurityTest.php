@@ -44,7 +44,7 @@ class AuthenticationAndSecurityTest extends TestCase
     public function test_administrator_with_two_factor_continues_to_admin_device_verification(): void
     {
         Mail::fake();
-        $google2fa = new Google2FAService();
+        $google2fa = new Google2FAService;
         $secret = $google2fa->generateSecretKey();
         $admin = $this->createUser([
             'role' => 'admin',

@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Technician;
-use App\Models\ServiceRequest;
 use App\Models\LoginAttempt;
+use App\Models\ServiceRequest;
+use App\Models\Technician;
 use App\Services\AdminActivityLogger;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class AdminTechnicianController extends Controller
 {
     public function __construct(private readonly AdminActivityLogger $activityLogger) {}
+
     public function index()
     {
         // Fetch all technicians from database
@@ -25,8 +27,10 @@ class AdminTechnicianController extends Controller
             ),
         ])->get()->map(function ($technician) {
             $technician->current_workload = $technician->active_requests;
+
             return $technician;
         });
+
         return view('admin.technicians.index', ['technicians' => $technicians]);
     }
 
@@ -53,21 +57,24 @@ class AdminTechnicianController extends Controller
         try {
             $technician = Technician::create($validated + ['is_active' => true]);
             $this->activityLogger->logAdministrative('technician_created', "Technician {$technician->full_name} created.", [], ['technician_id' => $technician->id]);
+
             return redirect()->route('admin.technicians.index')->with('success', 'Technician created successfully');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Failed to create technician: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create technician: '.$e->getMessage());
         }
     }
 
     public function show($id)
     {
         $technician = Technician::findOrFail($id);
+
         return view('admin.technicians.show', ['technician' => $technician]);
     }
 
     public function edit($id)
     {
         $technician = Technician::findOrFail($id);
+
         return view('admin.technicians.edit', ['technician' => $technician]);
     }
 
@@ -91,9 +98,10 @@ class AdminTechnicianController extends Controller
                 : null;
             $technician->update($validated);
             $this->activityLogger->logAdministrative('technician_updated', "Technician {$technician->full_name} updated.", [], ['technician_id' => $technician->id, 'status' => $technician->status]);
+
             return back()->with('success', 'Technician updated successfully');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Failed to update technician: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update technician: '.$e->getMessage());
         }
     }
 
@@ -112,9 +120,10 @@ class AdminTechnicianController extends Controller
 
             $technician->update(['status' => 'on_leave', 'is_active' => false, 'deactivated_at' => now(), 'deactivated_by' => Auth::id()]);
             $this->activityLogger->logAdministrative('technician_deactivated', "Technician {$technician->full_name} deactivated.", [], ['technician_id' => $technician->id]);
+
             return back()->with('success', 'Technician deactivated. Historical request assignments were preserved.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete technician: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete technician: '.$e->getMessage());
         }
     }
 
@@ -122,13 +131,14 @@ class AdminTechnicianController extends Controller
     {
         $technician->update(['is_active' => true, 'status' => 'available', 'deactivated_at' => null, 'deactivated_by' => null]);
         $this->activityLogger->logAdministrative('technician_activated', "Technician {$technician->full_name} reactivated.", [], ['technician_id' => $technician->id]);
+
         return back()->with('success', 'Technician reactivated successfully.');
     }
 
     /**
      * Get technician details with logs for modal view
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     *
+     * @return JsonResponse
      */
     public function getDetails($id)
     {
@@ -155,7 +165,7 @@ class AdminTechnicianController extends Controller
                 'success' => true,
                 'technician' => [
                     'id' => $technician->id,
-                    'full_name' => $technician->first_name . ' ' . $technician->last_name,
+                    'full_name' => $technician->first_name.' '.$technician->last_name,
                     'email' => $technician->email,
                     'specialization' => $technician->specialization ?? 'N/A',
                     'job_assignment' => $technician->job_assignment ?? 'N/A',
@@ -170,7 +180,7 @@ class AdminTechnicianController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching technician details: ' . $e->getMessage(),
+                'message' => 'Error fetching technician details: '.$e->getMessage(),
             ], 500);
         }
     }

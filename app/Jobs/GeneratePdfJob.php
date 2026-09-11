@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\ServiceRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,8 +17,11 @@ class GeneratePdfJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $serviceRequestId;
+
     public int $tries = 3;
+
     public int $timeout = 120;
+
     public array $backoff = [10, 30, 60];
 
     /**
@@ -38,14 +42,14 @@ class GeneratePdfJob implements ShouldQueue
             $serviceRequest = ServiceRequest::with(['assignedTechnician', 'user'])->findOrFail($this->serviceRequestId);
 
             // Create cache key
-            $cacheKey = 'pdf_v11_' . $serviceRequest->id . '_' . $serviceRequest->updated_at->timestamp;
+            $cacheKey = 'pdf_v11_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
 
             // Only generate if not already cached
-            if (!Cache::has($cacheKey)) {
+            if (! Cache::has($cacheKey)) {
                 $html = \view('pdf.service-request', ['request' => $serviceRequest])->render();
 
                 // Generate PDF with optimizations
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+                $pdf = Pdf::loadHTML($html);
                 $pdf->setPaper('A4', 'portrait');
 
                 // Apply DomPDF optimizations
@@ -59,10 +63,10 @@ class GeneratePdfJob implements ShouldQueue
                 // Cache for 30 days
                 Cache::put($cacheKey, $pdf->output(), now()->addDays(30));
 
-                Log::info('PDF generated and cached for request: ' . $serviceRequest->id);
+                Log::info('PDF generated and cached for request: '.$serviceRequest->id);
             }
         } catch (\Exception $e) {
-            Log::error('PDF Generation Job Error: ' . $e->getMessage());
+            Log::error('PDF Generation Job Error: '.$e->getMessage());
             throw $e;
         }
     }

@@ -9,7 +9,6 @@ use App\Services\AdminDeviceTrustService;
 use App\Services\SecurityNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -18,12 +17,12 @@ class AdminDeviceVerificationController extends Controller
 {
     public function show(Request $request, AdminDeviceTrustService $devices): View|RedirectResponse
     {
-        if (!$request->user()->isAdmin()) {
+        if (! $request->user()->isAdmin()) {
             return redirect()->route('dashboard');
         }
 
         $challenge = $devices->pendingChallenge($request);
-        if (!(bool) $request->session()->get('admin_device_bootstrap', false) && !$challenge) {
+        if (! (bool) $request->session()->get('admin_device_bootstrap', false) && ! $challenge) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -35,7 +34,7 @@ class AdminDeviceVerificationController extends Controller
         $request->validate(['code' => ['required', 'digits:6']]);
         $challenge = $devices->pendingChallenge($request);
 
-        if (!$challenge || !$challenge->isPending() || !Hash::check($request->code, $challenge->code_hash)) {
+        if (! $challenge || ! $challenge->isPending() || ! Hash::check($request->code, $challenge->code_hash)) {
             return back()->withErrors(['code' => 'The verification code is invalid or expired.']);
         }
 
@@ -50,8 +49,8 @@ class AdminDeviceVerificationController extends Controller
     public function continueApproved(Request $request, AdminDeviceTrustService $devices): RedirectResponse
     {
         $challenge = $devices->pendingChallenge($request);
-        if (!(bool) $request->session()->get('admin_device_bootstrap', false)
-            && (!$challenge || $challenge->approved_at === null)) {
+        if (! (bool) $request->session()->get('admin_device_bootstrap', false)
+            && (! $challenge || $challenge->approved_at === null)) {
             return back()->with('info', 'This sign-in is still waiting for approval.');
         }
 
@@ -63,7 +62,7 @@ class AdminDeviceVerificationController extends Controller
         $challenge = AdminDeviceChallenge::where('public_id', $publicId)->firstOrFail();
         abort_unless($challenge->user_id === $request->user()->id && $request->user()->isAdmin(), 403);
 
-        if (!$devices->currentDevice($request->user(), $request)) {
+        if (! $devices->currentDevice($request->user(), $request)) {
             return redirect()->route('admin.device.verify')
                 ->with('warning', 'Approve this request from a device that is already trusted.');
         }
@@ -74,7 +73,7 @@ class AdminDeviceVerificationController extends Controller
     public function approve(Request $request, string $publicId, AdminDeviceTrustService $devices): RedirectResponse
     {
         $challenge = $this->reviewable($request, $publicId, $devices);
-        if (!$challenge->isPending()) {
+        if (! $challenge->isPending()) {
             return back()->with('info', 'This sign-in request is no longer pending.');
         }
 
@@ -86,7 +85,7 @@ class AdminDeviceVerificationController extends Controller
     public function deny(Request $request, string $publicId, AdminDeviceTrustService $devices): RedirectResponse
     {
         $challenge = $this->reviewable($request, $publicId, $devices);
-        if (!$challenge->isPending()) {
+        if (! $challenge->isPending()) {
             return back()->with('info', 'This sign-in request is no longer pending.');
         }
 
@@ -115,8 +114,8 @@ class AdminDeviceVerificationController extends Controller
             $request->user(),
             'Administrator device trusted',
             'A device was approved for administrator access: '
-                . $devices->deviceName($request->userAgent())
-                . ' at IP ' . $request->ip() . '.'
+                .$devices->deviceName($request->userAgent())
+                .' at IP '.$request->ip().'.'
         );
 
         return redirect()->route('admin.dashboard')->with('success', $message)->withCookie($cookie);

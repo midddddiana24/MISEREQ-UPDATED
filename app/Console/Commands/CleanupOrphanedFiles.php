@@ -3,11 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\FileUploadLog;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 use Exception;
+use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CleanupOrphanedFiles extends Command
 {
@@ -38,7 +38,7 @@ class CleanupOrphanedFiles extends Command
         $cutoffDate = now()->subDays($daysOld);
 
         $this->info("🔍 Scanning for orphaned files in '{$disk}' disk...");
-        $this->info("Dry-run mode: " . ($dryRun ? 'YES' : 'NO'));
+        $this->info('Dry-run mode: '.($dryRun ? 'YES' : 'NO'));
         $this->info("Cutoff date: {$cutoffDate->format('Y-m-d H:i:s')} ({$daysOld} days ago)");
         $this->info('');
 
@@ -49,10 +49,10 @@ class CleanupOrphanedFiles extends Command
 
             // Get all tracked files from database
             $trackedFiles = FileUploadLog::pluck('file_path')->toArray();
-            $this->info("Found " . count($trackedFiles) . " tracked files in database");
+            $this->info('Found '.count($trackedFiles).' tracked files in database');
 
             // Find orphaned files (not in database)
-            $orphanedFiles = $allFiles->filter(fn($file) => !in_array($file, $trackedFiles));
+            $orphanedFiles = $allFiles->filter(fn ($file) => ! in_array($file, $trackedFiles));
             $this->info("Found {$orphanedFiles->count()} orphaned files (not in database)");
 
             // Find old unaccessed files (in database but old)
@@ -92,22 +92,24 @@ class CleanupOrphanedFiles extends Command
             $totalSize = $this->calculateTotalSize($disk, $orphanedFiles) + $oldFiles->sum('file_size');
 
             $this->line('');
-            $this->line("-------------------------------------------");
+            $this->line('-------------------------------------------');
             $this->info("Total files to delete: {$totalFiles}");
-            $this->info("Total space to free: " . $this->formatBytes($totalSize));
-            $this->line("-------------------------------------------");
+            $this->info('Total space to free: '.$this->formatBytes($totalSize));
+            $this->line('-------------------------------------------');
 
             // Return early if dry-run
             if ($dryRun) {
                 $this->line('');
                 $this->warn('⚠️  DRY-RUN MODE: No files were actually deleted.');
                 $this->info('Run without --dry-run to actually delete files.');
+
                 return 0;
             }
 
             // Confirm before deletion
-            if (!$this->confirm('❌ Delete these files permanently?')) {
+            if (! $this->confirm('❌ Delete these files permanently?')) {
                 $this->info('Operation cancelled.');
+
                 return 0;
             }
 
@@ -124,7 +126,7 @@ class CleanupOrphanedFiles extends Command
                         $deletedSize += $size;
                     }
                 } catch (Exception $e) {
-                    $this->error("Failed to delete {$file}: " . $e->getMessage());
+                    $this->error("Failed to delete {$file}: ".$e->getMessage());
                     Log::error('Failed to delete orphaned file', [
                         'file' => $file,
                         'error' => $e->getMessage(),
@@ -143,7 +145,7 @@ class CleanupOrphanedFiles extends Command
                     $log->delete();
                     $deletedCount++;
                 } catch (Exception $e) {
-                    $this->error("Failed to delete {$log->file_path}: " . $e->getMessage());
+                    $this->error("Failed to delete {$log->file_path}: ".$e->getMessage());
                     Log::error('Failed to delete old file', [
                         'file_id' => $log->id,
                         'file' => $log->file_path,
@@ -153,9 +155,9 @@ class CleanupOrphanedFiles extends Command
             }
 
             $this->line('');
-            $this->info("✅ Cleanup complete!");
+            $this->info('✅ Cleanup complete!');
             $this->info("Deleted: {$deletedCount} files");
-            $this->info("Freed: " . $this->formatBytes($deletedSize));
+            $this->info('Freed: '.$this->formatBytes($deletedSize));
 
             Log::info('File cleanup completed', [
                 'files_deleted' => $deletedCount,
@@ -166,7 +168,7 @@ class CleanupOrphanedFiles extends Command
 
             return 0;
         } catch (Exception $e) {
-            $this->error("❌ Error during cleanup: " . $e->getMessage());
+            $this->error('❌ Error during cleanup: '.$e->getMessage());
             Log::error('File cleanup failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -185,6 +187,7 @@ class CleanupOrphanedFiles extends Command
             return collect(Storage::disk($disk)->allFiles());
         } catch (Exception $e) {
             Log::warning("Failed to scan disk '{$disk}'", ['error' => $e->getMessage()]);
+
             return collect();
         }
     }
@@ -196,6 +199,7 @@ class CleanupOrphanedFiles extends Command
     {
         try {
             $size = Storage::disk($disk)->size($filePath);
+
             return $this->formatBytes($size);
         } catch (Exception $e) {
             return 'unknown';
@@ -231,6 +235,6 @@ class CleanupOrphanedFiles extends Command
         $pow = min($pow, count($units) - 1);
         $bytes /= (1 << (10 * $pow));
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bytes, $precision).' '.$units[$pow];
     }
 }

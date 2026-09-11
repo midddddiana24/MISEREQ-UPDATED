@@ -26,7 +26,7 @@ class PasswordChangeRequest extends BaseFormRequest
                 'required',
                 'string',
                 'confirmed',
-                new StrongPassword(),
+                new StrongPassword,
                 new NotInPasswordHistory(auth()->id()),
             ],
             'new_password_confirmation' => [
@@ -54,8 +54,6 @@ class PasswordChangeRequest extends BaseFormRequest
 
     /**
      * Prepare data for validation - sanitize inputs
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {

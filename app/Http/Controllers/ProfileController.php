@@ -77,7 +77,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$request->user()->id,
         ]);
 
         $request->user()->update($request->only('name', 'email'));
@@ -89,7 +89,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', new StrongPassword(), new NotInPasswordHistory(Auth::id())],
+            'password' => ['required', 'confirmed', new StrongPassword, new NotInPasswordHistory(Auth::id())],
         ]);
 
         /** @var User $user */
@@ -221,9 +221,9 @@ class ProfileController extends Controller
     private function loginAttempts(User $user, int $limit)
     {
         return LoginAttempt::whereIn('username', array_values(array_unique(array_filter([
-                $user->username,
-                $user->email,
-            ]))))
+            $user->username,
+            $user->email,
+        ]))))
             ->latest('created_at')
             ->limit($limit)
             ->get();

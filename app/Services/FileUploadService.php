@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use App\Models\FileUploadLog;
 use App\Models\Setting;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Secure File Upload Service
@@ -41,25 +44,21 @@ class FileUploadService
 
     /**
      * Max file size in bytes (10MB)
-     *
-     * @var int
      */
     private int $maxFileSize = 10485760; // 10MB
 
     /**
      * Storage disk (configured outside web root)
-     *
-     * @var string
      */
     private string $disk = 'secure';
 
     /**
      * Upload a file securely
      *
-     * @param  UploadedFile  $file
      * @param  string  $category  Category/folder for organizing uploads
      * @param  array<string, mixed>  $metadata  Additional metadata to store
-     * @return array<string, mixed>  Upload result with file ID and path
+     * @return array<string, mixed> Upload result with file ID and path
+     *
      * @throws Exception
      */
     public function upload(UploadedFile $file, string $category = 'general', array $metadata = []): array
@@ -121,8 +120,8 @@ class FileUploadService
     /**
      * Download a file securely
      *
-     * @param  int  $fileId
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @return StreamedResponse
+     *
      * @throws Exception
      */
     public function download(int $fileId)
@@ -135,7 +134,7 @@ class FileUploadService
         }
 
         // Check file exists
-        if (!Storage::disk($this->disk)->exists($uploadLog->file_path)) {
+        if (! Storage::disk($this->disk)->exists($uploadLog->file_path)) {
             throw new Exception('File not found.');
         }
 
@@ -146,7 +145,7 @@ class FileUploadService
         ]);
 
         // Download file
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk($this->disk);
 
         return $disk->download(
@@ -158,8 +157,6 @@ class FileUploadService
     /**
      * Delete a file securely
      *
-     * @param  int  $fileId
-     * @return bool
      * @throws Exception
      */
     public function delete(int $fileId): bool
@@ -167,7 +164,7 @@ class FileUploadService
         $uploadLog = FileUploadLog::findOrFail($fileId);
 
         // Verify user can delete this file
-        if ($uploadLog->user_id !== auth()->id() && !auth()->user()->is_admin) {
+        if ($uploadLog->user_id !== auth()->id() && ! auth()->user()->is_admin) {
             throw new Exception('Unauthorized to delete this file.');
         }
 
@@ -200,8 +197,6 @@ class FileUploadService
     /**
      * Validate file before upload
      *
-     * @param  UploadedFile  $file
-     * @return void
      * @throws Exception
      */
     private function validateFile(UploadedFile $file): void
@@ -214,21 +209,18 @@ class FileUploadService
 
         // Check file extension
         $extension = strtolower($file->getClientOriginalExtension());
-        if (!in_array($extension, $this->allowedExtensions, true)) {
-            throw new Exception('File type not allowed. Allowed types: ' . implode(', ', $this->allowedExtensions));
+        if (! in_array($extension, $this->allowedExtensions, true)) {
+            throw new Exception('File type not allowed. Allowed types: '.implode(', ', $this->allowedExtensions));
         }
 
         // Check MIME type
-        if (!$this->isValidMimeType($file)) {
+        if (! $this->isValidMimeType($file)) {
             throw new Exception('File MIME type does not match extension.');
         }
     }
 
     /**
      * Validate MIME type matches extension
-     *
-     * @param  UploadedFile  $file
-     * @return bool
      */
     private function isValidMimeType(UploadedFile $file): bool
     {
@@ -247,7 +239,7 @@ class FileUploadService
             'gif' => ['image/gif'],
         ];
 
-        if (!isset($allowedMimes[$extension])) {
+        if (! isset($allowedMimes[$extension])) {
             return false;
         }
 
@@ -256,9 +248,6 @@ class FileUploadService
 
     /**
      * Generate a secure random filename
-     *
-     * @param  UploadedFile  $file
-     * @return string
      */
     private function generateSecureFilename(UploadedFile $file): string
     {
@@ -271,7 +260,7 @@ class FileUploadService
     /**
      * Get user's uploaded files
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getUserFiles()
     {
@@ -283,7 +272,7 @@ class FileUploadService
     /**
      * Clean up old/abandoned files (older than 90 days)
      *
-     * @return int  Number of files deleted
+     * @return int Number of files deleted
      */
     public function cleanupOldFiles(): int
     {
@@ -315,11 +304,13 @@ class FileUploadService
 
     public function downloadByPath(string $path, string $downloadName)
     {
-        if (!Storage::disk($this->disk)->exists($path)) throw new Exception('File not found.');
+        if (! Storage::disk($this->disk)->exists($path)) {
+            throw new Exception('File not found.');
+        }
         FileUploadLog::where('file_path', $path)->increment('download_count');
         FileUploadLog::where('file_path', $path)->update(['last_downloaded_at' => now()]);
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk($this->disk);
 
         return $disk->download($path, $downloadName);
@@ -327,19 +318,19 @@ class FileUploadService
 
     public function deleteByPath(string $path): void
     {
-        if (Storage::disk($this->disk)->exists($path)) Storage::disk($this->disk)->delete($path);
+        if (Storage::disk($this->disk)->exists($path)) {
+            Storage::disk($this->disk)->delete($path);
+        }
         FileUploadLog::where('file_path', $path)->update(['is_archived' => true]);
     }
 
     /**
      * Check if file is an image that may contain EXIF data
-     *
-     * @param  UploadedFile  $file
-     * @return bool
      */
     private function isImageFile(UploadedFile $file): bool
     {
         $mimeType = strtolower($file->getMimeType());
+
         return in_array($mimeType, ['image/jpeg', 'image/png'], true);
     }
 
@@ -348,8 +339,8 @@ class FileUploadService
      * Removes location, timestamp, device info, and other sensitive metadata
      *
      * @param  string  $imageData  Raw image file content
-     * @param  string  $mimeType   Image MIME type
-     * @return string              Image data with EXIF stripped
+     * @param  string  $mimeType  Image MIME type
+     * @return string Image data with EXIF stripped
      */
     private function stripExifMetadata(string $imageData, string $mimeType): string
     {
@@ -369,6 +360,7 @@ class FileUploadService
                 'mime_type' => $mimeType,
                 'error' => $e->getMessage(),
             ]);
+
             // Return original image if stripping fails
             return $imageData;
         }
@@ -378,12 +370,13 @@ class FileUploadService
      * Strip EXIF data from JPEG image using GD library
      *
      * @param  string  $jpegData  Raw JPEG data
-     * @return string             JPEG data with EXIF removed
+     * @return string JPEG data with EXIF removed
      */
     private function stripJpegExif(string $jpegData): string
     {
-        if (!extension_loaded('gd')) {
+        if (! extension_loaded('gd')) {
             Log::warning('GD extension not loaded; EXIF data may not be stripped');
+
             return $jpegData;
         }
 
@@ -409,12 +402,13 @@ class FileUploadService
      * Strip EXIF data from PNG image using GD library
      *
      * @param  string  $pngData  Raw PNG data
-     * @return string            PNG data with EXIF removed
+     * @return string PNG data with EXIF removed
      */
     private function stripPngExif(string $pngData): string
     {
-        if (!extension_loaded('gd')) {
+        if (! extension_loaded('gd')) {
             Log::warning('GD extension not loaded; EXIF data may not be stripped');
+
             return $pngData;
         }
 

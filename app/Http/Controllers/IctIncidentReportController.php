@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\IctIncidentReport;
 use App\Models\ServiceRequest;
-use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use App\Services\AdminActionNotificationService;
 use App\Services\AdminActivityLogger;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class IctIncidentReportController extends Controller
 {
@@ -29,10 +30,10 @@ class IctIncidentReportController extends Controller
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($builder) use ($search) {
                 $builder
-                    ->where('document_number', 'like', '%' . $search . '%')
-                    ->orWhere('department', 'like', '%' . $search . '%')
-                    ->orWhere('reported_by', 'like', '%' . $search . '%')
-                    ->orWhere('details_of_incident', 'like', '%' . $search . '%');
+                    ->where('document_number', 'like', '%'.$search.'%')
+                    ->orWhere('department', 'like', '%'.$search.'%')
+                    ->orWhere('reported_by', 'like', '%'.$search.'%')
+                    ->orWhere('details_of_incident', 'like', '%'.$search.'%');
             });
         }
 
@@ -40,6 +41,7 @@ class IctIncidentReportController extends Controller
             ->latest()
             ->paginate(15);
         $reports->appends($request->query());
+
         return view('mis.incident-reports.index', compact('reports'));
     }
 
@@ -68,7 +70,7 @@ class IctIncidentReportController extends Controller
             'service_request_id' => 'nullable|exists:service_requests,id',
         ]);
 
-        if (!empty($validated['service_request_id'])) {
+        if (! empty($validated['service_request_id'])) {
             $linkedRequest = ServiceRequest::where('user_id', Auth::id())->findOrFail($validated['service_request_id']);
             $validated['service_request_id'] = $linkedRequest->id;
         }
@@ -170,7 +172,7 @@ class IctIncidentReportController extends Controller
         $pdf = Pdf::loadView('pdf.incident-report', ['report' => $incidentReport])
             ->setPaper('A4', 'portrait');
 
-        $response = $pdf->stream('ICT_Incident_Report_' . $incidentReport->document_number . '.pdf');
+        $response = $pdf->stream('ICT_Incident_Report_'.$incidentReport->document_number.'.pdf');
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');
@@ -181,7 +183,7 @@ class IctIncidentReportController extends Controller
     private function ensureOwner(IctIncidentReport $incidentReport): void
     {
         $user = Auth::user();
-        $isAdmin = $user instanceof \App\Models\User ? $user->isAdmin() : false;
+        $isAdmin = $user instanceof User ? $user->isAdmin() : false;
 
         abort_unless($incidentReport->user_id === Auth::id() || $isAdmin, 403);
     }
@@ -190,7 +192,7 @@ class IctIncidentReportController extends Controller
     {
         $this->adminActionNotifications->notify(
             $subject,
-            ($report->document_number ?: 'Incident report') . ' from ' . ($report->reported_by ?: 'a requester') . '.',
+            ($report->document_number ?: 'Incident report').' from '.($report->reported_by ?: 'a requester').'.',
             route('admin.incident-reports.show', $report),
             $report->service_request_id
         );

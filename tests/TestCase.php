@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Str;
 
@@ -10,8 +11,8 @@ abstract class TestCase extends BaseTestCase
 {
     public function createApplication()
     {
-        $app = require __DIR__ . '/../bootstrap/app.php';
-        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        $app = require __DIR__.'/../bootstrap/app.php';
+        $app->make(Kernel::class)->bootstrap();
         $app->detectEnvironment(fn () => 'testing');
 
         $liveDatabase = (string) env('PRODUCTION_DB_DATABASE', 'mis_service_request');

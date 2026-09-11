@@ -30,7 +30,7 @@ return new class extends Migration
                 Crypt::decryptString($user->two_factor_recovery_code);
             } catch (Throwable) {
                 $codes = json_decode($user->two_factor_recovery_code, true);
-                if (!is_array($codes)) {
+                if (! is_array($codes)) {
                     $codes = array_values(array_filter(array_map('trim', explode(',', $user->two_factor_recovery_code))));
                 }
                 DB::table('users')->where('id', $user->id)->update([
@@ -40,7 +40,7 @@ return new class extends Migration
         });
 
         Schema::table('technicians', function (Blueprint $table) {
-            if (!Schema::hasColumn('technicians', 'is_active')) {
+            if (! Schema::hasColumn('technicians', 'is_active')) {
                 $table->boolean('is_active')->default(true)->after('status')->index();
                 $table->timestamp('deactivated_at')->nullable()->after('is_active');
                 $table->foreignId('deactivated_by')->nullable()->after('deactivated_at')->constrained('users')->nullOnDelete();
@@ -49,7 +49,7 @@ return new class extends Migration
 
         foreach (['ict_incident_reports', 'preventive_maintenance_checklists'] as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                if (!Schema::hasColumn($tableName, 'archived_at')) {
+                if (! Schema::hasColumn($tableName, 'archived_at')) {
                     $table->timestamp('archived_at')->nullable()->after('status');
                     $table->foreignId('archived_by')->nullable()->after('archived_at')->constrained('users')->nullOnDelete();
                     $table->text('archive_reason')->nullable()->after('archived_by');
@@ -58,15 +58,21 @@ return new class extends Migration
         }
 
         foreach (['service_requests', 'service_request_attachments', 'clarification_attachments'] as $tableName) {
-            if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'path') && $tableName !== 'service_requests') continue;
+            if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, 'path') && $tableName !== 'service_requests') {
+                continue;
+            }
             $pathColumn = $tableName === 'service_requests' ? 'attachment' : 'path';
             DB::table($tableName)->whereNotNull($pathColumn)->orderBy('id')->eachById(function ($record) use ($pathColumn) {
                 $path = $record->{$pathColumn};
-                if (!$path || !Storage::disk('public')->exists($path)) return;
-                if (!Storage::disk('secure')->exists($path)) {
+                if (! $path || ! Storage::disk('public')->exists($path)) {
+                    return;
+                }
+                if (! Storage::disk('secure')->exists($path)) {
                     Storage::disk('secure')->put($path, Storage::disk('public')->get($path));
                 }
-                if (Storage::disk('secure')->exists($path)) Storage::disk('public')->delete($path);
+                if (Storage::disk('secure')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
             });
         }
     }
@@ -74,15 +80,21 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('technicians', function (Blueprint $table) {
-            if (Schema::hasColumn('technicians', 'deactivated_by')) $table->dropConstrainedForeignId('deactivated_by');
+            if (Schema::hasColumn('technicians', 'deactivated_by')) {
+                $table->dropConstrainedForeignId('deactivated_by');
+            }
             $table->dropColumn(array_values(array_filter(['is_active', 'deactivated_at'], fn ($column) => Schema::hasColumn('technicians', $column))));
         });
 
         foreach (['ict_incident_reports', 'preventive_maintenance_checklists'] as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                if (Schema::hasColumn($tableName, 'archived_by')) $table->dropConstrainedForeignId('archived_by');
+                if (Schema::hasColumn($tableName, 'archived_by')) {
+                    $table->dropConstrainedForeignId('archived_by');
+                }
                 $columns = array_values(array_filter(['archived_at', 'archive_reason'], fn ($column) => Schema::hasColumn($tableName, $column)));
-                if ($columns) $table->dropColumn($columns);
+                if ($columns) {
+                    $table->dropColumn($columns);
+                }
             });
         }
     }

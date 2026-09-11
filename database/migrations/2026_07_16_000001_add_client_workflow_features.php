@@ -9,19 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            if (!Schema::hasColumn('notifications', 'read_at')) {
+            if (! Schema::hasColumn('notifications', 'read_at')) {
                 $table->timestamp('read_at')->nullable()->after('sent_at')->index();
             }
         });
 
         Schema::table('service_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('service_requests', 'expected_completion_at')) {
+            if (! Schema::hasColumn('service_requests', 'expected_completion_at')) {
                 $table->timestamp('expected_completion_at')->nullable()->after('assigned_date');
             }
-            if (!Schema::hasColumn('service_requests', 'cancellation_reason')) {
+            if (! Schema::hasColumn('service_requests', 'cancellation_reason')) {
                 $table->text('cancellation_reason')->nullable()->after('comments');
             }
-            if (!Schema::hasColumn('service_requests', 'feedback_rating')) {
+            if (! Schema::hasColumn('service_requests', 'feedback_rating')) {
                 $table->unsignedTinyInteger('feedback_rating')->nullable()->after('cancellation_reason');
                 $table->text('feedback_comment')->nullable()->after('feedback_rating');
                 $table->boolean('feedback_resolved')->nullable()->after('feedback_comment');

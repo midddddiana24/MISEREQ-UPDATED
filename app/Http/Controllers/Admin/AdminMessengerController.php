@@ -47,7 +47,9 @@ class AdminMessengerController extends Controller
                 $builder->whereHas('messages', fn ($messages) => $messages
                     ->where('is_admin', false)
                     ->whereNull('read_at'));
-                if ($selectedRequestId) $builder->orWhere('service_requests.id', $selectedRequestId);
+                if ($selectedRequestId) {
+                    $builder->orWhere('service_requests.id', $selectedRequestId);
+                }
             });
         } elseif ($scope !== 'all') {
             $query->where(function ($builder) use ($selectedRequestId) {
@@ -55,7 +57,9 @@ class AdminMessengerController extends Controller
                 // before the requester or MIS sends the first message.
                 $builder->whereNotNull('user_id')
                     ->orWhereHas('messages');
-                if ($selectedRequestId) $builder->orWhere('service_requests.id', $selectedRequestId);
+                if ($selectedRequestId) {
+                    $builder->orWhere('service_requests.id', $selectedRequestId);
+                }
             });
             $scope = 'messages';
         }
@@ -93,13 +97,13 @@ class AdminMessengerController extends Controller
                         'email' => $request->user?->email ?? 'No client account',
                     ],
                     'can_message' => (bool) $request->user_id,
-                    'is_walk_in' => $request->is_admin_created && !$request->user_id,
+                    'is_walk_in' => $request->is_admin_created && ! $request->user_id,
                     'technician' => $request->assignedTechnician?->full_name,
                     'request_url' => route('admin.service-requests.show', $request),
                     'unread_count' => $unreadCount,
                     'last_message_text' => $lastMessage ? Str::limit($lastMessage->message, 50) : 'No messages yet',
                     'last_message_time' => $lastMessage?->created_at,
-                    'last_message_from_user' => $lastMessage && !$lastMessage->is_admin,
+                    'last_message_from_user' => $lastMessage && ! $lastMessage->is_admin,
                 ];
             })->values();
 
@@ -136,7 +140,7 @@ class AdminMessengerController extends Controller
                     'unread_count' => (int) $serviceRequest->unread_messages_count,
                     'last_message_id' => (int) ($serviceRequest->messages_max_id ?? 0),
                     'last_message_text' => $latest ? Str::limit($latest->message, 50) : 'No messages yet',
-                    'last_message_from_user' => $latest ? !$latest->is_admin : false,
+                    'last_message_from_user' => $latest ? ! $latest->is_admin : false,
                     'last_message_at' => $latest?->created_at?->toIso8601String(),
                 ];
             })

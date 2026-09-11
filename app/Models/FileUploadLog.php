@@ -50,8 +50,6 @@ class FileUploadLog extends Model
 
     /**
      * Get the user who uploaded the file
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {

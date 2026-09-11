@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('users', 'must_change_password')) {
+        if (! Schema::hasColumn('users', 'must_change_password')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->boolean('must_change_password')->default(false)->after('password_expires_at');
             });
         }
 
-        if (!Schema::hasTable('trusted_admin_devices')) {
+        if (! Schema::hasTable('trusted_admin_devices')) {
             Schema::create('trusted_admin_devices', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
@@ -31,7 +31,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('admin_device_challenges')) {
+        if (! Schema::hasTable('admin_device_challenges')) {
             Schema::create('admin_device_challenges', function (Blueprint $table) {
                 $table->id();
                 $table->uuid('public_id')->unique();

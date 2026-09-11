@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\ServiceRequest;
 use App\Models\Technician;
-use App\Models\Notification;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class AdminRequestController extends Controller
 {
     public function __construct(
         private readonly AdminActivityLogger $activityLogger
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -38,7 +37,7 @@ class AdminRequestController extends Controller
             ->with(['user', 'assignedTechnician.user'])
             ->latest('created_at');
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($builder) use ($search) {
                 $builder->where('control_number', 'like', "%{$search}%")
@@ -52,11 +51,11 @@ class AdminRequestController extends Controller
             });
         }
 
-        if (!empty($filters['search_id'])) {
-            $query->where('control_number', 'like', '%' . $filters['search_id'] . '%');
+        if (! empty($filters['search_id'])) {
+            $query->where('control_number', 'like', '%'.$filters['search_id'].'%');
         }
 
-        if (!empty($filters['search_name'])) {
+        if (! empty($filters['search_name'])) {
             $name = $filters['search_name'];
             $query->where(function ($builder) use ($name) {
                 $builder->where('requester_name', 'like', "%{$name}%")
@@ -68,25 +67,25 @@ class AdminRequestController extends Controller
             });
         }
 
-        if (!empty($filters['search_status'])) {
+        if (! empty($filters['search_status'])) {
             $query->where('status', $filters['search_status']);
         }
 
-        if (!empty($filters['search_category'])) {
+        if (! empty($filters['search_category'])) {
             $query->where('category', $filters['search_category']);
         }
 
-        if (!empty($filters['search_technician'])) {
+        if (! empty($filters['search_technician'])) {
             $query->where('assigned_technician_id', $filters['search_technician']);
         }
 
         $this->applyQueueFilter($query, $filters['search_queue'] ?? null);
 
-        if (!empty($filters['search_date_from'])) {
+        if (! empty($filters['search_date_from'])) {
             $query->whereDate('created_at', '>=', $filters['search_date_from']);
         }
 
-        if (!empty($filters['search_date_to'])) {
+        if (! empty($filters['search_date_to'])) {
             $query->whereDate('created_at', '<=', $filters['search_date_to']);
         }
 
@@ -144,7 +143,7 @@ class AdminRequestController extends Controller
                 'recipient_email' => $serviceRequest->user?->email,
                 'notification_type' => 'client_update',
                 'subject' => 'Service request archived',
-                'message' => $serviceRequest->control_number . ': ' . $validated['archive_reason'],
+                'message' => $serviceRequest->control_number.': '.$validated['archive_reason'],
                 'action_url' => route('requests.index'),
                 'status' => 'pending',
             ]);
@@ -185,7 +184,7 @@ class AdminRequestController extends Controller
                 'recipient_email' => $serviceRequest->user?->email,
                 'notification_type' => 'client_update',
                 'subject' => 'Service request restored',
-                'message' => $serviceRequest->control_number . ' was restored to the MIS request records.',
+                'message' => $serviceRequest->control_number.' was restored to the MIS request records.',
                 'action_url' => route('requests.show', $serviceRequest),
                 'status' => 'pending',
             ]);

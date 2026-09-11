@@ -3,13 +3,14 @@
 namespace App\Http\Requests\User;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class ProfileUpdateRequest extends BaseFormRequest
 {
     /**
      * Get the validation rules that apply to the request
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
@@ -68,8 +69,6 @@ class ProfileUpdateRequest extends BaseFormRequest
 
     /**
      * Prepare data for validation - sanitize inputs
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -184,12 +185,14 @@ class ServiceRequest extends Model
         // Temporary attributes (starting with _) are used by observers/controllers but should not be saved to DB
         if (str_starts_with($key, '_')) {
             // Store in a temporary property instead of model attributes
-            if (!isset($this->_temporaryData)) {
+            if (! isset($this->_temporaryData)) {
                 $this->_temporaryData = [];
             }
             $this->_temporaryData[$key] = $value;
+
             return $this;
         }
+
         return parent::setAttribute($key, $value);
     }
 
@@ -201,6 +204,7 @@ class ServiceRequest extends Model
         if (str_starts_with($key, '_') && isset($this->_temporaryData[$key])) {
             return $this->_temporaryData[$key];
         }
+
         return parent::getAttribute($key);
     }
 
@@ -367,13 +371,14 @@ class ServiceRequest extends Model
      */
     public function getDateOfRequestFormattedAttribute()
     {
-        if (!$this->date_of_request) {
+        if (! $this->date_of_request) {
             return 'N/A';
         }
 
         try {
             // If it's already a Carbon instance, use it; otherwise convert
-            $date = is_string($this->date_of_request) ? \Carbon\Carbon::parse($this->date_of_request) : $this->date_of_request;
+            $date = is_string($this->date_of_request) ? Carbon::parse($this->date_of_request) : $this->date_of_request;
+
             return $date->format('M d, Y');
         } catch (\Exception $e) {
             return 'N/A';
@@ -387,7 +392,7 @@ class ServiceRequest extends Model
 
     public function canBeCancelledByUser(): bool
     {
-        return !$this->assigned_technician_id && in_array($this->status, ['submitted', 'pending'], true);
+        return ! $this->assigned_technician_id && in_array($this->status, ['submitted', 'pending'], true);
     }
 
     public function scopeOpen($query)
@@ -409,11 +414,11 @@ class ServiceRequest extends Model
 
     public function canBeReopenedByUser(int $days = 14): bool
     {
-        if (!in_array($this->status, ['awaiting_confirmation', 'completed', 'closed'], true)) {
+        if (! in_array($this->status, ['awaiting_confirmation', 'completed', 'closed'], true)) {
             return false;
         }
 
-        return !$this->closed_at || $this->closed_at->greaterThanOrEqualTo(now()->subDays($days));
+        return ! $this->closed_at || $this->closed_at->greaterThanOrEqualTo(now()->subDays($days));
     }
 
     public function getReopenUntilAttribute()
@@ -423,7 +428,7 @@ class ServiceRequest extends Model
 
     public function getIsOverdueAttribute(): bool
     {
-        if (!$this->expected_completion_at || $this->status === 'awaiting_requester_info') {
+        if (! $this->expected_completion_at || $this->status === 'awaiting_requester_info') {
             return false;
         }
 

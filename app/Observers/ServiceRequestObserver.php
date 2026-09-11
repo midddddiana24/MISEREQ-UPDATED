@@ -41,7 +41,7 @@ class ServiceRequestObserver
             if ($statusChangeData['old_status'] !== $statusChangeData['new_status']) {
                 // Use custom remarks if provided, otherwise generate default ones
                 $remarks = $serviceRequest->_statusChangeRemarks
-                    ?? ('Status changed from ' . ucfirst(str_replace('-', ' ', $statusChangeData['old_status'])) . ' to ' . ucfirst(str_replace('-', ' ', $statusChangeData['new_status'])));
+                    ?? ('Status changed from '.ucfirst(str_replace('-', ' ', $statusChangeData['old_status'])).' to '.ucfirst(str_replace('-', ' ', $statusChangeData['new_status'])));
 
                 // Create status log entry automatically
                 $serviceRequest->statusLogs()->create([

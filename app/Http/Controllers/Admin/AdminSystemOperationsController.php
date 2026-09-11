@@ -15,9 +15,7 @@ use Throwable;
 
 class AdminSystemOperationsController extends Controller
 {
-    public function __construct(private readonly AdminActivityLogger $activityLogger)
-    {
-    }
+    public function __construct(private readonly AdminActivityLogger $activityLogger) {}
 
     public function index()
     {
@@ -25,6 +23,7 @@ class AdminSystemOperationsController extends Controller
             'database' => $this->check(fn () => DB::selectOne('select 1 as healthy')?->healthy === 1),
             'cache' => $this->check(function () {
                 Cache::put('admin:operations:health', now()->timestamp, 60);
+
                 return (int) Cache::get('admin:operations:health') > 0;
             }),
             'storage' => $this->check(fn () => Storage::disk('secure')->exists('.health')

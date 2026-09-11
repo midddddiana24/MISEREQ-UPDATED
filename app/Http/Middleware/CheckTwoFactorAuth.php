@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Setting;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckTwoFactorAuth
@@ -13,7 +13,7 @@ class CheckTwoFactorAuth
     public function handle(Request $request, Closure $next): Response
     {
         // Only check 2FA for authenticated users
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -24,7 +24,7 @@ class CheckTwoFactorAuth
             ? Setting::get('require_2fa_admins', false)
             : Setting::get('require_2fa_clients', false);
 
-        if ($twoFactorRequired && !$user->isTwoFactorEnabled()) {
+        if ($twoFactorRequired && ! $user->isTwoFactorEnabled()) {
             if (in_array($currentRoute, ['2fa.setup', '2fa.setup.store', 'logout'], true)) {
                 return $next($request);
             }
@@ -34,9 +34,10 @@ class CheckTwoFactorAuth
         }
 
         // If user doesn't have 2FA enabled at all, allow access
-        if (!$user?->isTwoFactorEnabled()) {
+        if (! $user?->isTwoFactorEnabled()) {
             // Mark as verified and allow
             session(['2fa_verified' => true]);
+
             return $next($request);
         }
 

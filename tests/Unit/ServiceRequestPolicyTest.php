@@ -15,7 +15,7 @@ class ServiceRequestPolicyTest extends TestCase
         $user->id = 10;
         $request = new ServiceRequest(['user_id' => 10]);
 
-        $policy = new ServiceRequestPolicy();
+        $policy = new ServiceRequestPolicy;
         $this->assertTrue($policy->view($user, $request));
         $this->assertTrue($policy->update($user, $request));
     }
@@ -26,7 +26,7 @@ class ServiceRequestPolicyTest extends TestCase
         $user->id = 10;
         $request = new ServiceRequest(['user_id' => 20]);
 
-        $policy = new ServiceRequestPolicy();
+        $policy = new ServiceRequestPolicy;
         $this->assertFalse($policy->view($user, $request));
         $this->assertFalse($policy->update($user, $request));
     }
@@ -37,14 +37,15 @@ class ServiceRequestPolicyTest extends TestCase
         $admin->id = 1;
         $request = new ServiceRequest(['user_id' => 20]);
 
-        $lockedUser = new class(['role' => 'user', 'is_admin' => false]) extends User {
+        $lockedUser = new class(['role' => 'user', 'is_admin' => false]) extends User
+        {
             public function isAccountLocked(): bool
             {
                 return true;
             }
         };
 
-        $policy = new ServiceRequestPolicy();
+        $policy = new ServiceRequestPolicy;
         $this->assertTrue($policy->view($admin, $request));
         $this->assertTrue($policy->delete($admin, $request));
         $this->assertFalse($policy->create($lockedUser));

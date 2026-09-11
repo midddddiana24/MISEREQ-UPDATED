@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ServiceRequest;
 use App\Models\IctIncidentReport;
-use App\Models\PreventiveMaintenanceChecklist;
 use App\Models\LoginAttempt;
-use App\Models\User;
 use App\Models\Message;
 use App\Models\Notification;
+use App\Models\PreventiveMaintenanceChecklist;
+use App\Models\ServiceRequest;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class UserDashboardController extends Controller implements HasMiddleware
 {
@@ -152,7 +152,7 @@ class UserDashboardController extends Controller implements HasMiddleware
         ];
 
         $user = Auth::user();
-        $controlNumber = 'REQ-' . now()->format('Y-m-d') . '-' . str_pad(ServiceRequest::count() + 1, 4, '0', STR_PAD_LEFT);
+        $controlNumber = 'REQ-'.now()->format('Y-m-d').'-'.str_pad(ServiceRequest::count() + 1, 4, '0', STR_PAD_LEFT);
 
         // Create request with all service columns
         ServiceRequest::create(array_merge([
@@ -184,7 +184,7 @@ class UserDashboardController extends Controller implements HasMiddleware
      */
     private function generatePDF(ServiceRequest $serviceRequest): string
     {
-        $cacheKey = 'pdf_v11_' . $serviceRequest->id . '_' . $serviceRequest->updated_at->timestamp;
+        $cacheKey = 'pdf_v11_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
 
         // Try to get from cache first - instant delivery on subsequent requests
         // PDF binaries can exceed MySQL's packet limit when the application's
@@ -227,10 +227,11 @@ class UserDashboardController extends Controller implements HasMiddleware
 
             return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="MIS-Request-' . $serviceRequest->control_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="MIS-Request-'.$serviceRequest->control_number.'.pdf"',
             ]);
         } catch (\Throwable $e) {
             $this->logPdfFailure('print', $e, $serviceRequest);
+
             return redirect()->back()->with('error', 'The PDF could not be generated. Please try again.');
         }
     }
@@ -249,10 +250,10 @@ class UserDashboardController extends Controller implements HasMiddleware
             // Get cached or newly generated PDF - cached PDFs are instant
             $pdfContent = $this->generatePDF($serviceRequest);
 
-            $etag = '"' . sha1($pdfContent) . '"';
+            $etag = '"'.sha1($pdfContent).'"';
             $headers = [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="MIS-Request-' . $serviceRequest->control_number . '.pdf"',
+                'Content-Disposition' => 'inline; filename="MIS-Request-'.$serviceRequest->control_number.'.pdf"',
                 'Cache-Control' => 'private, max-age=0, must-revalidate',
                 'ETag' => $etag,
             ];
@@ -264,6 +265,7 @@ class UserDashboardController extends Controller implements HasMiddleware
             return response($pdfContent, 200, $headers);
         } catch (\Throwable $e) {
             $this->logPdfFailure('view', $e, $serviceRequest);
+
             return redirect()->back()->with('error', 'The PDF could not be generated. Please try again.');
         }
     }
@@ -284,10 +286,11 @@ class UserDashboardController extends Controller implements HasMiddleware
 
             return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="MIS-Request-' . $serviceRequest->control_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="MIS-Request-'.$serviceRequest->control_number.'.pdf"',
             ]);
         } catch (\Throwable $e) {
             $this->logPdfFailure('download', $e, $serviceRequest);
+
             return redirect()->back()->with('error', 'The PDF could not be downloaded. Please try again.');
         }
     }
@@ -315,7 +318,7 @@ class UserDashboardController extends Controller implements HasMiddleware
         $notifications = [];
 
         // 1. Fetch recent status update notifications from the Notification table.
-        $statusNotifications = \App\Models\Notification::where('user_id', $user->id)
+        $statusNotifications = Notification::where('user_id', $user->id)
             ->where('notification_type', 'status_update')
             ->with('serviceRequest')
             ->orderBy('created_at', 'desc')
@@ -327,12 +330,12 @@ class UserDashboardController extends Controller implements HasMiddleware
                 $notifications[] = [
                     'id' => $notif->id,
                     'title' => '🔔 Status Update',
-                    'message' => $notif->message ?? 'Control #' . $notif->serviceRequest->control_number . ' - status has been updated',
+                    'message' => $notif->message ?? 'Control #'.$notif->serviceRequest->control_number.' - status has been updated',
                     'type' => 'status_update',
                     'url' => route('request.show', $notif->service_request_id),
                     'time' => $notif->created_at->diffForHumans(),
                     'timestamp' => $notif->created_at->timestamp,
-                    'read' => $notif->status === 'sent' ? false : true
+                    'read' => $notif->status === 'sent' ? false : true,
                 ];
             }
         }
@@ -348,30 +351,30 @@ class UserDashboardController extends Controller implements HasMiddleware
             foreach ($pendingRequests as $request) {
                 $notifications[] = [
                     'id' => $request->id,
-                    'title' => '📋 ' . ($request->title ?? 'Pending Request'),
-                    'message' => 'Control #' . $request->control_number . ' - awaiting admin review',
+                    'title' => '📋 '.($request->title ?? 'Pending Request'),
+                    'message' => 'Control #'.$request->control_number.' - awaiting admin review',
                     'type' => 'pending',
                     'url' => route('request.show', $request->id),
                     'time' => $request->updated_at->diffForHumans(),
                     'timestamp' => $request->updated_at->timestamp,
-                    'read' => false
+                    'read' => false,
                 ];
             }
         }
 
-        // Processing requests  
+        // Processing requests
         $processingRequests = $requests->where('status', 'processing');
         if ($processingRequests->count() > 0) {
             foreach ($processingRequests as $request) {
                 $notifications[] = [
                     'id' => $request->id,
-                    'title' => '🔄 ' . ($request->title ?? 'Processing Request'),
-                    'message' => 'Control #' . $request->control_number . ' - technician is working on it',
+                    'title' => '🔄 '.($request->title ?? 'Processing Request'),
+                    'message' => 'Control #'.$request->control_number.' - technician is working on it',
                     'type' => 'processing',
                     'url' => route('request.show', $request->id),
                     'time' => $request->updated_at->diffForHumans(),
                     'timestamp' => $request->updated_at->timestamp,
-                    'read' => false
+                    'read' => false,
                 ];
             }
         }
@@ -382,13 +385,13 @@ class UserDashboardController extends Controller implements HasMiddleware
             foreach ($completedRequests as $request) {
                 $notifications[] = [
                     'id' => $request->id,
-                    'title' => '✅ ' . ($request->title ?? 'Completed Request'),
-                    'message' => 'Control #' . $request->control_number . ' - task completed successfully',
+                    'title' => '✅ '.($request->title ?? 'Completed Request'),
+                    'message' => 'Control #'.$request->control_number.' - task completed successfully',
                     'type' => 'completed',
                     'url' => route('request.show', $request->id),
                     'time' => $request->updated_at->diffForHumans(),
                     'timestamp' => $request->updated_at->timestamp,
-                    'read' => true
+                    'read' => true,
                 ];
             }
         }
@@ -399,13 +402,13 @@ class UserDashboardController extends Controller implements HasMiddleware
             foreach ($rejectedRequests as $request) {
                 $notifications[] = [
                     'id' => $request->id,
-                    'title' => '❌ ' . ($request->title ?? 'Rejected Request'),
-                    'message' => 'Control #' . $request->control_number . ' - request was rejected',
+                    'title' => '❌ '.($request->title ?? 'Rejected Request'),
+                    'message' => 'Control #'.$request->control_number.' - request was rejected',
                     'type' => 'rejected',
                     'url' => route('request.show', $request->id),
                     'time' => $request->updated_at->diffForHumans(),
                     'timestamp' => $request->updated_at->timestamp,
-                    'read' => false
+                    'read' => false,
                 ];
             }
         }
@@ -416,13 +419,13 @@ class UserDashboardController extends Controller implements HasMiddleware
             foreach ($cancelledRequests as $request) {
                 $notifications[] = [
                     'id' => $request->id,
-                    'title' => '🚫 ' . ($request->title ?? 'Cancelled Request'),
-                    'message' => 'Control #' . $request->control_number . ' - request was cancelled',
+                    'title' => '🚫 '.($request->title ?? 'Cancelled Request'),
+                    'message' => 'Control #'.$request->control_number.' - request was cancelled',
                     'type' => 'cancelled',
                     'url' => route('request.show', $request->id),
                     'time' => $request->updated_at->diffForHumans(),
                     'timestamp' => $request->updated_at->timestamp,
-                    'read' => false
+                    'read' => false,
                 ];
             }
         }
@@ -439,7 +442,7 @@ class UserDashboardController extends Controller implements HasMiddleware
 
         return response()->json([
             'notifications' => array_slice($notifications, 0, 10),
-            'total_unread' => count(array_filter($notifications, fn($n) => !$n['read']))
+            'total_unread' => count(array_filter($notifications, fn ($n) => ! $n['read'])),
         ]);
     }
 
@@ -489,7 +492,7 @@ class UserDashboardController extends Controller implements HasMiddleware
         $user = Auth::user();
         $request = ServiceRequest::find($id);
 
-        if (!$request || $request->user_id !== $user->id) {
+        if (! $request || $request->user_id !== $user->id) {
             return response()->json(['error' => 'Notification not found'], 404);
         }
 
@@ -551,6 +554,7 @@ class UserDashboardController extends Controller implements HasMiddleware
     public function notificationsPage()
     {
         $notifications = Notification::where('user_id', Auth::id())->latest()->paginate(25);
+
         return view('user.notifications', compact('notifications'));
     }
 

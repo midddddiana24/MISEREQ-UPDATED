@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\SecurityNotificationService;
 use App\Services\AdminDeviceTrustService;
+use App\Services\SecurityNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +39,7 @@ class TwoFactorAuthController extends Controller
         ]);
 
         $request->session()->passwordConfirmed();
+
         return $this->completeSetup($request, route('2fa.setup'));
     }
 
@@ -76,7 +77,7 @@ class TwoFactorAuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        if (!$user->isTwoFactorEnabled()) {
+        if (! $user->isTwoFactorEnabled()) {
             return redirect()->route($this->settingsRoute($user))->with('error', 'Enable 2FA before managing recovery codes.');
         }
 
@@ -96,7 +97,7 @@ class TwoFactorAuthController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        if (!$user->isTwoFactorEnabled() || !$this->validAuthenticatorCode($user, $request->verification_code)) {
+        if (! $user->isTwoFactorEnabled() || ! $this->validAuthenticatorCode($user, $request->verification_code)) {
             return back()->withErrors(['verification_code' => 'The authenticator code is invalid.']);
         }
 
@@ -122,7 +123,7 @@ class TwoFactorAuthController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        if (!$user->isTwoFactorEnabled() || !$this->validAuthenticatorCode($user, $request->verification_code)) {
+        if (! $user->isTwoFactorEnabled() || ! $this->validAuthenticatorCode($user, $request->verification_code)) {
             return back()->withErrors(['verification_code' => 'The authenticator code is invalid.']);
         }
 
@@ -139,13 +140,13 @@ class TwoFactorAuthController extends Controller
 
     public function showVerify()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'Please sign in first.');
         }
 
         /** @var User $user */
         $user = Auth::user();
-        if (!$user->isTwoFactorEnabled()) {
+        if (! $user->isTwoFactorEnabled()) {
             return redirect()->route($this->dashboardRoute($user))->with('info', 'Two-factor authentication is not enabled.');
         }
 
@@ -158,13 +159,13 @@ class TwoFactorAuthController extends Controller
             'code' => ['required', 'string', 'max:32'],
         ]);
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->withErrors(['2fa' => 'Please sign in first.']);
         }
 
         /** @var User $user */
         $user = Auth::user();
-        if (!$user->isTwoFactorEnabled()) {
+        if (! $user->isTwoFactorEnabled()) {
             return redirect()->route($this->dashboardRoute($user));
         }
 
@@ -173,7 +174,7 @@ class TwoFactorAuthController extends Controller
             ? $this->validAuthenticatorCode($user, $code)
             : $this->verifyRecoveryCode($user, $code);
 
-        if (!$valid) {
+        if (! $valid) {
             return back()->withErrors(['code' => 'Invalid authenticator or recovery code.']);
         }
 
@@ -189,6 +190,7 @@ class TwoFactorAuthController extends Controller
                 return redirect()->route('admin.device.verify')
                     ->with('success', 'Two-factor authentication verified. Confirm this device to continue.');
             }
+
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Two-factor authentication verified.');
         }
@@ -204,13 +206,14 @@ class TwoFactorAuthController extends Controller
         $secret = (string) $request->session()->get('2fa_pending_secret', '');
         $startedAt = (int) $request->session()->get('2fa_pending_started_at', 0);
 
-        if (!$secret || !$startedAt || $startedAt < now()->subMinutes(10)->timestamp) {
+        if (! $secret || ! $startedAt || $startedAt < now()->subMinutes(10)->timestamp) {
             $request->session()->forget(['2fa_pending_secret', '2fa_pending_started_at']);
+
             return redirect($failureRedirect)->with('error', 'The setup session expired. Start 2FA setup again.');
         }
 
-        $google2fa = new Google2FAService();
-        if (!$google2fa->verifyKey($secret, $request->verification_code, 1)) {
+        $google2fa = new Google2FAService;
+        if (! $google2fa->verifyKey($secret, $request->verification_code, 1)) {
             return back()->withErrors(['verification_code' => 'The authenticator code is invalid.']);
         }
 
@@ -234,11 +237,11 @@ class TwoFactorAuthController extends Controller
     {
         $existing = (string) $request->session()->get('2fa_pending_secret', '');
         $startedAt = (int) $request->session()->get('2fa_pending_started_at', 0);
-        if (!$forceNew && $existing && $startedAt >= now()->subMinutes(10)->timestamp) {
+        if (! $forceNew && $existing && $startedAt >= now()->subMinutes(10)->timestamp) {
             return $existing;
         }
 
-        $secret = (new Google2FAService())->generateSecretKey();
+        $secret = (new Google2FAService)->generateSecretKey();
         $request->session()->put('2fa_pending_secret', $secret);
         $request->session()->put('2fa_pending_started_at', now()->timestamp);
 
@@ -247,7 +250,7 @@ class TwoFactorAuthController extends Controller
 
     private function qrCode(User $user, string $secret): string
     {
-        $qrCode = (new Google2FAService())->getQRCodeInline(
+        $qrCode = (new Google2FAService)->getQRCodeInline(
             config('app.name', 'MIS Service Request'),
             $user->email,
             $secret,
@@ -256,18 +259,18 @@ class TwoFactorAuthController extends Controller
 
         return str_starts_with($qrCode, 'data:image')
             ? $qrCode
-            : 'data:image/svg+xml;base64,' . base64_encode($qrCode);
+            : 'data:image/svg+xml;base64,'.base64_encode($qrCode);
     }
 
     private function validAuthenticatorCode(User $user, string $code): bool
     {
-        return (new Google2FAService())->verifyKey($user->google2fa_secret, $code, 1);
+        return (new Google2FAService)->verifyKey($user->google2fa_secret, $code, 1);
     }
 
     private function generateRecoveryCodes(int $count = 8): array
     {
         return collect(range(1, $count))
-            ->map(fn () => strtoupper(Str::random(4) . '-' . Str::random(4)))
+            ->map(fn () => strtoupper(Str::random(4).'-'.Str::random(4)))
             ->all();
     }
 
@@ -295,6 +298,7 @@ class TwoFactorAuthController extends Controller
                     'A 2FA recovery code was used',
                     'A one-time recovery code was used to sign in to your MIS account.'
                 );
+
                 return true;
             }
         }
