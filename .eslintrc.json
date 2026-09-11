@@ -1,0 +1,27 @@
+{
+  "plugins": ["@babel/plugin-proposal-class-properties"],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "no-undef": [
+      "error",
+      {
+        "typeof": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["resources/views/**/*.blade.php"],
+      "rules": {
+        "no-undef": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }
+  ]
+}

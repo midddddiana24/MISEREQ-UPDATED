@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+/*
+|--------------------------------------------------------------------------
+| Register The Auto Loader
+|--------------------------------------------------------------------------
+|
+| Composer provides a convenient, automatically generated class loader for
+| our application. We just need to utilize it! We'll simply require it
+| into the script here so that we don't have to worry about manual
+| loading any of our classes later on. It feels great to relax.
+|
+*/
+
+require __DIR__ . '/../vendor/autoload.php';
+
+/*
+|--------------------------------------------------------------------------
+| Bootstrap Laravel And Handle The Request
+|--------------------------------------------------------------------------
+|
+| Without this file, we would need to manually handle every request in a
+| traditional static method. But with modern routing and dependency
+| injection, we can defer all of that work to the classes we've
+| carefully prepared for the application here.
+|
+*/
+
+$app = require_once __DIR__ . '/../bootstrap/app.php';
+
+$kernel = $app->make(Kernel::class);
+
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
+
+$kernel->terminate($request, $response);

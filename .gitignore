@@ -1,0 +1,104 @@
+# Laravel
+/vendor
+/node_modules
+/Homestead.json
+/Homestead.yaml
+/app.php
+npm-debug.log
+yarn-error.log
+
+# Environment & secrets (NEVER commit)
+.env
+.env.backup
+.env.production
+.env.testing
+*.pem
+*.key
+*.crt
+
+# Bootstrap caches
+/bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+
+# Storage runtime (keep structure, ignore contents)
+/storage/*.key
+/storage/app/backups/*
+!/storage/app/backups/.gitkeep
+/storage/app/secure/*
+!/storage/app/secure/.gitkeep
+/storage/app/private/*
+!/storage/app/private/.gitkeep
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/fonts/*.php
+/storage/fonts/*.ufm
+
+# Testing artifacts
+.phpunit.cache
+.phpunit.result.cache
+/psalm
+/tests/load/output
+/coverage
+/coverage.xml
+
+# IDE & editor
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# AI tooling local state
+.agents/
+.codex/
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Debug scripts with credentials/cookies (NEVER commit)
+/scripts/cookiejar*.txt
+/scripts/cookie_saved.txt
+/scripts/login_test.php
+/scripts/login_and_fetch_dashboard.php
+/scripts/login_from_saved_page.php
+/scripts/fetch_login_page.php
+/scripts/insert_admin_pdo.php
+/scripts/create_temp_admin.php
+/scripts/login_page.html
+/scripts/admin_dashboard*.html
+/scripts/save_and_search_snapshot.php
+/scripts/search_dashboard_for_text.php
+/scripts/inspect_dashboard.php
+/scripts/check_admin_page.php
+/scripts/find_css_marker.php
+
+# Project documents (kept out of repo; store separately)
+/WVSU-MIS-SOI-*.pdf
+
+# Temp verification scripts (session-scoped)
+/scripts/verify_*.php
+
+# Python helpers not part of the PHP app
+apply_sidebar.py
+
+# XAMPP local check scripts (root-level, superseded by tests)
+/check_*.php
+/check-*.php
+/clear_pdf_cache.php

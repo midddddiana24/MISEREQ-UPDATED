@@ -1,0 +1,25 @@
+* text=auto eol=lf
+
+*.php text diff=php
+*.blade.php text diff=html
+*.css text diff=css
+*.js text diff=js
+*.json text
+*.md text
+*.yml text
+*.yaml text
+*.xml text
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.sh text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
