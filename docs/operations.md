@@ -70,6 +70,63 @@ php tests\load\smoke.php http://127.0.0.1:8000 100 10
 php tests\responsive\source-audit.php
 ```
 
+## Known Security Debt
+
+The installed Laravel 10 line is affected by `PKSA-mdq4-51ck-6kdq`, a CRLF
+injection issue in Laravel's default email validation rule. The issue is fixed
+in Laravel 11 and later; no Laravel 10.x patch is available. A full Laravel
+framework upgrade is a separate, planned project and is not part of the current
+remediation work.
+
+The application currently uses the default `email` validation rule in:
+
+- `RegisterRequest` for new account email addresses.
+- `ProfileUpdateRequest` for profile email changes.
+- `PasswordResetLinkController` for password-reset requests.
+- `AdminSettingsController` for the configured support email.
+
+The compensating-control review found that outgoing email subjects are either
+server-generated or stored notification subjects, and user input is not passed
+directly into email headers. Recipient and support email values are validated
+before use in `to()` or `replyTo()`. Continue treating this as security debt
+until the separately planned Laravel 11+ upgrade is completed.
+
+## Sentry
+
+The project uses `sentry/sentry-laravel` 4.27.0. Create a Sentry project at
+https://sentry.io, copy its DSN, and set these values in the deployment `.env`
+file only:
+
+```dotenv
+SENTRY_LARAVEL_DSN=https://examplePublicKey@o0.ingest.sentry.io/0
+SENTRY_ENVIRONMENT=production
+SENTRY_RELEASE=2026.09.12
+SENTRY_SAMPLE_RATE=1.0
+SENTRY_TRACES_SAMPLE_RATE=0.0
+SENTRY_STATUS_CHECK_ENABLED=false
+```
+
+Never commit the real DSN. Sentry is disabled unless `APP_ENV` is `production`
+or `staging` and `APP_DEBUG=false`. `send_default_pii` is disabled, and the
+`before_send` callback removes request bodies, headers, cookies, authenticated
+user data, and extra metadata before an event can be sent. It keeps the request
+URL path, method, and non-sensitive query values. Breadcrumbs are retained for
+debugging, but metadata keys matching password, token, secret, recovery code,
+authorization, cookie, or session are removed recursively.
+
+After deployment, verify configuration without sending an event:
+
+```powershell
+php artisan sentry:status
+```
+
+The command requires `SENTRY_STATUS_CHECK_ENABLED=true` and runs only in local
+or testing environments. It sends one controlled status event, then reports
+whether a DSN is configured, environment/release values, and that default PII
+is disabled. Use the built-in `php artisan sentry:test` command for a basic SDK
+connectivity check; review the resulting event in Sentry before disabling the
+temporary verification flag.
+
 Before production launch, complete `docs/DEVICE-ACCEPTANCE-CHECKLIST.md` on
 physical mobile, tablet, and campus laptop devices using the final HTTPS URL.
 
