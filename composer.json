@@ -47,7 +47,35 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --test"
+        ],
+        "lint:fix": [
+            "@php vendor/bin/pint"
+        ],
+        "test": [
+            "@php vendor/bin/phpunit"
+        ],
+        "test:coverage": [
+            "@php vendor/bin/phpunit --coverage-text"
+        ],
+        "security-check": [
+            "@composer audit"
+        ],
+        "qa": [
+            "@composer lint",
+            "@composer validate --strict",
+            "@composer test"
         ]
+    },
+    "scripts-descriptions": {
+        "lint": "Check code style with Pint (no changes written)",
+        "lint:fix": "Fix code style with Pint",
+        "test": "Run the PHPUnit test suite",
+        "test:coverage": "Run tests with text coverage output",
+        "security-check": "Check dependencies for known security advisories (informational; run separately because known advisories currently fail the exit code)",
+        "qa": "Run all quality gates: style, composer.json validation, tests"
     },
     "extra": {
         "laravel": {
