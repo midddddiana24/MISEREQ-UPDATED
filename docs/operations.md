@@ -70,6 +70,32 @@ php tests\load\smoke.php http://127.0.0.1:8000 100 10
 php tests\responsive\source-audit.php
 ```
 
+## Exception Argument Privacy
+
+PHP must run with `zend.exception_ignore_args=On` so exception stack frames do
+not retain function argument values such as passwords, tokens, or recovery
+codes. This is a `php.ini` setting, not an application setting tracked by Git.
+
+Set it manually in every environment, including each developer workstation,
+staging, and production. For the XAMPP installation used by this project, the
+active file is `C:\xampp_new\php\php.ini`:
+
+```ini
+zend.exception_ignore_args=On
+```
+
+After changing it, restart Apache/PHP and verify the active runtime:
+
+```powershell
+C:\xampp_new\php\php.exe --ini
+C:\xampp_new\php\php.exe -i | Select-String zend.exception_ignore_args
+```
+
+The GitHub Actions CI workflow fails if the active PHP runtime does not report
+this setting as `1` (`On`), preventing a silent privacy regression. Repeat the
+same check in staging and production startup/health procedures because their
+`php.ini` files are managed outside this repository.
+
 ## Known Security Debt
 
 The installed Laravel 10 line is affected by `PKSA-mdq4-51ck-6kdq`, a CRLF
