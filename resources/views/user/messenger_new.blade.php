@@ -722,7 +722,7 @@ $requests = isset($requests) ? $requests : [];
             <!-- Messages List -->
             <div class="section">
                 @if(count($requests) > 0)
-                <h3>Conversations</h3>
+                <h2>Conversations</h2>
                 <div class="message-list">
                     @foreach($requests as $request)
                     @php($latestMessage = $request->messages->first())
@@ -753,7 +753,7 @@ $requests = isset($requests) ? $requests : [];
                 </div>
                 @else
                 <div class="empty-state">
-                    <h3>No Conversations</h3>
+                    <h2>No Conversations</h2>
                     <p>Submit a service request to start a private conversation with the MIS Office.</p>
                     <br>
                     <a href="{{ route('requests.create') }}" class="button">+ Submit a Service Request</a>

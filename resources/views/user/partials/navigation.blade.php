@@ -205,7 +205,7 @@ default => 'Settings',
         max-width: 100%;
         margin-top: 5px;
         display: block;
-        color: #71808b;
+        color: #586d78;
         font-size: 10px;
         overflow-wrap: anywhere;
     }
@@ -234,7 +234,7 @@ default => 'Settings',
     .notification-empty {
         margin: 0;
         padding: 24px 15px;
-        color: #71808b;
+        color: #586d78;
         font-size: 12px;
         text-align: center;
     }
@@ -319,7 +319,7 @@ default => 'Settings',
     }
 
     .nav-toggle-copy small {
-        color: #71808b;
+        color: #586d78;
         font-size: 10px;
         font-weight: 700;
         letter-spacing: .06em;
@@ -548,6 +548,12 @@ default => 'Settings',
             </section>
         </div>
     </nav>
+    <div id="notificationConfig" hidden
+        data-csrf="{{ csrf_token() }}"
+        data-feed-url="{{ route('user.notifications') }}"
+        data-read-all-url="{{ route('notifications.read-all') }}"
+        data-clear-url="{{ route('notifications.clear') }}"
+        data-notification-base-url="{{ url('/api/notifications') }}"></div>
 </div>
 
 <script>
@@ -597,11 +603,12 @@ default => 'Settings',
         if (!toggle || !menu || !list || toggle.dataset.bound === 'true') return;
 
         toggle.dataset.bound = 'true';
-        const csrf = @json(csrf_token());
-        const feedUrl = @json(route('user.notifications'));
-        const readAllUrl = @json(route('notifications.read-all'));
-        const clearUrl = @json(route('notifications.clear'));
-        const notificationBaseUrl = @json(url('/api/notifications'));
+        const config = document.getElementById('notificationConfig');
+        const csrf = config.dataset.csrf;
+        const feedUrl = config.dataset.feedUrl;
+        const readAllUrl = config.dataset.readAllUrl;
+        const clearUrl = config.dataset.clearUrl;
+        const notificationBaseUrl = config.dataset.notificationBaseUrl;
 
         function setBadge(element, value) {
             if (!element) return;

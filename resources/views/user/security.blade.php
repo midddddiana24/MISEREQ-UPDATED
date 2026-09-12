@@ -93,7 +93,7 @@
         }
 
         .login-time {
-            color: #71808b;
+            color: #586d78;
             font-size: 12px;
         }
 
@@ -105,7 +105,7 @@
 
         .login-label {
             margin-bottom: 3px;
-            color: #71808b;
+            color: #586d78;
             font-size: 10px;
             font-weight: 700;
             letter-spacing: .05em;
@@ -161,14 +161,14 @@
         }
 
         .recommendation p {
-            color: #71808b;
+            color: #586d78;
             font-size: 12px;
             line-height: 1.5;
         }
 
         .empty-state {
             padding: 34px 20px;
-            color: #71808b;
+            color: #586d78;
             text-align: center;
         }
 

@@ -577,7 +577,7 @@
 
         .tracking-detail span {
             display: block;
-            color: #71808b;
+            color: #586d78;
             font-size: 10px;
             font-weight: 800;
             letter-spacing: .05em;
@@ -645,7 +645,7 @@
         .request-timeline time {
             display: block;
             margin-top: 2px;
-            color: #71808b;
+            color: #586d78;
             font-size: 10px;
         }
 
@@ -778,7 +778,7 @@
         .clarification-card small {
             margin-top: 6px;
             display: block;
-            color: #71808b;
+            color: #586d78;
             font-size: 10px;
         }
 
@@ -1280,10 +1280,10 @@
                 </div>
 
                 <div class="section">
-                    <h3>Request Tracking</h3>
+                    <h2>Request Tracking</h2>
                     <div class="tracking-grid">
                         <div class="tracking-card">
-                            <h4>Assigned Support</h4>
+                            <h3>Assigned Support</h3>
                             @if($request->assignedTechnician)
                             <div class="tracking-detail"><span>Technician</span><strong>{{ $request->assignedTechnician->full_name }}</strong></div>
                             <div class="tracking-detail"><span>Role / Specialization</span><strong>{{ $request->assignedTechnician->job_assignment ?? $request->assignedTechnician->specialization ?? 'MIS Technical Support' }}</strong></div>
@@ -1293,7 +1293,7 @@
                             @endif
                         </div>
                         <div class="tracking-card">
-                            <h4>Status Timeline</h4>
+                            <h3>Status Timeline</h3>
                             <ol class="request-timeline">
                                 <li>
                                     <strong>Request submitted</strong>
@@ -1327,7 +1327,7 @@
 
                 @if($request->clarifications->isNotEmpty())
                 <div class="section">
-                    <h3>Information Requests</h3>
+                    <h2>Information Requests</h2>
                     <div class="clarification-list">
                         @foreach($request->clarifications as $clarification)
                         <div class="clarification-card">
@@ -1358,7 +1358,7 @@
 
                 @if($request->scheduled_visit_at)
                 <div class="section">
-                    <h3>Scheduled MIS Visit</h3>
+                    <h2>Scheduled MIS Visit</h2>
                     <div class="schedule-card">
                         <strong>{{ $request->scheduled_visit_at->format('M d, Y g:i A') }}</strong>
                         <p style="margin:4px 0 0;color:#526570;font-size:13px;">{{ $request->scheduled_location }}</p>
@@ -1385,7 +1385,7 @@
 
                 <!-- Requestor Information -->
                 <div class="section">
-                    <h3>Requestor Information</h3>
+                    <h2>Requestor Information</h2>
                     <div class="info-grid four-col">
                         <div class="info-item">
                             <div class="info-label">Name</div>
@@ -1409,7 +1409,7 @@
                 <!-- Services Requested -->
                 @if($request->services)
                 <div class="section">
-                    <h3>🔧 Services Requested</h3>
+                    <h2>🔧 Services Requested</h2>
                     <div class="services-list">
                         <ul>
                             @php
@@ -1430,14 +1430,14 @@
                 <!-- Description -->
                 @if($request->description)
                 <div class="section">
-                    <h3>Description and Details</h3>
+                    <h2>Description and Details</h2>
                     <div class="description-box">{{ $request->description }}</div>
                 </div>
                 @endif
 
                 <!-- Additional Information -->
                 <div class="section">
-                    <h3>Additional Information</h3>
+                    <h2>Additional Information</h2>
                     <div class="info-grid two-col">
                         <div class="info-item">
                             <div class="info-label">Category</div>
@@ -1452,7 +1452,7 @@
 
                 @if($request->attachments->isNotEmpty())
                 <div class="section">
-                    <h3>Attachments</h3>
+                    <h2>Attachments</h2>
                     <div class="attachment-section">
                         @foreach($request->attachments as $attachment)
                         <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -1473,7 +1473,7 @@
                 <!-- Attachment -->
                 @if($request->attachment && $request->attachments->isEmpty())
                 <div class="section">
-                    <h3>Attachment</h3>
+                    <h2>Attachment</h2>
                     <div class="attachment-section">
                         <div class="info-label">Attached File</div>
                         <div style="margin-top: 8px;">
@@ -1486,7 +1486,7 @@
                 @endif
 
                 <div class="section">
-                    <h3>Linked Records</h3>
+                    <h2>Linked Records</h2>
                     <p style="margin:-5px 0 12px;color:#60717d;font-size:12px;line-height:1.5;">When an ICT incident is submitted from this request, the system prepares its preventive-maintenance checklist automatically for MIS staff.</p>
                     <div class="info-grid two-col">
                         <div class="info-item">
@@ -1516,7 +1516,7 @@
 
                 @if(in_array($request->status, ['completed', 'closed'], true))
                 <div class="section">
-                    <h3>Service Summary</h3>
+                    <h2>Service Summary</h2>
                     <div class="info-grid four-col">
                         <div class="info-item">
                             <div class="info-label">Submitted</div>
@@ -1545,7 +1545,7 @@
 
                 @if(in_array($request->status, ['awaiting_confirmation', 'completed', 'closed'], true))
                 <div class="section">
-                    <h3>{{ $request->status === 'awaiting_confirmation' ? 'Confirm Resolution' : 'Service Feedback' }}</h3>
+                    <h2>{{ $request->status === 'awaiting_confirmation' ? 'Confirm Resolution' : 'Service Feedback' }}</h2>
                     @if($request->feedback_submitted_at)
                     <div class="feedback-summary">
                         <strong>{{ $request->feedback_rating }}/5 rating</strong> &middot; {{ $request->feedback_resolved ? 'Issue resolved' : 'Issue needs follow-up' }}

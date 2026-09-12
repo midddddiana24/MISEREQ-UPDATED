@@ -254,7 +254,7 @@
             right: 13px;
             top: 50%;
             width: 14px;
-            color: #71808b;
+            color: #586d78;
             pointer-events: none;
             transform: translateY(-50%);
         }

@@ -913,7 +913,7 @@
                                 @if($request->incident_reports_count && $request->preventive_maintenance_checklists_count)<span> &middot; </span>@endif
                                 @if($request->preventive_maintenance_checklists_count)<span>{{ $request->preventive_maintenance_checklists_count }} PM</span>@endif
                                 @else
-                                <span style="color:#71808b;">None</span>
+                                <span style="color:#586d78;">None</span>
                                 @endif
                             </td>
                             <td data-label="Status">

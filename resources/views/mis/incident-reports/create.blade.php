@@ -469,7 +469,7 @@
                 <input type="hidden" name="service_request_id" value="{{ $linkedRequest->id }}">
                 @endif
                 <div class="form-section">
-                    <h3>Reporter Information</h3>
+                    <h2>Reporter Information</h2>
                     <div class="form-row two-col">
                         <div class="form-group">
                             <label for="reported_by" class="required">Reported By</label>
@@ -515,7 +515,7 @@
                 </div>
 
                 <div class="form-section">
-                    <h3>Nature of Incident</h3>
+                    <h2>Nature of Incident</h2>
                     @php
                     $natureOptions = [
                     'loss_of_sensitive_data' => 'Loss of sensitive and valuable data',
@@ -543,7 +543,7 @@
                 </div>
 
                 <div class="form-section">
-                    <h3>Incident Details</h3>
+                    <h2>Incident Details</h2>
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="details_of_incident">Details of Incident</label>

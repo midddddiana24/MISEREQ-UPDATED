@@ -239,9 +239,10 @@
         </div>
     </main>
 
+    <div id="recoveryCodesData" data-codes="{{ json_encode($recoveryCodes) }}" hidden></div>
     <script>
         function downloadCodes() {
-            const codes = @json($recoveryCodes);
+            const codes = JSON.parse(document.getElementById('recoveryCodesData').dataset.codes);
             const content = 'MIS Service Request - 2FA Recovery Codes\n' +
                 'Generated: ' + new Date().toLocaleString() + '\n\n' +
                 'Keep these codes safe and never share them.\n\n' +

@@ -181,7 +181,7 @@
             flex-wrap: wrap;
             gap: 4px 12px;
             margin-top: 4px;
-            color: #6e7e89;
+            color: #586d78;
             font-size: 11px;
             line-height: 1.4;
         }
@@ -300,7 +300,7 @@
         .preference small {
             display: block;
             margin-top: 2px;
-            color: #6e7e89;
+            color: #586d78;
             font-size: 11px;
             line-height: 1.4;
         }
@@ -367,7 +367,7 @@
 
         .empty-state {
             padding: 20px 12px;
-            color: #71808b;
+            color: #586d78;
             font-size: 12px;
             line-height: 1.5;
             text-align: center;
@@ -599,7 +599,7 @@
                     </div>
 
                     @if(!$twoFactorEnabled)
-                    <form id="beginTwoFactorForm" class="compact-form">
+                    <form id="beginTwoFactorForm" class="compact-form" data-setup-url="{{ route('settings.2fa.setup') }}">
                         <div class="form-grid two">
                             <div class="field">
                                 <label for="twofa_setup_password">Current password</label>
@@ -720,7 +720,7 @@
                 button.disabled = true;
                 button.textContent = 'Preparing...';
                 try {
-                    const response = await fetch(@json(route('settings.2fa.setup')), {
+                    const response = await fetch(form.dataset.setupUrl, {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/json',

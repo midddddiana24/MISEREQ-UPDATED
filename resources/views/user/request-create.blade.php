@@ -701,6 +701,10 @@
 
     <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
+        <div id="requestFormConfig" hidden
+            data-draft-url="{{ route('request-draft.show') }}"
+            data-duplicate-url="{{ route('requests.duplicate-check') }}"
+            data-csrf="{{ csrf_token() }}"></div>
 
         <div class="panel service-request-form">
             <div class="section-header">
@@ -748,7 +752,7 @@
 
                 <!-- Requestor Information -->
                 <div class="form-section">
-                    <h3>Requestor Information</h3>
+                    <h2>Requestor Information</h2>
                     <div class="form-row four-col">
                         <div class="form-group">
                             <label for="requester_name" class="required">Name of Requestor</label>
@@ -788,11 +792,11 @@
 
                 <!-- Service Categories -->
                 <div class="form-section services-section">
-                    <h3><span class="required">Services Requested</span></h3>
+                    <h2><span class="required">Services Requested</span></h2>
 
                     <!-- Network Services -->
                     <div class="service-box">
-                        <h4>🌐 Network/Telephone Services</h4>
+                        <h3>🌐 Network/Telephone Services</h3>
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="network_new_computer" name="services[]" value="new_network_computer" @checked(in_array('new_network_computer', $selectedServices, true))>
@@ -831,7 +835,7 @@
 
                     <!-- ICT Equipment Services -->
                     <div class="service-box">
-                        <h4>💻 ICT Equipment Services</h4>
+                        <h3>💻 ICT Equipment Services</h3>
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="ict_troubleshoot_pc" name="services[]" value="troubleshoot_pc" @checked(in_array('troubleshoot_pc', $selectedServices, true))>
@@ -863,7 +867,7 @@
 
                     <!-- MIS Software Services -->
                     <div class="service-box">
-                        <h4>⚙️ MIS Software/System Services</h4>
+                        <h3>⚙️ MIS Software/System Services</h3>
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="mis_account_creation" name="services[]" value="account_creation" @checked(in_array('account_creation', $selectedServices, true))>
@@ -888,7 +892,7 @@
 
                 <!-- Additional Information -->
                 <div class="form-section">
-                    <h3>Additional Information</h3>
+                    <h2>Additional Information</h2>
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="description">Description/Details of Request <span style="color:#64748b;font-weight:400;">(optional)</span></label>
@@ -929,8 +933,9 @@
             const status = document.querySelector('[data-draft-status]');
             if (!form || !banner || !status) return;
 
-            const endpoint = @json(route('request-draft.show'));
-            const csrf = @json(csrf_token());
+            const config = document.getElementById('requestFormConfig');
+            const endpoint = config.dataset.draftUrl;
+            const csrf = config.dataset.csrf;
             let availableDraft = null;
             let timer = null;
 
@@ -1030,8 +1035,9 @@
             const propertyNo = document.getElementById('property_no');
             const warning = document.querySelector('[data-duplicate-warning]');
             if (!description || !propertyNo || !warning) return;
-            const endpoint = @json(route('requests.duplicate-check'));
-            const csrf = @json(csrf_token());
+            const config = document.getElementById('requestFormConfig');
+            const endpoint = config.dataset.duplicateUrl;
+            const csrf = config.dataset.csrf;
             let timer = null;
 
             function check() {

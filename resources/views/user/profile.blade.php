@@ -64,7 +64,7 @@
 
         .profile-identity p {
             margin: 4px 0 0;
-            color: #71808b;
+            color: #586d78;
             font-size: 11px;
         }
 
@@ -94,7 +94,7 @@
 
         .profile-fact span {
             display: block;
-            color: #71808b;
+            color: #586d78;
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
@@ -124,7 +124,7 @@
 
         .profile-card-head p {
             margin: 3px 0 0;
-            color: #71808b;
+            color: #586d78;
             font-size: 10px;
             line-height: 1.45;
         }
@@ -174,7 +174,7 @@
         .profile-help {
             display: block;
             margin-top: 4px;
-            color: #71808b;
+            color: #586d78;
             font-size: 9px;
             line-height: 1.4;
         }
