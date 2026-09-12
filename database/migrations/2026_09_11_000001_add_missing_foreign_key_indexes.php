@@ -22,7 +22,12 @@ return new class extends Migration
     public function up(): void
     {
         // service_requests.user_id - PRIMARY: filtered on every user dashboard/list query
-        if (Schema::hasTable('service_requests') && ! $this->hasIndex('service_requests', 'user_id')) {
+        // (column itself is added by 2026_09_12 migration on fresh installs)
+        if (
+            Schema::hasTable('service_requests')
+            && Schema::hasColumn('service_requests', 'user_id')
+            && ! $this->hasIndex('service_requests', 'user_id')
+        ) {
             Schema::table('service_requests', function (Blueprint $table) {
                 $table->index('user_id');
             });
