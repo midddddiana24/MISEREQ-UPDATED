@@ -297,7 +297,7 @@
 
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
@@ -318,7 +318,7 @@
             </div>
             <form method="GET" class="search-form record-search-form">
                 @if(request('status'))
-                    <input type="hidden" name="status" value="{{ request('status') }}">
+                <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
                 <input type="text" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search control number, owner, or property number">
                 <button type="submit" class="button">Search</button>
@@ -327,36 +327,38 @@
             @if ($checklists->count())
             <p class="client-record-note" id="maintenanceRecordHint">Scroll inside the records area to review more checklists.</p>
             <div class="client-record-scroll" tabindex="0" role="region" aria-label="Preventive maintenance checklist records" aria-describedby="maintenanceRecordHint">
-            <table class="client-record-table">
-                <thead>
-                    <tr>
-                        <th>Control No.</th>
-                        <th>System Owner</th>
-                        <th>Date Inspected</th>
-                        <th>Source / Request</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($checklists as $checklist)
-                    <tr>
-                        <td data-label="Control No.">{{ $checklist->control_number }}</td>
-                        <td data-label="System Owner">{{ $checklist->system_owner }}</td>
-                        <td data-label="Date Inspected">{{ optional($checklist->date_inspected)->format('M d, Y') }}</td>
-                        <td data-label="Source / Request">
-                            @if($checklist->serviceRequest)
+                <table class="client-record-table">
+                    <thead>
+                        <tr>
+                            <th>Control No.</th>
+                            <th>System Owner</th>
+                            <th>Date Inspected</th>
+                            <th>Source / Request</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($checklists as $checklist)
+                        <tr>
+                            <td data-label="Control No.">{{ $checklist->control_number }}</td>
+                            <td data-label="System Owner">{{ $checklist->system_owner }}</td>
+                            <td data-label="Date Inspected">{{ optional($checklist->date_inspected)->format('M d, Y') }}</td>
+                            <td data-label="Source / Request">
+                                @if($checklist->serviceRequest)
                                 <a href="{{ route('requests.show', $checklist->serviceRequest) }}">{{ $checklist->serviceRequest->control_number }}</a>
-                            @else
+                                @else
                                 <span>Standalone checklist</span>
-                            @endif
-                        </td>
-                        <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $checklist->status)) }}</td>
-                        <td data-label="Actions"><div class="record-actions"><a class="record-action primary" href="{{ route('pm-checklists.show', $checklist) }}">View details</a><a class="record-action" href="{{ route('pm-checklists.pdf', ['pmChecklist' => $checklist, 'v' => $checklist->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div></td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                                @endif
+                            </td>
+                            <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $checklist->status)) }}</td>
+                            <td data-label="Actions">
+                                <div class="record-actions"><a class="record-action primary" href="{{ route('pm-checklists.show', $checklist) }}">View details</a><a class="record-action" href="{{ route('pm-checklists.pdf', ['pmChecklist' => $checklist, 'v' => $checklist->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
             <div style="margin-top:16px;">{{ $checklists->links() }}</div>
             @else

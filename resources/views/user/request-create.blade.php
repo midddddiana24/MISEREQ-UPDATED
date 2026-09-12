@@ -496,7 +496,7 @@
             padding-top: 22px;
         }
 
-        .service-request-form .services-section > h3 {
+        .service-request-form .services-section>h3 {
             margin-bottom: 12px !important;
         }
 
@@ -611,10 +611,46 @@
             }
         }
 
-        .draft-banner { margin: 0 0 14px; padding: 11px 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #bad8e8; border-radius: 7px; background: #f1f8fc; color: #385665; font-size: 12px; }
-        .draft-actions { display: flex; gap: 7px; flex-wrap: wrap; }
-        .draft-actions button { padding: 6px 9px; border: 1px solid #9fc5d9; border-radius: 5px; background: #fff; color: #245f83; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
-        .draft-status { margin: 0 0 10px; min-height: 17px; color: #647985; font-size: 11px; text-align: right; }
+        .draft-banner {
+            margin: 0 0 14px;
+            padding: 11px 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid #bad8e8;
+            border-radius: 7px;
+            background: #f1f8fc;
+            color: #385665;
+            font-size: 12px;
+        }
+
+        .draft-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .draft-actions button {
+            padding: 6px 9px;
+            border: 1px solid #9fc5d9;
+            border-radius: 5px;
+            background: #fff;
+            color: #245f83;
+            font: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .draft-status {
+            margin: 0 0 10px;
+            min-height: 17px;
+            color: #647985;
+            font-size: 11px;
+            text-align: right;
+        }
+
         .service-request-form .form-action-bar {
             position: sticky;
             z-index: 10;
@@ -631,8 +667,18 @@
             box-shadow: 0 8px 24px rgba(25, 55, 74, .12);
             backdrop-filter: blur(8px);
         }
-        .service-request-form .form-action-bar .btn { min-width: 140px; }
-        @media (max-width: 600px) { .draft-banner { align-items: flex-start; flex-direction: column; } }
+
+        .service-request-form .form-action-bar .btn {
+            min-width: 140px;
+        }
+
+        @media (max-width: 600px) {
+            .draft-banner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
         @media (max-width: 600px) {
             .service-request-form .form-action-bar {
                 bottom: 6px;
@@ -641,7 +687,11 @@
                 display: grid;
                 grid-template-columns: 1fr;
             }
-            .service-request-form .form-action-bar .btn { width: 100%; min-height: 46px; }
+
+            .service-request-form .form-action-bar .btn {
+                width: 100%;
+                min-height: 46px;
+            }
         }
     </style>
 </head>
@@ -649,7 +699,7 @@
 <body>
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <div class="panel service-request-form">
@@ -679,21 +729,21 @@
             @endif
 
             @if(!$isEdit)
-                <div class="draft-banner" data-draft-banner hidden>
-                    <span data-draft-copy>A saved draft is available.</span>
-                    <div class="draft-actions">
-                        <button type="button" data-draft-restore>Restore draft</button>
-                        <button type="button" data-draft-discard>Discard</button>
-                    </div>
+            <div class="draft-banner" data-draft-banner hidden>
+                <span data-draft-copy>A saved draft is available.</span>
+                <div class="draft-actions">
+                    <button type="button" data-draft-restore>Restore draft</button>
+                    <button type="button" data-draft-discard>Discard</button>
                 </div>
-                <p class="draft-status" data-draft-status aria-live="polite"></p>
-                <div data-duplicate-warning hidden style="margin:10px 0 14px;padding:12px 14px;border:1px solid #f1d38a;border-left:4px solid #d9aa22;border-radius:7px;background:#fffaf0;color:#5d4a1f;font-size:13px;" role="status"></div>
+            </div>
+            <p class="draft-status" data-draft-status aria-live="polite"></p>
+            <div data-duplicate-warning hidden style="margin:10px 0 14px;padding:12px 14px;border:1px solid #f1d38a;border-left:4px solid #d9aa22;border-radius:7px;background:#fffaf0;color:#5d4a1f;font-size:13px;" role="status"></div>
             @endif
 
             <form action="{{ $isEdit ? route('requests.update', $requestModel) : route('requests.store') }}" method="POST" enctype="multipart/form-data" data-service-request-form>
                 @csrf
                 @if($isEdit)
-                    @method('PATCH')
+                @method('PATCH')
                 @endif
 
                 <!-- Requestor Information -->
@@ -856,7 +906,7 @@
                             <input type="file" id="attachments" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
                             <small>Up to 5 files. PDF, DOC, DOCX, JPG, or PNG; maximum 10MB each. Files are not stored in drafts.</small>
                             @if($isEdit && $requestModel?->attachment)
-                                <small>Current file: <a href="{{ route('requests.attachment', $requestModel) }}">Download current attachment</a></small>
+                            <small>Current file: <a href="{{ route('requests.attachment', $requestModel) }}">Download current attachment</a></small>
                             @endif
                         </div>
                     </div>
@@ -872,7 +922,7 @@
     </main>
     @if(!$isEdit)
     <script>
-        (function () {
+        (function() {
             const form = document.querySelector('[data-service-request-form]');
             const banner = document.querySelector('[data-draft-banner]');
             const copy = document.querySelector('[data-draft-copy]');
@@ -886,7 +936,7 @@
 
             function payloadFromForm() {
                 const payload = {};
-                Array.from(form.elements).forEach(function (field) {
+                Array.from(form.elements).forEach(function(field) {
                     if (!field.name || field.disabled || field.type === 'file' || field.type === 'submit' || field.name.startsWith('_')) return;
                     const key = field.name.replace(/\[\]$/, '');
                     if ((field.type === 'checkbox' || field.type === 'radio') && !field.checked) return;
@@ -901,9 +951,9 @@
             }
 
             function restore(payload) {
-                Object.keys(payload || {}).forEach(function (key) {
+                Object.keys(payload || {}).forEach(function(key) {
                     const fields = form.querySelectorAll('[name="' + CSS.escape(key) + '"], [name="' + CSS.escape(key + '[]') + '"]');
-                    fields.forEach(function (field) {
+                    fields.forEach(function(field) {
                         const value = payload[key];
                         if (field.type === 'checkbox') field.checked = Array.isArray(value) && value.includes(field.value);
                         else if (field.type === 'radio') field.checked = String(value) === field.value;
@@ -918,34 +968,56 @@
                 status.textContent = 'Saving draft...';
                 fetch(endpoint, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-                    body: JSON.stringify({ payload: payloadFromForm() })
-                }).then(function (response) {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payload: payloadFromForm()
+                    })
+                }).then(function(response) {
                     status.textContent = response.ok ? 'Draft saved automatically.' : 'Draft could not be saved.';
-                }).catch(function () { status.textContent = 'Draft could not be saved.'; });
+                }).catch(function() {
+                    status.textContent = 'Draft could not be saved.';
+                });
             }
 
-            form.addEventListener('input', function () {
+            form.addEventListener('input', function() {
                 clearTimeout(timer);
                 status.textContent = 'Unsaved changes...';
                 timer = setTimeout(save, 900);
             });
-            form.addEventListener('change', function () {
+            form.addEventListener('change', function() {
                 clearTimeout(timer);
                 timer = setTimeout(save, 500);
             });
 
-            document.querySelector('[data-draft-restore]').addEventListener('click', function () { restore(availableDraft); });
-            document.querySelector('[data-draft-discard]').addEventListener('click', function () {
-                fetch(endpoint, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
+            document.querySelector('[data-draft-restore]').addEventListener('click', function() {
+                restore(availableDraft);
+            });
+            document.querySelector('[data-draft-discard]').addEventListener('click', function() {
+                fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json'
+                    }
+                });
                 availableDraft = null;
                 banner.hidden = true;
                 status.textContent = 'Saved draft discarded.';
             });
 
-            fetch(endpoint, { headers: { 'Accept': 'application/json' } })
-                .then(function (response) { return response.ok ? response.json() : null; })
-                .then(function (data) {
+            fetch(endpoint, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    return response.ok ? response.json() : null;
+                })
+                .then(function(data) {
                     if (!data || !data.draft) return;
                     availableDraft = data.draft.payload;
                     copy.textContent = 'A draft saved ' + data.draft.updated_human + ' is available.';
@@ -953,7 +1025,7 @@
                 });
         })();
 
-        (function () {
+        (function() {
             const description = document.getElementById('description');
             const propertyNo = document.getElementById('property_no');
             const warning = document.querySelector('[data-duplicate-warning]');
@@ -968,11 +1040,22 @@
                     return;
                 }
                 fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-                    body: JSON.stringify({ description: description.value, property_no: propertyNo.value })
-                }).then(function (response) { return response.ok ? response.json() : { matches: [] }; })
-                    .then(function (data) {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            description: description.value,
+                            property_no: propertyNo.value
+                        })
+                    }).then(function(response) {
+                        return response.ok ? response.json() : {
+                            matches: []
+                        };
+                    })
+                    .then(function(data) {
                         const matches = Array.isArray(data.matches) ? data.matches : [];
                         warning.replaceChildren();
                         warning.hidden = matches.length === 0;
@@ -980,7 +1063,7 @@
                         const title = document.createElement('strong');
                         title.textContent = 'Similar active request found. Check it before submitting another request:';
                         warning.appendChild(title);
-                        matches.forEach(function (match) {
+                        matches.forEach(function(match) {
                             const line = document.createElement('div');
                             line.style.marginTop = '5px';
                             const link = document.createElement('a');
@@ -994,8 +1077,8 @@
                     });
             }
 
-            [description, propertyNo].forEach(function (field) {
-                field.addEventListener('input', function () {
+            [description, propertyNo].forEach(function(field) {
+                field.addEventListener('input', function() {
                     clearTimeout(timer);
                     timer = setTimeout(check, 700);
                 });

@@ -449,7 +449,7 @@
 
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
@@ -464,13 +464,13 @@
             </div>
 
             @if(isset($linkedRequest) && $linkedRequest)
-                <div class="alert alert-success">Linked to service request <strong>{{ $linkedRequest->control_number }}</strong>.</div>
+            <div class="alert alert-success">Linked to service request <strong>{{ $linkedRequest->control_number }}</strong>.</div>
             @endif
 
             <form method="POST" action="{{ route('pm-checklists.store') }}">
                 @csrf
                 @if(isset($linkedRequest) && $linkedRequest)
-                    <input type="hidden" name="service_request_id" value="{{ $linkedRequest->id }}">
+                <input type="hidden" name="service_request_id" value="{{ $linkedRequest->id }}">
                 @endif
 
                 <div class="form-section">

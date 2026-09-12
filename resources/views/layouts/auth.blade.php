@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#174f75">
     <title>@yield('title', 'Account') - WVSU MIS Service Portal</title>
     @php
-        $wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png'))
-            ? asset('images/wvsu-janiuay-logo.png')
-            : asset('images/wvsu-logo.png');
-        $bagongPilipinasLogo = asset('images/Bagong_Pilipinas_logo.png');
+    $wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png'))
+    ? asset('images/wvsu-janiuay-logo.png')
+    : asset('images/wvsu-logo.png');
+    $bagongPilipinasLogo = asset('images/Bagong_Pilipinas_logo.png');
     @endphp
     <style>
         :root {
@@ -26,8 +27,13 @@
             --focus: #e5b827;
         }
 
-        * { box-sizing: border-box; }
-        html { min-width: 320px; }
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-width: 320px;
+        }
 
         body {
             min-height: 100vh;
@@ -43,9 +49,8 @@
             position: fixed;
             inset: 0;
             z-index: 0;
-            background-image:
-                url("{{ $wvsuLogo }}"),
-                url("{{ $bagongPilipinasLogo }}");
+            background-image: url("{{ $wvsuLogo }}"),
+            url("{{ $bagongPilipinasLogo }}");
             background-position:
                 left 5vw center,
                 right 5vw center;
@@ -58,9 +63,19 @@
             pointer-events: none;
         }
 
-        a { color: var(--brand); }
-        button, input, select { font: inherit; }
-        .site-header { z-index: 1; }
+        a {
+            color: var(--brand);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        .site-header {
+            z-index: 1;
+        }
 
         a:focus-visible,
         button:focus-visible,
@@ -92,7 +107,9 @@
             box-shadow: 0 12px 34px rgba(27, 60, 80, .08);
         }
 
-        .auth-content.compact { max-width: 470px; }
+        .auth-content.compact {
+            max-width: 470px;
+        }
 
         .auth-heading {
             margin-bottom: 24px;
@@ -130,8 +147,17 @@
             line-height: 1.45;
         }
 
-        .alert.success { border-color: #b8dcc7; background: #f2faf5; color: var(--success); }
-        .alert svg { width: 17px; flex: 0 0 auto; margin-top: 1px; }
+        .alert.success {
+            border-color: #b8dcc7;
+            background: #f2faf5;
+            color: var(--success);
+        }
+
+        .alert svg {
+            width: 17px;
+            flex: 0 0 auto;
+            margin-top: 1px;
+        }
 
         .form-section {
             margin: 25px 0 15px;
@@ -144,9 +170,19 @@
             text-transform: uppercase;
         }
 
-        .form-section:first-child { margin-top: 0; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
-        .form-group { margin-bottom: 16px; }
+        .form-section:first-child {
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 18px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
 
         .form-group label {
             display: flex;
@@ -158,8 +194,15 @@
             font-weight: 700;
         }
 
-        .optional { color: #7b8991; font-size: 11px; font-weight: 400; }
-        .input-wrap { position: relative; }
+        .optional {
+            color: #7b8991;
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
 
         .input-icon {
             position: absolute;
@@ -185,12 +228,26 @@
             transition: border-color .15s ease, box-shadow .15s ease;
         }
 
-        .input-wrap select { appearance: none; cursor: pointer; }
-        .input-wrap input::placeholder { color: #919ea6; }
+        .input-wrap select {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .input-wrap input::placeholder {
+            color: #919ea6;
+        }
+
         .input-wrap input:focus,
-        .input-wrap select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(23, 79, 117, .11); }
+        .input-wrap select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(23, 79, 117, .11);
+        }
+
         .form-group.error .input-wrap input,
-        .form-group.error .input-wrap select { border-color: #cc655d; background: #fffafa; }
+        .form-group.error .input-wrap select {
+            border-color: #cc655d;
+            background: #fffafa;
+        }
 
         .select-arrow {
             position: absolute;
@@ -219,10 +276,28 @@
             transform: translateY(-50%);
         }
 
-        .password-toggle:hover { color: var(--brand); background: var(--brand-soft); }
-        .password-toggle svg { width: 17px; }
-        .error-message { margin-top: 5px; color: var(--danger); font-size: 12px; line-height: 1.4; }
-        .password-hint { margin: -6px 0 17px; color: #687983; font-size: 12px; line-height: 1.5; }
+        .password-toggle:hover {
+            color: var(--brand);
+            background: var(--brand-soft);
+        }
+
+        .password-toggle svg {
+            width: 17px;
+        }
+
+        .error-message {
+            margin-top: 5px;
+            color: var(--danger);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .password-hint {
+            margin: -6px 0 17px;
+            color: #687983;
+            font-size: 12px;
+            line-height: 1.5;
+        }
 
         .form-options {
             margin: 2px 0 20px;
@@ -233,10 +308,29 @@
             font-size: 13px;
         }
 
-        .check-label { display: inline-flex; align-items: center; gap: 8px; color: #4f626e; cursor: pointer; }
-        .check-label input { width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
-        .text-link { font-weight: 700; text-decoration: none; }
-        .text-link:hover { text-decoration: underline; }
+        .check-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4f626e;
+            cursor: pointer;
+        }
+
+        .check-label input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--brand);
+        }
+
+        .text-link {
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .text-link:hover {
+            text-decoration: underline;
+        }
 
         .primary-button {
             width: 100%;
@@ -256,16 +350,52 @@
             transition: background .15s ease, border-color .15s ease;
         }
 
-        .primary-button:hover { border-color: var(--brand-dark); background: var(--brand-dark); }
-        .primary-button svg { width: 17px; }
-        .auth-footer { margin: 20px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
-        .back-home { margin-top: 14px; display: flex; justify-content: center; }
-        .back-home a { display: inline-flex; align-items: center; gap: 5px; color: #64747e; font-size: 12px; font-weight: 700; text-decoration: none; }
-        .back-home a:hover { color: var(--brand-dark); }
-        .back-home svg { width: 14px; }
+        .primary-button:hover {
+            border-color: var(--brand-dark);
+            background: var(--brand-dark);
+        }
+
+        .primary-button svg {
+            width: 17px;
+        }
+
+        .auth-footer {
+            margin: 20px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .back-home {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .back-home a {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #64747e;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .back-home a:hover {
+            color: var(--brand-dark);
+        }
+
+        .back-home svg {
+            width: 14px;
+        }
 
         @media (max-width: 640px) {
-            body { background: var(--page); }
+            body {
+                background: var(--page);
+            }
+
             body::before {
                 background-position:
                     left -72px top 110px,
@@ -275,10 +405,26 @@
                     205px auto;
                 opacity: .06;
             }
-            .auth-page { width: min(100% - 24px, 760px); padding: 20px 0 30px; }
-            .auth-content { padding: 23px 18px; border-radius: 10px; box-shadow: 0 8px 22px rgba(27, 60, 80, .07); }
-            .auth-heading { margin-bottom: 20px; }
-            .form-grid { grid-template-columns: 1fr; gap: 0; }
+
+            .auth-page {
+                width: min(100% - 24px, 760px);
+                padding: 20px 0 30px;
+            }
+
+            .auth-content {
+                padding: 23px 18px;
+                border-radius: 10px;
+                box-shadow: 0 8px 22px rgba(27, 60, 80, .07);
+            }
+
+            .auth-heading {
+                margin-bottom: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
         }
 
         @media (max-width: 380px) {
@@ -288,28 +434,45 @@
                     right -78px bottom 20px;
                 opacity: .05;
             }
-            .auth-page { width: calc(100% - 16px); padding-top: 12px; }
-            .auth-content { padding: 20px 14px; }
-            .form-options { align-items: flex-start; gap: 10px; }
+
+            .auth-page {
+                width: calc(100% - 16px);
+                padding-top: 12px;
+            }
+
+            .auth-content {
+                padding: 20px 14px;
+            }
+
+            .form-options {
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { transition: none !important; }
+
+            *,
+            *::before,
+            *::after {
+                transition: none !important;
+            }
         }
     </style>
 </head>
+
 <body>
     @include('partials.public-header')
 
-    <main class="auth-page" id="mainContent">
+    <main class="auth-page" id="mainContent" tabindex="-1">
         <section class="auth-content @yield('content-class', 'compact')" aria-label="@yield('title', 'Account')">
             @yield('content')
         </section>
     </main>
 
     <script>
-        document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
-            button.addEventListener('click', function () {
+        document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
+            button.addEventListener('click', function() {
                 var input = document.getElementById(button.getAttribute('data-password-toggle'));
                 if (!input) return;
                 var showing = input.type === 'text';
@@ -322,4 +485,5 @@
     @include('partials.submission-feedback')
     @stack('scripts')
 </body>
+
 </html>

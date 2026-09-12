@@ -297,7 +297,7 @@
 
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
@@ -318,7 +318,7 @@
             </div>
             <form method="GET" class="search-form record-search-form">
                 @if(request('status'))
-                    <input type="hidden" name="status" value="{{ request('status') }}">
+                <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
                 <input type="text" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search document number, department, or details">
                 <button type="submit" class="button">Search</button>
@@ -327,36 +327,38 @@
             @if ($reports->count())
             <p class="client-record-note" id="incidentRecordHint">Scroll inside the records area to review more reports.</p>
             <div class="client-record-scroll" tabindex="0" role="region" aria-label="ICT incident report records" aria-describedby="incidentRecordHint">
-            <table class="client-record-table">
-                <thead>
-                    <tr>
-                        <th>Document No.</th>
-                        <th>Incident Date</th>
-                        <th>Department</th>
-                        <th>Connected Records</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($reports as $report)
-                    <tr>
-                        <td data-label="Document No.">{{ $report->document_number }}</td>
-                        <td data-label="Incident Date">{{ optional($report->date_of_incident)->format('M d, Y') }}</td>
-                        <td data-label="Department">{{ $report->department }}</td>
-                        <td data-label="Connected Records">
-                            @if($report->serviceRequest)
+                <table class="client-record-table">
+                    <thead>
+                        <tr>
+                            <th>Document No.</th>
+                            <th>Incident Date</th>
+                            <th>Department</th>
+                            <th>Connected Records</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($reports as $report)
+                        <tr>
+                            <td data-label="Document No.">{{ $report->document_number }}</td>
+                            <td data-label="Incident Date">{{ optional($report->date_of_incident)->format('M d, Y') }}</td>
+                            <td data-label="Department">{{ $report->department }}</td>
+                            <td data-label="Connected Records">
+                                @if($report->serviceRequest)
                                 <a href="{{ route('requests.show', $report->serviceRequest) }}">{{ $report->serviceRequest->control_number }}</a>
-                            @else
+                                @else
                                 <span>Standalone incident</span>
-                            @endif
-                        </td>
-                        <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $report->status)) }}</td>
-                        <td data-label="Actions"><div class="record-actions"><a class="record-action primary" href="{{ route('incident-reports.show', $report) }}">View details</a><a class="record-action" href="{{ route('incident-reports.pdf', ['incidentReport' => $report, 'v' => $report->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div></td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                                @endif
+                            </td>
+                            <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $report->status)) }}</td>
+                            <td data-label="Actions">
+                                <div class="record-actions"><a class="record-action primary" href="{{ route('incident-reports.show', $report) }}">View details</a><a class="record-action" href="{{ route('incident-reports.pdf', ['incidentReport' => $report, 'v' => $report->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
             <div style="margin-top:16px;">{{ $reports->links() }}</div>
             @else

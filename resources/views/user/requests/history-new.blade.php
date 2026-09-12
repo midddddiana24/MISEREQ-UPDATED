@@ -341,12 +341,35 @@
             color: #92400e;
         }
 
-        .status-submitted { background: #f1f5f9; color: #475569; }
-        .status-processing { background: #dbeafe; color: #1d4ed8; }
-        .status-awaiting_confirmation { background: #ede9fe; color: #6d28d9; }
-        .status-awaiting_requester_info { background: #fef3c7; color: #92400e; }
-        .status-reopened { background: #ffedd5; color: #c2410c; }
-        .status-escalated { background: #fee2e2; color: #b91c1c; }
+        .status-submitted {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-awaiting_confirmation {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-awaiting_requester_info {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-reopened {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .status-escalated {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
         .status-completed {
             background: #d1fae5;
@@ -402,9 +425,22 @@
             text-decoration: none;
         }
 
-        .request-action:hover { border-color: #8fb4ca; background: #eef6fb; text-decoration: none; }
-        .request-action.primary { color: #fff; border-color: #236d9e; background: #236d9e; }
-        .request-action.primary:hover { border-color: #174f75; background: #174f75; }
+        .request-action:hover {
+            border-color: #8fb4ca;
+            background: #eef6fb;
+            text-decoration: none;
+        }
+
+        .request-action.primary {
+            color: #fff;
+            border-color: #236d9e;
+            background: #236d9e;
+        }
+
+        .request-action.primary:hover {
+            border-color: #174f75;
+            background: #174f75;
+        }
 
         .empty-state {
             text-align: center;
@@ -567,9 +603,20 @@
                 letter-spacing: 0.04em;
             }
 
-            table td[data-label="Actions"]::before { margin-bottom: 7px; }
-            .request-actions { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .request-action { width: 100%; min-height: 42px; }
+            table td[data-label="Actions"]::before {
+                margin-bottom: 7px;
+            }
+
+            .request-actions {
+                min-width: 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .request-action {
+                width: 100%;
+                min-height: 42px;
+            }
         }
     </style>
     @include('user.partials.theme')
@@ -579,6 +626,7 @@
             color: var(--client-ink-500);
             font-size: 11px;
         }
+
         .request-history-scroll {
             max-height: min(62vh, 620px);
             overflow: auto;
@@ -588,22 +636,40 @@
             border-radius: 8px;
             background: #fff;
         }
+
         .request-history-scroll:focus-visible {
             outline: 3px solid rgba(35, 109, 158, .28);
             outline-offset: 2px;
         }
-        .request-history-table thead { position: sticky; z-index: 2; top: 0; }
+
+        .request-history-table thead {
+            position: sticky;
+            z-index: 2;
+            top: 0;
+        }
 
         @media (max-width: 1024px) {
-            .request-history-scroll { max-height: min(58vh, 560px); padding: 9px; }
+            .request-history-scroll {
+                max-height: min(58vh, 560px);
+                padding: 9px;
+            }
+
             .request-history-table,
-            .request-history-table tbody { display: block !important; width: 100%; }
-            .request-history-table thead { display: none !important; }
+            .request-history-table tbody {
+                display: block !important;
+                width: 100%;
+            }
+
+            .request-history-table thead {
+                display: none !important;
+            }
+
             .request-history-table tbody {
                 display: grid !important;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 10px;
             }
+
             .request-history-table tbody tr {
                 min-width: 0;
                 padding: 13px !important;
@@ -615,6 +681,7 @@
                 border-radius: 8px;
                 background: #fff;
             }
+
             .request-history-table tbody td {
                 min-width: 0;
                 width: auto !important;
@@ -623,6 +690,7 @@
                 border: 0 !important;
                 overflow-wrap: anywhere;
             }
+
             .request-history-table tbody td::before {
                 content: attr(data-label);
                 margin-bottom: 3px;
@@ -634,18 +702,48 @@
                 line-height: 1.3;
                 text-transform: uppercase;
             }
+
             .request-history-table tbody td[data-label="Control Number"],
-            .request-history-table tbody td[data-label="Actions"] { grid-column: 1 / -1; }
-            .request-history-table .request-actions { min-width: 0; display: flex; gap: 5px; }
-            .request-history-table .request-action { width: auto; min-height: 38px; flex: 1 1 auto; padding: 7px 8px; }
+            .request-history-table tbody td[data-label="Actions"] {
+                grid-column: 1 / -1;
+            }
+
+            .request-history-table .request-actions {
+                min-width: 0;
+                display: flex;
+                gap: 5px;
+            }
+
+            .request-history-table .request-action {
+                width: auto;
+                min-height: 38px;
+                flex: 1 1 auto;
+                padding: 7px 8px;
+            }
         }
 
         @media (max-width: 640px) {
-            .request-history-scroll { max-height: min(54vh, 470px); padding: 7px; }
-            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
-            .stat-card { padding: 12px !important; }
-            .stat-card .stat-value { font-size: 20px !important; }
-            .stat-card .stat-hint { display: none; }
+            .request-history-scroll {
+                max-height: min(54vh, 470px);
+                padding: 7px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+
+            .stat-card {
+                padding: 12px !important;
+            }
+
+            .stat-card .stat-value {
+                font-size: 20px !important;
+            }
+
+            .stat-card .stat-hint {
+                display: none;
+            }
 
             .filters {
                 margin: 0 -2px 14px !important;
@@ -655,17 +753,50 @@
                 overflow-x: auto;
                 scrollbar-width: thin;
             }
-            .filters .filter-btn { flex: 0 0 auto !important; min-height: 38px; padding: 8px 11px !important; white-space: nowrap; }
-            .search-container { margin-bottom: 14px !important; }
-            .search-input { width: 100%; max-width: none !important; }
 
-            .request-history-table tbody { grid-template-columns: 1fr; gap: 8px; }
-            .request-history-table tbody tr { padding: 12px !important; }
+            .filters .filter-btn {
+                flex: 0 0 auto !important;
+                min-height: 38px;
+                padding: 8px 11px !important;
+                white-space: nowrap;
+            }
+
+            .search-container {
+                margin-bottom: 14px !important;
+            }
+
+            .search-input {
+                width: 100%;
+                max-width: none !important;
+            }
+
+            .request-history-table tbody {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .request-history-table tbody tr {
+                padding: 12px !important;
+            }
+
             .request-history-table tbody td[data-label="Category"],
-            .request-history-table tbody td[data-label="Date Submitted"] { display: none !important; }
-            .request-history-table tbody td[data-label="Status"] { grid-column: 1 / -1; }
-            .request-history-table .request-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .request-history-table .request-action { width: 100%; min-height: 40px; }
+            .request-history-table tbody td[data-label="Date Submitted"] {
+                display: none !important;
+            }
+
+            .request-history-table tbody td[data-label="Status"] {
+                grid-column: 1 / -1;
+            }
+
+            .request-history-table .request-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .request-history-table .request-action {
+                width: 100%;
+                min-height: 40px;
+            }
         }
     </style>
 </head>
@@ -680,7 +811,7 @@
 
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <div class="panel">
@@ -735,87 +866,87 @@
 
             <!-- Scrollable request records -->
             @if($requests->count())
-                <p class="request-list-note" id="requestListHint">Showing {{ $requests->count() }} request{{ $requests->count() === 1 ? '' : 's' }} on this page. Scroll inside the list to see more.</p>
+            <p class="request-list-note" id="requestListHint">Showing {{ $requests->count() }} request{{ $requests->count() === 1 ? '' : 's' }} on this page. Scroll inside the list to see more.</p>
             @endif
             <div class="request-history-scroll" tabindex="0" role="region" aria-label="Service request records" @if($requests->count()) aria-describedby="requestListHint" @endif>
-            <table class="request-history-table">
-                <thead>
-                    <tr>
-                        <th>Control Number</th>
-                        <th>Category</th>
-                        <th>Date Submitted</th>
-                        <th>Linked Records</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($requests as $request)
-                    <tr data-request-id="{{ $request->id }}" data-status="{{ $request->status }}">
-                        <td data-label="Control Number"><strong>{{ $request->control_number }}</strong></td>
-                        <td data-label="Category">
-                            @if($request->category)
-                            <span class="category-badge">
-                                @php
-                                $categoryVal = strtolower($request->category);
-                                if ($categoryVal === 'network') {
-                                echo '🌐 Network';
-                                } elseif ($categoryVal === 'ict') {
-                                echo '💻 ICT';
-                                } elseif ($categoryVal === 'mis') {
-                                echo '📊 MIS';
-                                } elseif ($categoryVal === 'web') {
-                                echo '🌍 Web';
-                                } else {
-                                echo ucfirst(str_replace('_', ' ', $categoryVal));
-                                }
-                                @endphp
-                            </span>
-                            @else
-                            <span class="category-badge">-</span>
-                            @endif
-                        </td>
-                        <td data-label="Date Submitted">{{ $request->created_at->format('M d, Y') }}</td>
-                        <td data-label="Linked Records">
-                            @if($request->incident_reports_count || $request->preventive_maintenance_checklists_count)
+                <table class="request-history-table">
+                    <thead>
+                        <tr>
+                            <th>Control Number</th>
+                            <th>Category</th>
+                            <th>Date Submitted</th>
+                            <th>Linked Records</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($requests as $request)
+                        <tr data-request-id="{{ $request->id }}" data-status="{{ $request->status }}">
+                            <td data-label="Control Number"><strong>{{ $request->control_number }}</strong></td>
+                            <td data-label="Category">
+                                @if($request->category)
+                                <span class="category-badge">
+                                    @php
+                                    $categoryVal = strtolower($request->category);
+                                    if ($categoryVal === 'network') {
+                                    echo '🌐 Network';
+                                    } elseif ($categoryVal === 'ict') {
+                                    echo '💻 ICT';
+                                    } elseif ($categoryVal === 'mis') {
+                                    echo '📊 MIS';
+                                    } elseif ($categoryVal === 'web') {
+                                    echo '🌍 Web';
+                                    } else {
+                                    echo ucfirst(str_replace('_', ' ', $categoryVal));
+                                    }
+                                    @endphp
+                                </span>
+                                @else
+                                <span class="category-badge">-</span>
+                                @endif
+                            </td>
+                            <td data-label="Date Submitted">{{ $request->created_at->format('M d, Y') }}</td>
+                            <td data-label="Linked Records">
+                                @if($request->incident_reports_count || $request->preventive_maintenance_checklists_count)
                                 @if($request->incident_reports_count)<span>{{ $request->incident_reports_count }} incident</span>@endif
                                 @if($request->incident_reports_count && $request->preventive_maintenance_checklists_count)<span> &middot; </span>@endif
                                 @if($request->preventive_maintenance_checklists_count)<span>{{ $request->preventive_maintenance_checklists_count }} PM</span>@endif
-                            @else
+                                @else
                                 <span style="color:#71808b;">None</span>
-                            @endif
-                        </td>
-                        <td data-label="Status">
-                            <span class="status-badge status-{{ strtolower($request->status ?? 'pending') }}">
-                                {{ $request->status_label }}
-                            </span>
-                            <div style="margin-top:4px;color:#6b7280;font-size:11px;">{{ $request->responsibility_label }}</div>
-                        </td>
-                        <td data-label="Actions">
-                            <div class="request-actions">
-                            <a href="{{ route('requests.show', $request->id) }}" class="request-action primary">View details</a>
-                            @if($request->canBeEditedByUser())
-                            <a href="{{ route('requests.edit', $request) }}" class="request-action">Edit</a>
-                            @endif
-                            <a href="{{ route('request.pdf', $request->id) }}" class="request-action" target="_blank" rel="noopener" data-pdf-action>View PDF</a>
-                            @if($request->attachment)
-                            <a href="{{ route('requests.attachment', $request) }}" class="request-action">Attachment</a>
-                            @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6">
-                            <div class="empty-state">
-                                <div class="empty-icon">📜</div>
-                                <p>No service requests yet.</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                @endif
+                            </td>
+                            <td data-label="Status">
+                                <span class="status-badge status-{{ strtolower($request->status ?? 'pending') }}">
+                                    {{ $request->status_label }}
+                                </span>
+                                <div style="margin-top:4px;color:#6b7280;font-size:11px;">{{ $request->responsibility_label }}</div>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="request-actions">
+                                    <a href="{{ route('requests.show', $request->id) }}" class="request-action primary">View details</a>
+                                    @if($request->canBeEditedByUser())
+                                    <a href="{{ route('requests.edit', $request) }}" class="request-action">Edit</a>
+                                    @endif
+                                    <a href="{{ route('request.pdf', $request->id) }}" class="request-action" target="_blank" rel="noopener" data-pdf-action>View PDF</a>
+                                    @if($request->attachment)
+                                    <a href="{{ route('requests.attachment', $request) }}" class="request-action">Attachment</a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📜</div>
+                                    <p>No service requests yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
             {{ $requests->links() }}

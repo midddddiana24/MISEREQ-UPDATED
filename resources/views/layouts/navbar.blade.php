@@ -116,6 +116,29 @@
         border-radius: 50%
     }
 
+    .navbar a:focus-visible,
+    .navbar button:focus-visible {
+        outline: 3px solid rgba(0, 61, 92, .55);
+        outline-offset: 2px;
+    }
+
+    .app-skip-link {
+        position: fixed;
+        z-index: 9999;
+        top: 8px;
+        left: 8px;
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: #fff;
+        color: var(--primary);
+        font-weight: 700;
+        transform: translateY(-150%);
+    }
+
+    .app-skip-link:focus {
+        transform: translateY(0);
+    }
+
     .notification-badge {
         position: absolute;
         top: -6px;
@@ -152,8 +175,9 @@
 </style>
 
 <nav class="navbar">
+    <a href="#mainContent" class="app-skip-link">Skip to main content</a>
     <div class="navbar-container">
-        <button class="navbar-hamburger" id="navbarToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+        <button class="navbar-hamburger" id="navbarToggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navbarMenu"><span></span><span></span><span></span></button>
         <a href="{{ route('home') }}" class="navbar-brand">
             <div class="navbar-logo">M</div><span class="navbar-brand-text">MIS Service Request</span>
         </a>
@@ -161,7 +185,7 @@
         <div class="navbar-menu" id="navbarMenu">
             @if(auth()->check() && !auth()->user()->is_admin)
             <div class="notification-bell-container">
-                <button class="notification-bell-btn" id="notificationBellBtn">🔔<span class="notification-badge" id="notificationBadge">0</span></button>
+                <button class="notification-bell-btn" id="notificationBellBtn" aria-label="Notifications" aria-expanded="false" aria-controls="notificationDropdown">🔔<span class="notification-badge" id="notificationBadge">0</span></button>
                 <div class="notification-dropdown" id="notificationDropdown" style="display:none">
                     <div class="notification-dropdown-header"><span>📬 Notifications</span><button id="clearAllBtn">Clear All</button></div>
                     <ul class="notification-list" id="notificationList">
@@ -193,9 +217,17 @@
         const toggle = document.getElementById('navbarToggle');
         const menu = document.getElementById('navbarMenu');
         if (toggle && menu) {
-            toggle.addEventListener('click', () => {
-                toggle.classList.toggle('open');
-                menu.classList.toggle('active');
+            const setMenu = (open) => {
+                toggle.classList.toggle('open', open);
+                menu.classList.toggle('active', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            };
+            toggle.addEventListener('click', () => setMenu(!menu.classList.contains('active')));
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && menu.classList.contains('active')) {
+                    setMenu(false);
+                    toggle.focus();
+                }
             });
         }
 
@@ -204,12 +236,22 @@
         const clearAll = document.getElementById('clearAllBtn');
 
         if (bell && dd) {
+            const setDropdown = (open) => {
+                dd.style.display = open ? 'block' : 'none';
+                bell.setAttribute('aria-expanded', open ? 'true' : 'false');
+            };
             bell.addEventListener('click', function(e) {
                 e.stopPropagation();
-                dd.style.display = (dd.style.display === 'none' || !dd.style.display) ? 'block' : 'none';
+                setDropdown(dd.style.display === 'none' || !dd.style.display);
             });
             document.addEventListener('click', function() {
-                if (dd) dd.style.display = 'none';
+                setDropdown(false);
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dd.style.display === 'block') {
+                    setDropdown(false);
+                    bell.focus();
+                }
             });
             if (clearAll) clearAll.addEventListener('click', function() {
                 const items = document.querySelectorAll('.notification-item.unread');

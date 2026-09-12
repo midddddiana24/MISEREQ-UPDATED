@@ -8,13 +8,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ asset('css/responsive-mobile.css') }}">
+    <style>
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid rgba(0, 61, 92, .55);
+            outline-offset: 2px;
+        }
+    </style>
     @yield('styles')
 </head>
 
 <body class="bg-gray-100">
     @include('layouts.navbar')
 
-    <main class="min-h-screen">
+    <main class="min-h-screen" id="mainContent" tabindex="-1">
         @if(session('success'))
         <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
             <div class="flex">

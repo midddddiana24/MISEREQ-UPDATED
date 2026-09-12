@@ -445,7 +445,7 @@
 <body>
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
@@ -460,13 +460,13 @@
             </div>
 
             @if(isset($linkedRequest) && $linkedRequest)
-                <div class="alert alert-success">Linked to service request <strong>{{ $linkedRequest->control_number }}</strong>.</div>
+            <div class="alert alert-success">Linked to service request <strong>{{ $linkedRequest->control_number }}</strong>.</div>
             @endif
 
             <form method="POST" action="{{ route('incident-reports.store') }}">
                 @csrf
                 @if(isset($linkedRequest) && $linkedRequest)
-                    <input type="hidden" name="service_request_id" value="{{ $linkedRequest->id }}">
+                <input type="hidden" name="service_request_id" value="{{ $linkedRequest->id }}">
                 @endif
                 <div class="form-section">
                     <h3>Reporter Information</h3>

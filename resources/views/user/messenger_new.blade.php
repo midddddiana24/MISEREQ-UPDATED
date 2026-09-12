@@ -494,22 +494,132 @@ $requests = isset($requests) ? $requests : [];
             overscroll-behavior: contain;
             scrollbar-gutter: stable;
         }
-        .message-item { height: 100%; }
-        .message-item.unread { border-color: #9fc3dc !important; background: #f4f9fc !important; }
-        .client-unread { display: inline-flex; min-width: 20px; height: 20px; padding: 0 6px; align-items: center; justify-content: center; color: #fff; border-radius: 999px; background: #185982; font-size: 10px; font-weight: 800; }
-        .message-actions { flex-direction: row !important; }
-        .message-actions .action-link { width: auto !important; min-width: 0; flex: 1 1 auto; min-height: 38px; padding: 7px 9px; }
-        .search-box form { width: min(100%, 520px); max-width: none !important; display: grid !important; grid-template-columns: minmax(0, 1fr) auto; }
-        .search-box form input { width: 100%; min-width: 0; max-width: none !important; }
-        .chat-compose { padding: 10px 12px; border-top: 1px solid #e3e9ed; background: #fff; }
-        .chat-compose-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
-        .chat-compose textarea { width: 100%; min-height: 44px; max-height: 110px; padding: 10px 12px; border: 1px solid #cbd7df; border-radius: 7px; font: inherit; font-size: 13px; resize: vertical; }
-        .chat-compose button[type="submit"] { min-height: 44px; padding: 9px 14px; border: 0; border-radius: 7px; color: #fff; background: #1f6fa8; font-weight: 700; cursor: pointer; }
-        .chat-compose-meta { margin-top: 7px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .chat-attachment { position: relative; min-height: 34px; padding: 6px 10px; display: inline-flex; align-items: center; color: #185982; border: 1px solid #c7d5de; border-radius: 6px; background: #fff; font-size: 11px; font-weight: 700; cursor: pointer; }
-        .chat-attachment input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-        .chat-status { min-width: 0; color: #687985; font-size: 11px; overflow-wrap: anywhere; text-align: right; }
-        .chat-status.error { color: #a33131; }
+
+        .message-item {
+            height: 100%;
+        }
+
+        .message-item.unread {
+            border-color: #9fc3dc !important;
+            background: #f4f9fc !important;
+        }
+
+        .client-unread {
+            display: inline-flex;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border-radius: 999px;
+            background: #185982;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .message-actions {
+            flex-direction: row !important;
+        }
+
+        .message-actions .action-link {
+            width: auto !important;
+            min-width: 0;
+            flex: 1 1 auto;
+            min-height: 38px;
+            padding: 7px 9px;
+        }
+
+        .search-box form {
+            width: min(100%, 520px);
+            max-width: none !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .search-box form input {
+            width: 100%;
+            min-width: 0;
+            max-width: none !important;
+        }
+
+        .chat-compose {
+            padding: 10px 12px;
+            border-top: 1px solid #e3e9ed;
+            background: #fff;
+        }
+
+        .chat-compose-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 8px;
+        }
+
+        .chat-compose textarea {
+            width: 100%;
+            min-height: 44px;
+            max-height: 110px;
+            padding: 10px 12px;
+            border: 1px solid #cbd7df;
+            border-radius: 7px;
+            font: inherit;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .chat-compose button[type="submit"] {
+            min-height: 44px;
+            padding: 9px 14px;
+            border: 0;
+            border-radius: 7px;
+            color: #fff;
+            background: #1f6fa8;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .chat-compose-meta {
+            margin-top: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .chat-attachment {
+            position: relative;
+            min-height: 34px;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            color: #185982;
+            border: 1px solid #c7d5de;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .chat-attachment input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .chat-status {
+            min-width: 0;
+            color: #687985;
+            font-size: 11px;
+            overflow-wrap: anywhere;
+            text-align: right;
+        }
+
+        .chat-status.error {
+            color: #a33131;
+        }
 
         @media (max-width: 1024px) {
             #chatPanel {
@@ -522,12 +632,32 @@ $requests = isset($requests) ? $requests : [];
         }
 
         @media (max-width: 700px) {
-            .message-list { max-height: min(54vh, 480px); grid-template-columns: 1fr; }
-            .message-item { padding: 13px !important; }
-            .message-header { gap: 5px !important; }
-            .message-preview { margin: 8px 0 !important; }
-            .search-box form { grid-template-columns: 1fr; }
-            .search-box form button { width: 100%; min-height: 42px; }
+            .message-list {
+                max-height: min(54vh, 480px);
+                grid-template-columns: 1fr;
+            }
+
+            .message-item {
+                padding: 13px !important;
+            }
+
+            .message-header {
+                gap: 5px !important;
+            }
+
+            .message-preview {
+                margin: 8px 0 !important;
+            }
+
+            .search-box form {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box form button {
+                width: 100%;
+                min-height: 42px;
+            }
+
             #chatPanel {
                 inset: auto 10px 10px 10px !important;
                 width: auto !important;
@@ -536,14 +666,29 @@ $requests = isset($requests) ? $requests : [];
                 max-height: calc(100vh - 86px) !important;
                 border-radius: 10px !important;
             }
-            .chat-compose-row { grid-template-columns: 1fr; }
-            .chat-compose button[type="submit"] { width: 100% !important; }
-            .chat-compose-meta { align-items: flex-start; flex-direction: column; }
-            .chat-status { text-align: left; }
+
+            .chat-compose-row {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-compose button[type="submit"] {
+                width: 100% !important;
+            }
+
+            .chat-compose-meta {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .chat-status {
+                text-align: left;
+            }
         }
 
         @media (max-width: 380px) {
-            #chatPanel { height: min(64vh, 430px) !important; }
+            #chatPanel {
+                height: min(64vh, 430px) !important;
+            }
         }
     </style>
 </head>
@@ -551,7 +696,7 @@ $requests = isset($requests) ? $requests : [];
 <body>
     @include('partials.header')
 
-    <main class="page">
+    <main class="page" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <div class="panel">
@@ -741,7 +886,10 @@ $requests = isset($requests) ? $requests : [];
             setChatStatus('Loading conversation...');
             try {
                 const res = await fetch(`/api/messages/request/${requestId}?limit=100`, {
-                    headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.error || data.message || 'Unable to load this conversation.');
@@ -763,7 +911,10 @@ $requests = isset($requests) ? $requests : [];
             if (!requestId || document.hidden) return;
             try {
                 const res = await fetch(`/api/messages/request/${requestId}/new?after_id=${lastId}`, {
-                    headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) return;
@@ -843,9 +994,9 @@ $requests = isset($requests) ? $requests : [];
             } catch (err) {
                 sendNeedsRetry = true;
                 chatSendButton.textContent = 'Retry';
-                const waitMessage = err.status === 429 && err.retryAfter
-                    ? ` Please retry in about ${err.retryAfter} seconds.`
-                    : ' Your draft and attachment were kept.';
+                const waitMessage = err.status === 429 && err.retryAfter ?
+                    ` Please retry in about ${err.retryAfter} seconds.` :
+                    ' Your draft and attachment were kept.';
                 setChatStatus((err.message || 'Network error. Please try again.') + waitMessage, true);
             } finally {
                 chatSendButton.disabled = false;
