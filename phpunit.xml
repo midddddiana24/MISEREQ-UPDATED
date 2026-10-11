@@ -12,6 +12,24 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+        <exclude>
+            <directory>./vendor</directory>
+            <directory>./bootstrap</directory>
+            <directory>./config</directory>
+            <directory>./database/migrations</directory>
+            <directory>./storage</directory>
+        </exclude>
+    </source>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-report"/>
+            <text outputFile="php://stdout" showUncoveredFiles="true"/>
+        </report>
+    </coverage>
     <php>
         <env name="APP_ENV" value="testing"/>
         <!-- Never allow automated tests to rebuild the live campus database. -->

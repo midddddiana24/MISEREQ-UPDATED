@@ -24,14 +24,6 @@ class AdminServiceRequestPolicy
     }
 
     /**
-     * Determine if admin can create a service request on behalf of a user.
-     */
-    public function createOnBehalf(User $user): bool
-    {
-        return $user->isAdmin();
-    }
-
-    /**
      * Determine if admin can assign a technician to this request.
      */
     public function assignTechnician(User $user, ServiceRequest $request): bool

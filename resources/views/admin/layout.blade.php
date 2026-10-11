@@ -104,6 +104,35 @@
             border: 0 !important;
         }
 
+        .admin-pagination { display: grid; gap: 8px; min-width: 0; color: var(--ink-700); font-size: 13px; line-height: 1.3; }
+        .admin-pagination-summary { color: var(--ink-500); }
+        .admin-pagination-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+        .admin-pagination-controls a,
+        .admin-pagination-controls .admin-pagination-disabled,
+        .admin-pagination-controls .admin-pagination-page-current {
+            display: inline-flex;
+            min-width: 32px;
+            min-height: 32px;
+            padding: 5px 8px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--brand-900);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            text-decoration: none;
+        }
+        .admin-pagination-controls a:hover { border-color: var(--brand-700); background: var(--brand-100); }
+        .admin-pagination-controls a:focus-visible { outline: 3px solid var(--brand-600); outline-offset: 2px; }
+        .admin-pagination-controls .admin-pagination-page-current { border-color: var(--brand-700); background: var(--brand-100); }
+        .admin-pagination-controls .admin-pagination-disabled { color: var(--ink-500); background: var(--surface-soft); }
+        .admin-pagination-ellipsis { padding: 0 3px; }
+        .admin-pagination-compact .admin-pagination-controls { justify-content: space-between; gap: 6px; }
+        .admin-pagination-compact .admin-pagination-current { color: var(--ink-700); font-size: 12px; font-weight: 700; white-space: nowrap; }
+
         .admin-shell {
             display: grid;
             grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
@@ -579,6 +608,10 @@
             border: 2px solid #fff;
         }
 
+        .notification-count[hidden] {
+            display: none;
+        }
+
         .notification-panel {
             position: absolute;
             top: calc(100% + 10px);
@@ -712,6 +745,7 @@
 
         .content-grid {
             display: grid;
+            grid-template-columns: minmax(0, 1fr);
             gap: 22px;
             max-width: var(--content-width);
             margin: 0 auto;
@@ -1058,6 +1092,47 @@
             gap: 10px;
             flex-wrap: wrap;
             margin-top: 8px;
+        }
+
+        .admin-record-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .admin-record-actions form { display: inline-flex; margin: 0; }
+        .admin-record-actions .btn-primary,
+        .admin-record-actions .btn-ghost,
+        .admin-record-actions .btn-danger {
+            min-height: 34px;
+            padding: 6px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .admin-record-filter-panel { padding: 16px; }
+        .admin-record-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) minmax(145px, 1fr) minmax(145px, 1fr) auto;
+            align-items: end;
+            gap: 10px;
+        }
+        .admin-record-filter-grid > .field { min-width: 0; }
+        .admin-record-filter-grid .field input,
+        .admin-record-filter-grid .field select { min-width: 0; }
+        .admin-record-filter-actions { display: flex; gap: 7px; }
+        .admin-record-filter-actions .btn-primary,
+        .admin-record-filter-actions .btn-ghost { min-height: 42px; padding: 8px 12px; font-size: 14px; }
+        .admin-filter-advanced { margin-top: 12px; padding: 0; overflow: hidden; }
+        .admin-filter-advanced > summary { padding: 11px 13px; }
+        .admin-filter-advanced[open] > summary { border-bottom: 1px solid var(--line); }
+        .admin-filter-advanced-fields { padding: 13px; }
+        @media (max-width: 1050px) {
+            .admin-record-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 650px) {
+            .admin-record-filter-grid { grid-template-columns: minmax(0, 1fr); }
         }
 
         .info-grid {
@@ -1624,7 +1699,7 @@
 <body class="@yield('body-class')">
     <a href="#main-content" class="skip-link">Skip to main content</a>
     @php($admin = auth()->user())
-    @php($wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png')) ? asset('images/wvsu-janiuay-logo.png') : asset('images/wvsu-logo.png'))
+    @php($wvsuLogo = asset('images/wvsu-logo.png'))
     <div class="admin-shell" id="adminShell">
         <aside class="admin-sidebar" id="adminSidebar" aria-label="Admin sidebar">
             <div class="sidebar-panel">
@@ -1782,6 +1857,7 @@
             const notificationList = document.getElementById('adminNotificationList');
             const notificationCount = document.getElementById('adminNotificationCount');
             const notificationClear = document.getElementById('adminNotificationClear');
+            let latestNotificationFeedRequest = 0;
             const adminMessageCount = document.getElementById('adminMessageCount');
 
             function setDesktopSidebarCollapsed(collapsed, remember = true) {
@@ -1917,14 +1993,20 @@
                 notificationList.querySelectorAll('[data-delete-url]').forEach(function(button) {
                     button.addEventListener('click', async function() {
                         button.disabled = true;
-                        await fetch(button.dataset.deleteUrl, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                                'Accept': 'application/json'
-                            }
-                        });
-                        loadAdminNotifications();
+                        try {
+                            const response = await fetch(button.dataset.deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            if (!response.ok) throw new Error('Unable to delete notification.');
+                            loadAdminNotifications();
+                        } catch (error) {
+                            button.disabled = false;
+                            window.alert('Unable to delete the notification. Please try again.');
+                        }
                     });
                 });
             }
@@ -1934,8 +2016,10 @@
                     return;
                 }
 
+                const requestNumber = ++latestNotificationFeedRequest;
                 try {
                     const response = await fetch('{{ route('admin.notifications') }}', {
+                        cache: 'no-store',
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest'
@@ -1947,7 +2031,7 @@
                     }
 
                     const payload = await response.json();
-                    renderAdminNotifications(payload);
+                    if (requestNumber === latestNotificationFeedRequest) renderAdminNotifications(payload);
                 } catch (error) {
                     // Keep the topbar functional even if notifications fail to load.
                 }
@@ -1984,6 +2068,7 @@
                     event.stopPropagation();
                     notificationPanel.classList.toggle('open');
                     notificationBtn.setAttribute('aria-expanded', notificationPanel.classList.contains('open') ? 'true' : 'false');
+                    if (notificationPanel.classList.contains('open')) loadAdminNotifications();
                 });
 
                 document.addEventListener('click', function(event) {
@@ -2000,20 +2085,32 @@
             loadAdminMessageSummary();
             window.setInterval(loadAdminMessageSummary, 6000);
             document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) loadAdminMessageSummary();
+                if (!document.hidden) {
+                    loadAdminMessageSummary();
+                    loadAdminNotifications();
+                }
+            });
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) loadAdminNotifications();
             });
 
             notificationClear?.addEventListener('click', async function() {
                 notificationClear.disabled = true;
-                await fetch('{{ route('admin.notifications.clear') }}', {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                        'Accept': 'application/json'
-                    }
-                });
-                notificationClear.disabled = false;
-                loadAdminNotifications();
+                try {
+                    const response = await fetch('{{ route('admin.notifications.clear') }}', {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (!response.ok) throw new Error('Unable to clear notifications.');
+                    loadAdminNotifications();
+                } catch (error) {
+                    window.alert('Unable to clear the notifications. Please try again.');
+                } finally {
+                    notificationClear.disabled = false;
+                }
             });
 
             document.addEventListener('keydown', function(event) {

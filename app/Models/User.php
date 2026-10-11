@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @method bool isTwoFactorEnabled()
@@ -26,6 +27,12 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
+
+    public const LOGIN_FAILURE_WINDOW_MINUTES = 30;
+
+    public const CLIENT_LOGIN_ATTEMPT_OPTIONS = [5, 10];
+
+    public const CLIENT_LOGIN_LOCK_MINUTE_OPTIONS = [15, 30, 60];
 
     protected $fillable = [
         'first_name',
@@ -59,6 +66,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'language',
         'email_verified',
         'failed_login_attempts',
+        'failed_login_window_started_at',
         'locked_until',
     ];
 
@@ -79,6 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'must_change_password' => 'boolean',
         'last_activity' => 'datetime',
         'locked_until' => 'datetime',
+        'failed_login_window_started_at' => 'datetime',
         'notify_email_enabled' => 'boolean',
         'notify_request_reminders' => 'boolean',
         'notify_system_announcements' => 'boolean',
@@ -130,21 +139,58 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->locked_until && $this->locked_until->isFuture();
     }
 
-    public function incrementFailedLoginAttempts(): void
+    public function loginLockThreshold(): int
     {
-        $this->failed_login_attempts++;
-
-        // Lock account after 5 failed attempts
-        if ($this->failed_login_attempts >= 5) {
-            $this->locked_until = now()->addMinutes(30);
+        if ($this->isAdmin()) {
+            return 5;
         }
 
-        $this->save();
+        $configured = (int) Setting::get('client_login_lock_attempts', 5);
+
+        return in_array($configured, self::CLIENT_LOGIN_ATTEMPT_OPTIONS, true) ? $configured : 5;
+    }
+
+    public function loginLockDurationMinutes(): int
+    {
+        if ($this->isAdmin()) {
+            return 30;
+        }
+
+        $configured = (int) Setting::get('client_login_lock_minutes', 30);
+
+        return in_array($configured, self::CLIENT_LOGIN_LOCK_MINUTE_OPTIONS, true) ? $configured : 30;
+    }
+
+    public function incrementFailedLoginAttempts(): void
+    {
+        DB::transaction(function () {
+            $user = self::query()->whereKey($this->getKey())->lockForUpdate()->firstOrFail();
+            $now = now();
+            $expiredLock = $user->locked_until && $user->locked_until->lte($now);
+            $expiredWindow = ! $user->failed_login_window_started_at
+                || $user->failed_login_window_started_at->lte($now->copy()->subMinutes(self::LOGIN_FAILURE_WINDOW_MINUTES));
+
+            if ($expiredLock || $expiredWindow) {
+                $user->failed_login_attempts = 0;
+                $user->failed_login_window_started_at = $now;
+                $user->locked_until = null;
+            }
+
+            $user->failed_login_attempts = (int) $user->failed_login_attempts + 1;
+            if ($user->failed_login_attempts >= $user->loginLockThreshold()) {
+                $user->locked_until = $now->copy()->addMinutes($user->loginLockDurationMinutes());
+            }
+
+            $user->save();
+        });
+
+        $this->refresh();
     }
 
     public function resetFailedLoginAttempts(): void
     {
         $this->failed_login_attempts = 0;
+        $this->failed_login_window_started_at = null;
         $this->locked_until = null;
         $this->save();
     }

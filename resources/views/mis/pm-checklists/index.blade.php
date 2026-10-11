@@ -285,6 +285,7 @@
         }
     </style>
     @include('user.partials.theme')
+    @include('user.partials.record-index-style')
 </head>
 
 <body>
@@ -297,37 +298,45 @@
 
     @include('partials.header')
 
-    <main class="page" id="mainContent" tabindex="-1">
+    <main class="page record-index" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
             <div class="section-header">
                 <div class="header-content">
                     <div>
-                        <h1>Your Checklists</h1>
-                        <small>Preventive Maintenance Checklists · West Visayas State University</small>
+                        <h1>Preventive Maintenance</h1>
+                        <small>Maintenance checklist records &middot; West Visayas State University</small>
                     </div>
-                    <a href="{{ route('requests.create', ['service' => 'preventive_maintenance']) }}" class="button">Request Maintenance</a>
+                    <a href="{{ route('pm-checklists.create') }}" class="button">Request Maintenance</a>
                 </div>
             </div>
-            <div class="toolbar-pills">
-                <a href="{{ route('pm-checklists.index', ['search' => request('search')]) }}" class="button secondary">All</a>
-                <a href="{{ route('pm-checklists.index', ['status' => 'pending', 'search' => request('search')]) }}" class="button secondary">Pending</a>
-                <a href="{{ route('pm-checklists.index', ['status' => 'completed', 'search' => request('search')]) }}" class="button secondary">Completed</a>
-                <a href="{{ route('pm-checklists.index', ['status' => 'needs_action', 'search' => request('search')]) }}" class="button secondary">Needs Action</a>
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-label">Total Checklists</span><span class="stat-value">{{ $stats['total'] }}</span><div class="stat-hint">All preventive maintenance records.</div></div>
+                <div class="stat-card"><span class="stat-label">Submitted</span><span class="stat-value">{{ $stats['submitted'] }}</span><div class="stat-hint">New requests sent to MIS.</div></div>
+                <div class="stat-card"><span class="stat-label">Pending</span><span class="stat-value">{{ $stats['pending'] }}</span><div class="stat-hint">Checklists awaiting review.</div></div>
+                <div class="stat-card"><span class="stat-label">Processing</span><span class="stat-value">{{ $stats['processing'] }}</span><div class="stat-hint">Maintenance being handled.</div></div>
+                <div class="stat-card"><span class="stat-label">Completed</span><span class="stat-value">{{ $stats['completed'] }}</span><div class="stat-hint">Finished maintenance records.</div></div>
             </div>
-            <form method="GET" class="search-form record-search-form">
+            <div class="filters" role="group" aria-label="Filter maintenance checklists">
+                <a href="{{ route('pm-checklists.index', ['search' => request('search')]) }}" class="filter-btn {{ request('status') ? '' : 'active' }}">All</a>
+                @foreach(\App\Models\PreventiveMaintenanceChecklist::STATUS_OPTIONS as $stage => $label)
+                <a href="{{ route('pm-checklists.index', ['status' => $stage, 'search' => request('search')]) }}" class="filter-btn {{ request('status') === $stage ? 'active' : '' }}">{{ $label }}</a>
+                @endforeach
+            </div>
+            <form method="GET" class="search-container record-search-form">
                 @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
-                <input type="text" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search control number, owner, or property number">
+                <label for="maintenanceSearch" class="visually-hidden">Search maintenance checklists</label>
+                <input type="search" id="maintenanceSearch" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search control number, owner, or property number">
                 <button type="submit" class="button">Search</button>
             </form>
             @if (session('success')) <p style="margin-top:12px;color:#166534;">{{ session('success') }}</p> @endif
             @if ($checklists->count())
-            <p class="client-record-note" id="maintenanceRecordHint">Scroll inside the records area to review more checklists.</p>
+            <p class="record-list-note" id="maintenanceRecordHint">Showing {{ $checklists->count() }} checklist{{ $checklists->count() === 1 ? '' : 's' }} on this page.</p>
             <div class="client-record-scroll" tabindex="0" role="region" aria-label="Preventive maintenance checklist records" aria-describedby="maintenanceRecordHint">
-                <table class="client-record-table">
+                <table class="client-record-table maintenance-record-table">
                     <thead>
                         <tr>
                             <th>Control No.</th>
@@ -351,16 +360,16 @@
                                 <span>Standalone checklist</span>
                                 @endif
                             </td>
-                            <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $checklist->status)) }}</td>
+                            <td data-label="Status"><span class="status-badge status-{{ $checklist->stage_status }}">{{ str($checklist->stage_status)->title() }}</span></td>
                             <td data-label="Actions">
-                                <div class="record-actions"><a class="record-action primary" href="{{ route('pm-checklists.show', $checklist) }}">View details</a><a class="record-action" href="{{ route('pm-checklists.pdf', ['pmChecklist' => $checklist, 'v' => $checklist->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
+                                <div class="record-actions"><a class="record-action primary" href="{{ route('pm-checklists.show', $checklist) }}">View details</a><a class="record-action" href="{{ route('pm-checklists.pdf', ['pmChecklist' => $checklist, 'v' => 'logo-2-'.$checklist->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <div style="margin-top:16px;">{{ $checklists->links() }}</div>
+            @include('user.partials.record-pagination', ['records' => $checklists, 'paginationLabel' => 'Preventive maintenance pages'])
             @else
             <p class="empty">No preventive maintenance checklists submitted yet.</p>
             @endif

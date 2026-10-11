@@ -184,7 +184,7 @@ class UserDashboardController extends Controller implements HasMiddleware
      */
     private function generatePDF(ServiceRequest $serviceRequest): string
     {
-        $cacheKey = 'pdf_v11_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
+        $cacheKey = 'pdf_v13_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
 
         // Try to get from cache first - instant delivery on subsequent requests
         // PDF binaries can exceed MySQL's packet limit when the application's
@@ -513,6 +513,7 @@ class UserDashboardController extends Controller implements HasMiddleware
             ->with('serviceRequest:id,user_id,control_number');
         $totalUnread = (clone $notificationQuery)->whereNull('read_at')->count();
         $notifications = $notificationQuery
+            ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END')
             ->latest()
             ->limit(20)
             ->get()
@@ -553,7 +554,11 @@ class UserDashboardController extends Controller implements HasMiddleware
 
     public function notificationsPage()
     {
-        $notifications = Notification::where('user_id', Auth::id())->latest()->paginate(25);
+        $notifications = Notification::where('user_id', Auth::id())
+            ->orderByRaw('read_at IS NOT NULL')
+            ->latest()
+            ->latest('id')
+            ->paginate(5);
 
         return view('user.notifications', compact('notifications'));
     }

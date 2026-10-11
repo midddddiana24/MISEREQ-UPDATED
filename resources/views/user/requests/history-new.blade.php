@@ -624,8 +624,10 @@
         .request-list-note {
             margin: 0 0 7px;
             color: var(--client-ink-500);
-            font-size: 11px;
+            font-size: 13px;
         }
+
+        .request-search-button { min-height: 44px; }
 
         .request-history-scroll {
             max-height: min(62vh, 620px);
@@ -650,8 +652,11 @@
 
         @media (max-width: 1024px) {
             .request-history-scroll {
-                max-height: min(58vh, 560px);
-                padding: 9px;
+                max-height: none;
+                overflow: visible;
+                padding: 0;
+                border: 0;
+                background: transparent;
             }
 
             .request-history-table,
@@ -723,10 +728,18 @@
         }
 
         @media (max-width: 640px) {
+            .search-container { flex-wrap: nowrap; }
+            .search-input { min-width: 0; width: auto !important; flex: 1 1 auto; }
+            .request-search-button { width: auto !important; padding-inline: 12px !important; }
             .request-history-scroll {
-                max-height: min(54vh, 470px);
-                padding: 7px;
+                max-height: none;
+                overflow: visible;
+                padding: 0;
+                border: 0;
+                background: transparent;
             }
+
+            .request-search-button { flex: 0 0 auto; }
 
             .stats-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -780,7 +793,9 @@
             }
 
             .request-history-table tbody td[data-label="Category"],
-            .request-history-table tbody td[data-label="Date Submitted"] {
+            .request-history-table tbody td[data-label="Date Submitted"],
+            .request-history-table tbody td[data-label="Linked Records"],
+            .request-history-table .request-action[data-pdf-action] {
                 display: none !important;
             }
 
@@ -859,16 +874,18 @@
             </div>
 
             <!-- Search -->
-            <div class="search-container">
-                <label for="searchInput" class="visually-hidden">Search by control number</label>
-                <input type="search" id="searchInput" class="search-input" placeholder="Search by control number" oninput="searchRequests()">
-            </div>
+            <form class="search-container" method="GET" action="{{ route('requests.index') }}" role="search">
+                <input type="hidden" name="status" value="{{ request('status', 'all') }}">
+                <label for="searchInput" class="visually-hidden">Search your service requests</label>
+                <input type="search" id="searchInput" name="search" class="search-input" value="{{ request('search') }}" placeholder="Search requests">
+                <button type="submit" class="button request-search-button">Search</button>
+            </form>
 
             <!-- Scrollable request records -->
             @if($requests->count())
-            <p class="request-list-note" id="requestListHint">Showing {{ $requests->count() }} request{{ $requests->count() === 1 ? '' : 's' }} on this page. Scroll inside the list to see more.</p>
+            <p class="request-list-note" id="requestListHint">Showing {{ $requests->count() }} of {{ $requests->total() }} matching requests.</p>
             @endif
-            <div class="request-history-scroll" tabindex="0" role="region" aria-label="Service request records" @if($requests->count()) aria-describedby="requestListHint" @endif>
+            <div class="request-history-scroll" role="region" aria-label="Service request records" @if($requests->count()) aria-describedby="requestListHint" @endif>
                 <table class="request-history-table">
                     <thead>
                         <tr>
@@ -949,28 +966,10 @@
                 </table>
             </div>
 
-            {{ $requests->links() }}
+            @include('user.partials.record-pagination', ['records' => $requests, 'paginationLabel' => 'Service request pages'])
         </div>
     </main>
 
-    <script>
-        function searchRequests() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const table = document.querySelector('table tbody');
-            const rows = table.querySelectorAll('tr');
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                const controlNumber = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
-                if (searchInput === '' || controlNumber.includes(searchInput)) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-    </script>
 </body>
 
 </html>

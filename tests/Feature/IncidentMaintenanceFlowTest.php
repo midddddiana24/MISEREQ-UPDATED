@@ -115,6 +115,105 @@ class IncidentMaintenanceFlowTest extends TestCase
         $this->assertPdfIsNotCacheable($maintenanceResponse->headers->get('Cache-Control'));
     }
 
+    public function test_owner_record_indexes_share_the_service_request_layout_and_counts(): void
+    {
+        $client = $this->createUser(['designation' => 'Faculty']);
+        [$report, $checklist] = $this->incidentAndChecklist($client);
+
+        $this->actingAs($client)
+            ->get(route('incident-reports.index'))
+            ->assertOk()
+            ->assertSee('ICT Incident Reports')
+            ->assertSee('Total Reports')
+            ->assertSee($report->document_number)
+            ->assertSee('class="page record-index"', false);
+
+        $this->get(route('pm-checklists.index'))
+            ->assertOk()
+            ->assertSee('Preventive Maintenance')
+            ->assertSee('Total Checklists')
+            ->assertSee($checklist->control_number)
+            ->assertSee('class="page record-index"', false);
+    }
+
+    public function test_client_record_indexes_paginate_five_rows_and_keep_filters_and_other_users_out(): void
+    {
+        $client = $this->createUser(['designation' => 'Faculty']);
+        $other = $this->createUser(['designation' => 'Faculty']);
+
+        for ($index = 1; $index <= 7; $index++) {
+            IctIncidentReport::create([
+                'document_number' => "QA-IIR-{$client->id}-{$index}",
+                'user_id' => $client->id,
+                'reported_by' => $client->full_name,
+                'department' => $client->office,
+                'date_of_incident' => now()->toDateString(),
+                'details_of_incident' => 'Pagination verification',
+                'status' => $index === 7 ? 'resolved' : 'open',
+            ]);
+            PreventiveMaintenanceChecklist::create([
+                'control_number' => "QA-PMC-{$client->id}-{$index}",
+                'user_id' => $client->id,
+                'system_owner' => $client->full_name,
+                'date_inspected' => now()->toDateString(),
+                'ict_type' => 'computer',
+                'status' => $index === 7 ? 'completed' : 'pending',
+            ]);
+        }
+
+        IctIncidentReport::create([
+            'document_number' => "QA-IIR-OTHER-{$other->id}",
+            'user_id' => $other->id,
+            'reported_by' => $other->full_name,
+            'date_of_incident' => now()->toDateString(),
+            'status' => 'open',
+        ]);
+        PreventiveMaintenanceChecklist::create([
+            'control_number' => "QA-PMC-OTHER-{$other->id}",
+            'user_id' => $other->id,
+            'system_owner' => $other->full_name,
+            'date_inspected' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($client)
+            ->get(route('incident-reports.index'))
+            ->assertOk()
+            ->assertViewHas('reports', fn ($records) => $records->count() === 5 && $records->total() === 7)
+            ->assertSee('Page 1 of 2')
+            ->assertDontSee("QA-IIR-OTHER-{$other->id}");
+
+        $this->get(route('incident-reports.index', ['status' => 'open', 'search' => 'QA-IIR']))
+            ->assertOk()
+            ->assertViewHas('reports', fn ($records) => $records->total() === 6
+                && str_contains($records->nextPageUrl(), 'status=open')
+                && str_contains($records->nextPageUrl(), 'search=QA-IIR'));
+
+        $this->get(route('incident-reports.index', ['status' => 'open', 'page' => 2]))
+            ->assertOk()
+            ->assertViewHas('reports', fn ($records) => $records->count() === 1 && $records->total() === 6)
+            ->assertSee('Page 2 of 2')
+            ->assertSee('status=open', false);
+
+        $this->get(route('pm-checklists.index'))
+            ->assertOk()
+            ->assertViewHas('checklists', fn ($records) => $records->count() === 5 && $records->total() === 7)
+            ->assertSee('Page 1 of 2')
+            ->assertDontSee("QA-PMC-OTHER-{$other->id}");
+
+        $this->get(route('pm-checklists.index', ['status' => 'pending', 'search' => 'QA-PMC']))
+            ->assertOk()
+            ->assertViewHas('checklists', fn ($records) => $records->total() === 6
+                && str_contains($records->nextPageUrl(), 'status=pending')
+                && str_contains($records->nextPageUrl(), 'search=QA-PMC'));
+
+        $this->get(route('pm-checklists.index', ['status' => 'pending', 'page' => 2]))
+            ->assertOk()
+            ->assertViewHas('checklists', fn ($records) => $records->count() === 1 && $records->total() === 6)
+            ->assertSee('Page 2 of 2')
+            ->assertSee('status=pending', false);
+    }
+
     public function test_another_client_cannot_view_or_download_independent_records(): void
     {
         $owner = $this->createUser();

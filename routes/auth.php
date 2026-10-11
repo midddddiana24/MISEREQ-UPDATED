@@ -84,7 +84,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1');
 
     Route::put('password', [PasswordController::class, 'update'])
-        ->middleware('throttle:sensitive')
+        ->middleware(['verified', '2fa', 'throttle:sensitive'])
         ->name('password.update');
 
     Route::get('2fa/setup', [TwoFactorAuthController::class, 'showSetup'])

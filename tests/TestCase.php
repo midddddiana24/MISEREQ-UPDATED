@@ -32,6 +32,7 @@ abstract class TestCase extends BaseTestCase
             'session.encrypt' => false,
             'session.secure' => false,
             'security.force_https' => false,
+            'backup.directory' => storage_path('app/testing-backups'),
         ]);
 
         return $app;

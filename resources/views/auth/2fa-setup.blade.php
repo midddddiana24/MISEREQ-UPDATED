@@ -5,14 +5,15 @@
 
 @section('content')
 <style>
-    .setup-intro { margin-bottom: 22px; text-align: center; }
-    .setup-intro h2 { margin: 0 0 7px; color: var(--brand-dark); font: 700 25px/1.2 Georgia, "Times New Roman", serif; }
-    .setup-intro p { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .setup-intro { margin-bottom: 22px; text-align: left; }
+    .setup-intro h1 { margin: 0 0 7px; color: var(--brand-dark); font: 750 clamp(28px, 3.2vw, 34px)/1.2 "Segoe UI", Arial, sans-serif; letter-spacing: -.03em; }
+    .setup-intro p { max-width: 590px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.55; }
     .setup-progress { margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; }
-    .setup-progress li { position: relative; color: #5e6f7b; font-size: 12px; font-weight: 700; text-align: center; }
+    .setup-progress li { position: relative; color: #415b6d; font-size: 14px; font-weight: 700; text-align: center; }
     .setup-progress li::before { content: attr(data-step); position: relative; z-index: 1; width: 28px; height: 28px; margin: 0 auto 7px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: var(--brand); }
     .setup-progress li:not(:last-child)::after { content: ""; position: absolute; top: 13px; left: calc(50% + 18px); width: calc(100% - 36px); border-top: 1px solid #cbd8e0; }
     .setup-grid { display: grid; grid-template-columns: 230px minmax(0, 1fr); align-items: start; gap: 24px; }
+    .setup-grid > * { min-width: 0; }
     .qr-panel { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f8fbfd; text-align: center; }
     .qr-panel img { width: 200px; height: 200px; max-width: 100%; display: block; margin: auto; border: 6px solid #fff; }
     .qr-panel strong { display: block; margin-top: 10px; color: var(--ink); font-size: 13px; }
@@ -24,15 +25,18 @@
     .field-error { display: block; margin-top: 5px; color: var(--danger); font-size: 12px; }
     .setup-grid .form-group > input { width: 100%; min-height: 44px; padding: 10px 12px; color: var(--ink); border: 1px solid #cbd6de; border-radius: 6px; outline: none; }
     .setup-grid .form-group > input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(31, 111, 168, .11); }
-    @media (max-width: 620px) {
+    .setup-copy { font-size: 16px; }
+    .setup-note { font-size: 14px; }
+    .qr-panel img { height: auto; aspect-ratio: 1; }
+    @media (max-width: 820px) {
         .setup-grid { grid-template-columns: 1fr; gap: 18px; }
         .qr-panel { width: 230px; max-width: 100%; margin: auto; }
-        .setup-progress li { font-size: 10px; }
+        .setup-progress li { font-size: 12px; padding: 0 3px; }
     }
 </style>
 
 <div class="setup-intro">
-    <h2>Protect Your Account</h2>
+    <h1>Protect Your Account</h1>
     <p>Connect an authenticator app to add a secure verification step when you sign in.</p>
 </div>
 

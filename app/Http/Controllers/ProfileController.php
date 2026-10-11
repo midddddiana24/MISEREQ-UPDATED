@@ -42,7 +42,10 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = $request->user();
         $currentSessionId = $request->session()->getId();
-        $sessionLifetime = max(15, min(240, (int) Setting::get('client_session_timeout', 120)));
+        $sessionLifetime = min(
+            max(15, (int) config('session.lifetime', 120)),
+            max(15, min(240, (int) Setting::get('client_session_timeout', 120)))
+        );
         $sessions = UserSession::where('user_id', $user->id)
             ->whereNull('revoked_at')
             ->where('last_activity_at', '>=', now()->subMinutes($sessionLifetime))
@@ -56,9 +59,12 @@ class ProfileController extends Controller
             'user' => $user,
             'twoFactorEnabled' => $user->isTwoFactorEnabled(),
             'sessions' => $sessions,
-            'loginAttempts' => $this->loginAttempts($user, 8),
+            'loginAttempts' => $this->loginAttempts($user, 3),
             'passwordChangedAt' => PasswordHistory::where('user_id', $user->id)->latest()->value('changed_at'),
             'remainingRecoveryCodeCount' => count($user->two_factor_recovery_code ?? []),
+            'loginLockThreshold' => $user->loginLockThreshold(),
+            'loginLockMinutes' => $user->loginLockDurationMinutes(),
+            'loginFailureWindowMinutes' => User::LOGIN_FAILURE_WINDOW_MINUTES,
         ]);
     }
 
@@ -69,7 +75,7 @@ class ProfileController extends Controller
 
         return view('user.security', [
             'user' => $user,
-            'loginAttempts' => $this->loginAttempts($user, 20),
+            'loginAttempts' => $this->loginAttemptsQuery($user)->paginate(5),
         ]);
     }
 
@@ -80,7 +86,20 @@ class ProfileController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,'.$request->user()->id,
         ]);
 
-        $request->user()->update($request->only('name', 'email'));
+        /** @var User $user */
+        $user = $request->user();
+        $previousEmail = $user->email;
+        $user->update($request->only('name', 'email'));
+
+        if (! hash_equals(strtolower($previousEmail), strtolower($user->email))) {
+            app(SecurityNotificationService::class)->notifyMandatory(
+                SecurityNotificationService::EVENT_EMAIL_CHANGED,
+                $user,
+                'Your MIS email address was changed',
+                "Your MIS account email was changed to {$user->email}. If this was not you, contact the MIS Office immediately.",
+                recipientEmail: $previousEmail
+            );
+        }
 
         return redirect()->route('profile.edit')->with('status', 'profile-updated');
     }
@@ -112,7 +131,8 @@ class ProfileController extends Controller
         });
         $request->session()->forget('auth.password_confirmed_at');
 
-        app(SecurityNotificationService::class)->notify(
+        app(SecurityNotificationService::class)->notifyMandatory(
+            SecurityNotificationService::EVENT_PASSWORD_CHANGED,
             $user->fresh(),
             'Your MIS password was changed',
             'Your password was changed and other active sessions were signed out. If this was not you, contact the MIS Office immediately.'
@@ -169,6 +189,10 @@ class ProfileController extends Controller
 
     public function terminateSession(Request $request, UserSession $session): RedirectResponse
     {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ]);
+
         abort_unless($session->user_id === $request->user()->id, 403);
 
         if (hash_equals($request->session()->getId(), $session->session_id)) {
@@ -220,12 +244,16 @@ class ProfileController extends Controller
 
     private function loginAttempts(User $user, int $limit)
     {
+        return $this->loginAttemptsQuery($user)->limit($limit)->get();
+    }
+
+    private function loginAttemptsQuery(User $user)
+    {
         return LoginAttempt::whereIn('username', array_values(array_unique(array_filter([
             $user->username,
             $user->email,
         ]))))
             ->latest('created_at')
-            ->limit($limit)
-            ->get();
+            ->latest('id');
     }
 }

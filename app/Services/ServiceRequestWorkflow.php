@@ -37,7 +37,8 @@ class ServiceRequestWorkflow
         string $newStatus,
         ?string $reason = null,
         array $additionalData = [],
-        bool $notify = true
+        bool $notify = true,
+        ?int $expectedVersion = null
     ): ServiceRequest {
         $oldStatus = $serviceRequest->status;
 
@@ -51,8 +52,10 @@ class ServiceRequestWorkflow
             ]);
         }
 
-        if (in_array($newStatus, ['processing', 'awaiting_confirmation', 'completed', 'closed'], true)
-            && ! $serviceRequest->assigned_technician_id) {
+        if (
+            in_array($newStatus, ['processing', 'awaiting_confirmation', 'completed', 'closed'], true)
+            && ! $serviceRequest->assigned_technician_id
+        ) {
             throw ValidationException::withMessages([
                 'status' => 'Assign a technician before moving this request to the selected status.',
             ]);
@@ -64,8 +67,10 @@ class ServiceRequestWorkflow
             ]);
         }
 
-        if (in_array($newStatus, ['rejected', 'cancelled', 'reopened', 'escalated'], true)
-            && blank($reason)) {
+        if (
+            in_array($newStatus, ['rejected', 'cancelled', 'reopened', 'escalated'], true)
+            && blank($reason)
+        ) {
             throw ValidationException::withMessages([
                 'reason' => 'A reason is required for this workflow action.',
             ]);
@@ -74,10 +79,24 @@ class ServiceRequestWorkflow
         $updateData = array_merge($additionalData, $this->timestampsFor($serviceRequest, $newStatus, $reason));
         $updateData['status'] = $newStatus;
 
-        DB::transaction(function () use ($serviceRequest, $oldStatus, $newStatus, $reason, $updateData) {
+        DB::transaction(function () use ($serviceRequest, $oldStatus, $newStatus, $reason, $updateData, $expectedVersion) {
+            $query = $serviceRequest->newQuery()->whereKey($serviceRequest->id);
+            if ($expectedVersion !== null) {
+                $query->where('version', $expectedVersion);
+            }
+
+            $nextVersion = ($serviceRequest->version ?? 0) + 1;
+            $updated = $query->lockForUpdate()->update(array_merge($updateData, ['version' => $nextVersion]));
+
+            if ($expectedVersion !== null && $updated === 0) {
+                throw ValidationException::withMessages([
+                    'version' => 'This request was already updated by someone else. Please refresh and review the current state before acting again.',
+                ]);
+            }
+
             $serviceRequest->_statusChangeRemarks = $reason
                 ?: "Status changed from {$this->label($oldStatus)} to {$this->label($newStatus)}";
-            $serviceRequest->update($updateData);
+            $serviceRequest->refresh();
 
             $this->activityLogger->log(
                 $serviceRequest,

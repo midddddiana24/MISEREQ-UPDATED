@@ -16,8 +16,9 @@ class RestoreSystem extends Command
 
     public function handle(): int
     {
-        $backupDirectory = realpath(storage_path('app/backups'));
-        $archive = realpath(storage_path('app/backups/'.basename((string) $this->argument('archive'))));
+        $configuredDirectory = (string) config('backup.directory', storage_path('app/backups'));
+        $backupDirectory = realpath($configuredDirectory);
+        $archive = realpath($configuredDirectory.DIRECTORY_SEPARATOR.basename((string) $this->argument('archive')));
 
         if (! $backupDirectory || ! $archive || ! str_starts_with($archive, $backupDirectory.DIRECTORY_SEPARATOR)) {
             $this->error('Backup archive was not found inside storage/app/backups.');

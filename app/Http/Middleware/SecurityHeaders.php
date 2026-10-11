@@ -25,12 +25,12 @@ class SecurityHeaders
         $response = $next($request);
 
         // Prevent XSS attacks
-        $response->header('X-Content-Type-Options', 'nosniff');
-        $response->header('X-Frame-Options', 'DENY');
-        $response->header('X-XSS-Protection', '1; mode=block');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-XSS-Protection', '1; mode=block');
 
         // Content Security Policy - Prevent inline scripts
-        $response->header(
+        $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self'; ".
                 "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; ".
@@ -43,17 +43,17 @@ class SecurityHeaders
         );
 
         // Referrer policy - Don't leak user data
-        $response->header('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Feature policy - Disable unnecessary features
-        $response->header(
+        $response->headers->set(
             'Permissions-Policy',
             'geolocation=(), microphone=(), camera=(), payment=()'
         );
 
         // Browsers only honor HSTS over an HTTPS response.
         if ($request->isSecure()) {
-            $response->header(
+            $response->headers->set(
                 'Strict-Transport-Security',
                 'max-age=31536000; includeSubDomains; preload'
             );

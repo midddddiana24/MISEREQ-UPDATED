@@ -8,10 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ServiceRequest extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $serviceRequest) {
+            $serviceRequest->version ??= 0;
+        });
+    }
 
     public const STATUSES = [
         'submitted',
@@ -37,7 +47,28 @@ class ServiceRequest extends Model
         'escalated',
     ];
 
+    // Admin lists group the detailed workflow into four stages while retaining
+    // the original status for transitions, audits, and requester-facing detail.
+    public const ADMIN_STAGES = [
+        'submitted' => ['submitted'],
+        'pending' => ['pending', 'awaiting_requester_info', 'reopened', 'escalated'],
+        'processing' => ['processing', 'awaiting_confirmation'],
+        'completed' => ['completed', 'closed', 'cancelled', 'rejected'],
+    ];
+
+    public function getAdminStageAttribute(): string
+    {
+        foreach (self::ADMIN_STAGES as $stage => $statuses) {
+            if (in_array($this->status, $statuses, true)) {
+                return $stage;
+            }
+        }
+
+        return 'pending';
+    }
+
     protected $fillable = [
+        'version',
         'control_number',
         'user_id',
         'requester_name',
@@ -147,6 +178,7 @@ class ServiceRequest extends Model
     ];
 
     protected $casts = [
+        'version' => 'integer',
         'services' => 'json',
         'network_services' => 'json',
         'ict_equipment_services' => 'json',
@@ -383,6 +415,38 @@ class ServiceRequest extends Model
         } catch (\Exception $e) {
             return 'N/A';
         }
+    }
+
+    public static function generateControlNumber(int $userId): string
+    {
+        return sprintf(
+            'SR-%s-%d-%s',
+            now()->format('YmdHis'),
+            $userId,
+            strtoupper(Str::random(6))
+        );
+    }
+
+    public static function createWithUniqueControlNumber(array $attributes, int $maxAttempts = 5): self
+    {
+        $userId = (int) ($attributes['user_id'] ?? 0);
+
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            $attributes['control_number'] = self::generateControlNumber($userId);
+
+            try {
+                return DB::transaction(fn() => self::query()->create($attributes));
+            } catch (QueryException $e) {
+                $errorCode = (int) ($e->errorInfo[1] ?? 0);
+                $message = (string) ($e->errorInfo[2] ?? '');
+
+                if ($errorCode !== 1062 && ! str_contains($message, 'control_number')) {
+                    throw $e;
+                }
+            }
+        }
+
+        throw new \RuntimeException("Unable to generate a unique control number for this service request after {$maxAttempts} attempts.");
     }
 
     public function canBeEditedByUser(): bool

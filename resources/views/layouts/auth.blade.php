@@ -3,28 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#174f75">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
+    <meta name="theme-color" content="#103d60">
     <title>@yield('title', 'Account') - WVSU MIS Service Portal</title>
-    @php
-    $wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png'))
-    ? asset('images/wvsu-janiuay-logo.png')
-    : asset('images/wvsu-logo.png');
-    $bagongPilipinasLogo = asset('images/Bagong_Pilipinas_logo.png');
-    @endphp
     <style>
         :root {
-            --brand: #174f75;
-            --brand-dark: #103a58;
-            --brand-soft: #eef5f8;
+            --brand: #0b5e92;
+            --brand-dark: #103d60;
+            --brand-soft: #e9f3f8;
             --page: #f4f7f8;
             --surface: #ffffff;
-            --ink: #1f303a;
-            --muted: #64747e;
-            --line: #d9e2e7;
+            --ink: #19354a;
+            --muted: #415b6d;
+            --line: #c6d7e2;
             --danger: #a52218;
             --success: #17623b;
-            --focus: #e5b827;
+            --focus: #f4cc59;
         }
 
         * {
@@ -33,33 +27,47 @@
 
         html {
             min-width: 320px;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         body {
             min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
             margin: 0;
+            overflow-x: hidden;
             color: var(--ink);
-            background: var(--page);
+            background: linear-gradient(112deg, #103d60 0%, #0b5e92 65%, #167cb1 100%);
             font-family: "Segoe UI", Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             position: relative;
         }
 
-        body::before {
-            position: fixed;
+        body::after {
+            position: absolute;
             inset: 0;
+            width: 100%;
+            height: 100%;
             z-index: 0;
-            background-image: url("{{ $wvsuLogo }}"),
-            url("{{ $bagongPilipinasLogo }}");
-            background-position:
-                left 5vw center,
-                right 5vw center;
-            background-size:
-                min(31vw, 390px) auto,
-                min(27vw, 340px) auto;
-            background-repeat: no-repeat;
+            background: radial-gradient(circle at 88% 0%, transparent 0 18%, rgba(255, 255, 255, .055) 18% 25%, transparent 25% 32%, rgba(255, 255, 255, .035) 32% 39%, transparent 39%);
             content: "";
-            opacity: .075;
+            pointer-events: none;
+        }
+
+        body::before {
+            position: absolute;
+            top: 50%;
+            right: max(36px, calc((100% - 1080px) / 2));
+            width: min(30vw, 340px);
+            aspect-ratio: 1;
+            z-index: 1;
+            border-radius: 50%;
+            background: url("{{ asset('images/janiuay2-1021x1024.jpg') }}") center / contain no-repeat;
+            content: "";
+            opacity: .52;
+            transform: translateY(-50%);
             pointer-events: none;
         }
 
@@ -74,7 +82,7 @@
         }
 
         .site-header {
-            z-index: 1;
+            z-index: 2;
         }
 
         a:focus-visible,
@@ -86,30 +94,52 @@
         }
 
         .auth-page {
-            width: min(100% - 32px, 760px);
-            min-height: calc(100vh - 80px);
+            width: min(100% - 64px, 1080px);
+            flex: 1;
+            min-width: 0;
             margin: 0 auto;
-            padding: 34px 0 46px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            padding: 28px 0 46px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
+
+        .auth-stack {
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .auth-stack.compact { max-width: 470px; }
+
+        .auth-navigation {
+            margin: 0 0 13px;
+        }
+
+        .auth-navigation a {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .auth-navigation a:hover { text-decoration: underline; }
+        .auth-navigation svg { width: 18px; height: 18px; }
 
         .auth-content {
             width: 100%;
-            max-width: 720px;
+            max-width: none;
             padding: clamp(24px, 4vw, 36px);
-            border: 1px solid var(--line);
+            border: 1px solid rgba(255, 255, 255, .82);
+            border-top: 5px solid var(--focus);
             border-radius: 12px;
-            background: rgba(255, 255, 255, .98);
-            box-shadow: 0 12px 34px rgba(27, 60, 80, .08);
+            background: #fff;
+            box-shadow: 0 20px 50px rgba(4, 38, 83, .28), 0 3px 12px rgba(4, 38, 83, .14);
         }
 
-        .auth-content.compact {
-            max-width: 470px;
-        }
+        .auth-content.compact { max-width: none; }
 
         .auth-heading {
             margin-bottom: 24px;
@@ -117,11 +147,14 @@
             border-bottom: 1px solid #e6ecef;
         }
 
+        .auth-heading h1,
         .auth-heading h2 {
             margin: 0 0 7px;
             color: var(--brand-dark);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(24px, 4vw, 28px);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: clamp(28px, 3.2vw, 34px);
+            font-weight: 750;
+            letter-spacing: -.03em;
             line-height: 1.2;
         }
 
@@ -129,7 +162,7 @@
             max-width: 590px;
             margin: 0;
             color: var(--muted);
-            font-size: 14px;
+            font-size: 16px;
             line-height: 1.55;
         }
 
@@ -176,11 +209,12 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
             gap: 0 18px;
         }
 
         .form-group {
+            min-width: 0;
             margin-bottom: 16px;
         }
 
@@ -190,18 +224,19 @@
             gap: 10px;
             margin-bottom: 6px;
             color: #344955;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
         }
 
         .optional {
-            color: #7b8991;
+            color: var(--muted);
             font-size: 11px;
             font-weight: 400;
         }
 
         .input-wrap {
             position: relative;
+            min-width: 0;
         }
 
         .input-icon {
@@ -220,6 +255,7 @@
             width: 100%;
             min-height: 44px;
             padding: 10px 40px;
+            font-size: 16px;
             color: var(--ink);
             border: 1px solid #c8d4db;
             border-radius: 7px;
@@ -263,8 +299,8 @@
             position: absolute;
             right: 5px;
             top: 50%;
-            width: 34px;
-            height: 34px;
+            width: 44px;
+            height: 44px;
             display: grid;
             place-items: center;
             padding: 0;
@@ -345,7 +381,7 @@
             border-radius: 7px;
             background: var(--brand);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 750;
             transition: background .15s ease, border-color .15s ease;
         }
@@ -391,50 +427,115 @@
             width: 14px;
         }
 
-        @media (max-width: 640px) {
-            body {
-                background: var(--page);
+        .auth-content { min-width: 0; overflow-wrap: anywhere; }
+        .auth-heading p, .auth-footer, .form-options { font-size: 15px; line-height: 1.6; }
+        .form-group label, .primary-button { font-size: 16px; }
+        .password-hint, .error-message, .back-home a { font-size: 13px; line-height: 1.5; }
+        .input-wrap input, .input-wrap select { min-width: 0; min-height: 48px; padding-right: 48px; }
+        .input-wrap input:not(:has(~ .password-toggle)) { padding-right: 12px; }
+        .input-wrap:not(:has(.input-icon)) input { padding-left: 12px; }
+        input, select, button { max-width: 100%; }
+        input { scroll-margin-block: 24px; }
+        .form-options { flex-wrap: wrap; gap: 8px 16px; }
+        .check-label, .form-options .text-link, .back-home a { min-height: 44px; display: inline-flex; align-items: center; }
+
+        .compact-select-button {
+            width: 100%; min-width: 0; min-height: 44px; padding: 10px 36px 10px 40px;
+            border: 1px solid #c8d4db; border-radius: 7px; background: #fff;
+            color: var(--ink); font-size: 16px; line-height: 1.4; text-align: left;
+            cursor: pointer; overflow-wrap: anywhere;
+        }
+        .compact-select-list {
+            max-height: 180px; max-height: min(180px, 30svh); overflow-y: auto;
+            overscroll-behavior: contain; margin-top: 4px; padding: 4px;
+            border: 1px solid #c8d4db; border-radius: 7px; background: #fff;
+        }
+        .compact-select-option {
+            padding: 9px 10px; min-height: 40px; font-size: 14px; line-height: 1.5;
+            border-radius: 4px; cursor: pointer; overflow-wrap: anywhere;
+        }
+        .compact-select-option[aria-selected="true"] { color: var(--brand-dark); font-weight: 700; }
+        .compact-select-option.is-active, .compact-select-option:hover { background: var(--brand-soft); }
+        .compact-select-button[aria-invalid="true"] { border-color: var(--danger); }
+        .select-arrow { pointer-events: none; }
+
+        @media (min-width: 901px) {
+            body::before {
+                top: 50%;
+                right: auto;
+                left: calc(50% + 235px);
+                width: min(45vw, 680px);
+                opacity: .3;
+                transform: translate(-50%, -50%);
             }
 
-            body::before {
-                background-position:
-                    left -72px top 110px,
-                    right -64px bottom 28px;
-                background-size:
-                    235px auto,
-                    205px auto;
-                opacity: .06;
+            body:has(.auth-stack:not(.compact))::before {
+                left: calc(50% + 360px);
             }
 
             .auth-page {
-                width: min(100% - 24px, 760px);
-                padding: 20px 0 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .auth-stack { margin: auto; }
+        }
+
+        @media (min-width: 901px) and (max-width: 1100px) {
+            body:has(.auth-stack:not(.compact))::before {
+                width: min(45vw, calc(100vw - 720px));
+            }
+        }
+
+        @media (max-width: 760px) {
+            body::before {
+                top: 48%;
+                right: 10px;
+                bottom: auto;
+                width: min(38vw, 280px);
+                opacity: .42;
+                transform: translateY(-50%);
+            }
+
+            .auth-page {
+                width: min(100% - 32px, 720px);
+                padding: 12px 0 24px;
             }
 
             .auth-content {
-                padding: 23px 18px;
+                padding: 20px 18px;
                 border-radius: 10px;
-                box-shadow: 0 8px 22px rgba(27, 60, 80, .07);
+                box-shadow: 0 14px 32px rgba(4, 38, 83, .24), 0 2px 8px rgba(4, 38, 83, .12);
             }
 
             .auth-heading {
                 margin-bottom: 20px;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 0;
+            .auth-heading { padding-bottom: 14px; margin-bottom: 18px; }
+            .auth-footer { margin-top: 16px; }
+            .back-home { margin-top: 6px; }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) and (orientation: portrait) {
+            body::before {
+                top: min(38%, 420px);
+                right: 0;
+                bottom: auto;
+                width: min(52vw, 420px);
+                opacity: .3;
+                transform: translateY(-50%);
             }
+
+            body:has(.auth-stack:not(.compact))::before { top: 50%; }
+
+            .auth-page { width: min(100% - 48px, 760px); }
+            .auth-stack.compact { width: min(100%, 470px); }
+            .auth-stack { margin-inline: auto; }
         }
 
         @media (max-width: 380px) {
-            body::before {
-                background-position:
-                    left -88px top 100px,
-                    right -78px bottom 20px;
-                opacity: .05;
-            }
-
             .auth-page {
                 width: calc(100% - 16px);
                 padding-top: 12px;
@@ -448,6 +549,29 @@
                 align-items: flex-start;
                 gap: 10px;
             }
+        }
+
+        @media (max-width: 600px) {
+            .auth-stack.compact { max-width: 100%; }
+            body::before {
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                background-size: min(90vw, 380px) auto;
+                background-position: right -45vw center;
+                opacity: .2;
+                transform: none;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            body::after {
+                position: absolute;
+                height: 100%;
+            }
+
+            body::before { top: 50%; right: -10vw; width: min(35vw, 190px); }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -465,12 +589,26 @@
     @include('partials.public-header')
 
     <main class="auth-page" id="mainContent" tabindex="-1">
-        <section class="auth-content @yield('content-class', 'compact')" aria-label="@yield('title', 'Account')">
-            @yield('content')
-        </section>
+        <div class="auth-stack @yield('content-class', 'compact')">
+            @unless(request()->routeIs('admin.device.*'))
+                <nav class="auth-navigation" aria-label="Page navigation">
+                    <a href="{{ route('home') }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                        Back to home
+                    </a>
+                </nav>
+            @endunless
+            <section class="auth-content @yield('content-class', 'compact')" aria-label="@yield('title', 'Account')">
+                @yield('content')
+            </section>
+        </div>
     </main>
 
     <script>
+        // Avoid opening the mobile keyboard or scrolling past the header on arrival.
+        if (window.matchMedia('(min-width: 1025px) and (pointer: fine)').matches) {
+            document.querySelector('[data-desktop-autofocus]')?.focus({ preventScroll: true });
+        }
         document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
             button.addEventListener('click', function() {
                 var input = document.getElementById(button.getAttribute('data-password-toggle'));

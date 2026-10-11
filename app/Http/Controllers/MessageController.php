@@ -132,9 +132,32 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'service_request_id' => 'required|exists:service_requests,id',
-            'message' => 'required|string|min:1|max:5000',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
+            'message' => 'required_without:attachment|nullable|string|max:5000',
+            'attachment' => [
+                'bail',
+                'nullable',
+                'file',
+                'mimes:pdf,doc,docx,jpg,jpeg,png',
+                'extensions:pdf,doc,docx,jpg,jpeg,png',
+                'max:'.$this->uploadMaxKilobytes(),
+                function ($attribute, $file, $fail) {
+                    $allowedMimeByExtension = [
+                        'pdf' => 'application/pdf',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'jpg' => 'image/jpeg',
+                        'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                    ];
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    if (isset($allowedMimeByExtension[$extension]) && $file->getMimeType() !== $allowedMimeByExtension[$extension]) {
+                        $fail('The attachment contents do not match its file extension.');
+                    }
+                },
+            ],
         ]);
+
+        $messageText = trim((string) ($validated['message'] ?? ''));
 
         $serviceRequest = ServiceRequest::findOrFail($validated['service_request_id']);
 
@@ -151,11 +174,11 @@ class MessageController extends Controller
             ], 422);
         }
 
-        $message = DB::transaction(function () use ($request, $validated, $user) {
+        $message = DB::transaction(function () use ($request, $validated, $user, $messageText) {
             $message = Message::create([
                 'service_request_id' => $validated['service_request_id'],
                 'sender_id' => Auth::id(),
-                'message' => $validated['message'],
+                'message' => $messageText !== '' ? $messageText : 'Attachment sent',
                 'is_admin' => $user instanceof User && $user->isAdmin(),
             ]);
 
@@ -297,8 +320,9 @@ class MessageController extends Controller
         ]);
     }
 
-    public function downloadAttachment(MessageAttachment $attachment)
+    public function downloadAttachment(int $attachment)
     {
+        $attachment = MessageAttachment::query()->findOrFail($attachment);
         $attachment->load('message.serviceRequest');
         $serviceRequest = $attachment->message?->serviceRequest;
         $user = Auth::user();

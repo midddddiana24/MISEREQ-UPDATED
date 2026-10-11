@@ -47,7 +47,8 @@ class RequiredPasswordController extends Controller
             ->where('session_id', '!=', $request->session()->getId())
             ->whereNull('revoked_at')
             ->update(['revoked_at' => now()]);
-        app(SecurityNotificationService::class)->notify(
+        app(SecurityNotificationService::class)->notifyMandatory(
+            SecurityNotificationService::EVENT_PASSWORD_CHANGED,
             $request->user(),
             'Required password change completed',
             'Your password was changed and other active sessions were signed out.'

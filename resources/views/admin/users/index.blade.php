@@ -25,19 +25,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <span class="label">Total Users</span>
-                <span class="value">{{ $users->count() }}</span>
+                <span class="value">{{ $userCounts['total'] }}</span>
             </div>
             <div class="stat-card">
                 <span class="label">Admins</span>
-                <span class="value">{{ $users->where('role', 'admin')->count() }}</span>
+                <span class="value">{{ $userCounts['admins'] }}</span>
             </div>
             <div class="stat-card">
                 <span class="label">End Users</span>
-                <span class="value">{{ $users->where('role', 'user')->count() }}</span>
+                <span class="value">{{ $userCounts['end_users'] }}</span>
             </div>
             <div class="stat-card">
                 <span class="label">Locked Accounts</span>
-                <span class="value">{{ $users->filter(fn ($account) => $account->isAccountLocked())->count() }}</span>
+                <span class="value">{{ $userCounts['locked'] }}</span>
             </div>
         </div>
     </section>
@@ -52,7 +52,7 @@
 
         <div class="toolbar-row">
             <div class="table-note">Administrative account management for end users, technicians, and admins.</div>
-            <div class="table-note">Records: {{ $users->count() }}</div>
+            <div class="table-note">Records: {{ $users->total() }}</div>
         </div>
 
         <div class="table-wrap">
@@ -123,6 +123,9 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        <div style="margin-top:16px;">
+            {{ $users->links('admin.partials.pagination', ['paginationLabel' => 'User directory pages']) }}
         </div>
     </section>
 @endsection

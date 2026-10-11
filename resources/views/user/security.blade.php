@@ -89,8 +89,14 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 12px;
+            cursor: pointer;
+            list-style: none;
         }
+        .login-entry-head::-webkit-details-marker { display: none; }
+        .login-entry-head::after { content: 'View details'; color: #174f75; font-size: 13px; font-weight: 700; }
+        .login-entry[open] .login-entry-head { margin-bottom: 12px; }
+        .login-entry[open] .login-entry-head::after { content: 'Hide details'; }
+        .login-entry-head:focus-visible { outline: 3px solid #236d9e; outline-offset: 3px; }
 
         .login-time {
             color: #586d78;
@@ -227,17 +233,18 @@
         <section class="panel">
             <div class="section-header">
                 <h1>Recent Login Activity</h1>
-                <small>Showing up to the last 20 sign-in attempts for your account.</small>
+                <small>Showing {{ $loginAttempts->count() }} of {{ $loginAttempts->total() }} sign-in attempts. Select an entry for details.</small>
             </div>
 
             @if($loginAttempts && $loginAttempts->count() > 0)
             <div class="login-list">
                 @foreach($loginAttempts as $attempt)
-                <article class="login-entry">
-                    <div class="login-entry-head">
+                <details class="login-entry">
+                    <summary class="login-entry-head">
                         <span class="login-status {{ $attempt->success ? 'success' : 'failed' }}">{{ $attempt->success ? 'Successful login' : 'Failed attempt' }}</span>
                         <span class="login-time">{{ $attempt->created_at->diffForHumans() }}</span>
-                    </div>
+                        <span class="login-time">{{ $attempt->device_info ?? 'Unknown device' }}</span>
+                    </summary>
                     <div class="login-grid">
                         <div>
                             <div class="login-label">IP Address</div>
@@ -258,9 +265,10 @@
                         </div>
                         @endif
                     </div>
-                </article>
+                </details>
                 @endforeach
             </div>
+            @include('user.partials.record-pagination', ['records' => $loginAttempts, 'paginationLabel' => 'Login activity pages'])
             @else
             <div class="empty-state">No login history is available yet.</div>
             @endif

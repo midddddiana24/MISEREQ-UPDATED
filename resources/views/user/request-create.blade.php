@@ -11,6 +11,12 @@
     $isEdit = $requestModel !== null;
     $isMaintenanceRequest = request('service') === 'preventive_maintenance';
     $selectedServices = old('services', $requestModel?->services ?? ($isMaintenanceRequest ? ['others_ict'] : []));
+    $networkServiceChoices = ['new_network_computer', 'new_network_printer', 'new_cabling', 'new_telephone_line', 'new_cabling_telephone', 'move_new_location', 'others_network'];
+    $ictServiceChoices = ['troubleshoot_pc', 'troubleshoot_printer', 'network_connection', 'software_installation', 'hardware_install', 'others_ict'];
+    $misServiceChoices = ['account_creation', 'password_reset', 'system_access', 'others_mis'];
+    $networkServicesSelected = count(array_intersect((array) $selectedServices, $networkServiceChoices)) > 0;
+    $ictServicesSelected = count(array_intersect((array) $selectedServices, $ictServiceChoices)) > 0;
+    $misServicesSelected = count(array_intersect((array) $selectedServices, $misServiceChoices)) > 0;
     $wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png'))
     ? asset('images/wvsu-janiuay-logo.png')
     : asset('images/wvsu-logo.png');
@@ -496,6 +502,13 @@
             padding-top: 22px;
         }
 
+        .service-request-form .service-category-help {
+            margin: 0 0 14px;
+            color: var(--client-ink-700);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
         .service-request-form .services-section>h3 {
             margin-bottom: 12px !important;
         }
@@ -511,6 +524,44 @@
 
         .service-request-form .service-box:last-child {
             margin-bottom: 0 !important;
+        }
+
+        .service-request-form .service-category-summary {
+            min-height: 44px;
+            padding: 10px 2px;
+            color: var(--client-brand-900);
+            font-size: 16px;
+            font-weight: 750;
+            line-height: 1.45;
+            cursor: pointer;
+        }
+
+        .service-request-form .service-category-summary:focus-visible {
+            outline: 3px solid var(--client-brand-700);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        .service-request-form .service-category-count {
+            margin-left: 8px;
+            color: var(--client-ink-700);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .service-request-form .service-category-options {
+            margin-top: 6px;
+            padding-top: 14px;
+            border-top: 1px solid var(--client-line);
+        }
+
+        .service-request-form .service-extra-field {
+            display: block;
+            margin-top: 12px;
+            color: var(--client-ink-700);
+            font-size: 15px;
+            font-weight: 650;
+            line-height: 1.45;
         }
 
         .service-request-form .service-box h4 {
@@ -530,7 +581,7 @@
 
         .service-request-form .checkbox-item {
             min-width: 0;
-            min-height: 40px;
+            min-height: 44px;
             padding: 8px 10px;
             display: flex;
             align-items: center;
@@ -569,7 +620,7 @@
             margin: 0 !important;
             padding: 0;
             color: #43545f !important;
-            font-size: 13px !important;
+            font-size: 15px !important;
             font-weight: 500 !important;
             line-height: 1.35;
             overflow-wrap: anywhere;
@@ -632,13 +683,14 @@
         }
 
         .draft-actions button {
-            padding: 6px 9px;
+            min-height: 44px;
+            padding: 8px 12px;
             border: 1px solid #9fc5d9;
             border-radius: 5px;
             background: #fff;
             color: #245f83;
             font: inherit;
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
         }
@@ -647,14 +699,12 @@
             margin: 0 0 10px;
             min-height: 17px;
             color: #647985;
-            font-size: 11px;
+            font-size: 14px;
             text-align: right;
         }
 
         .service-request-form .form-action-bar {
-            position: sticky;
-            z-index: 10;
-            bottom: 10px;
+            position: static;
             margin: 26px -8px -8px;
             padding: 12px;
             display: flex;
@@ -681,7 +731,6 @@
 
         @media (max-width: 600px) {
             .service-request-form .form-action-bar {
-                bottom: 6px;
                 margin: 22px -8px -8px;
                 padding: 9px;
                 display: grid;
@@ -793,10 +842,12 @@
                 <!-- Service Categories -->
                 <div class="form-section services-section">
                     <h2><span class="required">Services Requested</span></h2>
+                    <p class="service-category-help">Open a category, then select one or more services. You may use more than one category.</p>
 
                     <!-- Network Services -->
-                    <div class="service-box">
-                        <h3>🌐 Network/Telephone Services</h3>
+                    <details class="service-box service-category" @if($networkServicesSelected) open @endif>
+                        <summary class="service-category-summary">🌐 Network/Telephone Services <span class="service-category-count" data-selected-count hidden></span></summary>
+                        <div class="service-category-options">
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="network_new_computer" name="services[]" value="new_network_computer" @checked(in_array('new_network_computer', $selectedServices, true))>
@@ -828,14 +879,20 @@
                             </div>
                         </div>
                         <div class="form-row two-col service-extra-grid">
-                            <input type="text" class="service-extra-input" name="network_specify_location" placeholder="Specify Location (if applicable)">
-                            <input type="text" class="service-extra-input" name="network_other" placeholder="Specify Other Service">
+                            <label class="service-extra-field" for="network_specify_location">Location (optional)
+                                <input type="text" id="network_specify_location" class="service-extra-input" name="network_specify_location" value="{{ old('network_specify_location', $requestModel?->office_location) }}" placeholder="Building, room, or office">
+                            </label>
+                            <label class="service-extra-field" for="network_other">Other network service
+                                <input type="text" id="network_other" class="service-extra-input" name="network_other" value="{{ old('network_other', $requestModel?->network_others) }}" placeholder="Describe the service">
+                            </label>
                         </div>
-                    </div>
+                        </div>
+                    </details>
 
                     <!-- ICT Equipment Services -->
-                    <div class="service-box">
-                        <h3>💻 ICT Equipment Services</h3>
+                    <details class="service-box service-category" @if($ictServicesSelected) open @endif>
+                        <summary class="service-category-summary">💻 ICT Equipment Services <span class="service-category-count" data-selected-count hidden></span></summary>
+                        <div class="service-category-options">
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="ict_troubleshoot_pc" name="services[]" value="troubleshoot_pc" @checked(in_array('troubleshoot_pc', $selectedServices, true))>
@@ -862,12 +919,16 @@
                                 <label for="ict_others">Others</label>
                             </div>
                         </div>
-                        <input type="text" class="service-extra-input" name="ict_other" placeholder="Specify Other Service">
-                    </div>
+                        <label class="service-extra-field" for="ict_other">Other ICT equipment service
+                            <input type="text" id="ict_other" class="service-extra-input" name="ict_other" value="{{ old('ict_other', $requestModel?->ict_others) }}" placeholder="Describe the service">
+                        </label>
+                        </div>
+                    </details>
 
                     <!-- MIS Software Services -->
-                    <div class="service-box">
-                        <h3>⚙️ MIS Software/System Services</h3>
+                    <details class="service-box service-category" @if($misServicesSelected) open @endif>
+                        <summary class="service-category-summary">⚙️ MIS Software/System Services <span class="service-category-count" data-selected-count hidden></span></summary>
+                        <div class="service-category-options">
                         <div class="checkbox-grid">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="mis_account_creation" name="services[]" value="account_creation" @checked(in_array('account_creation', $selectedServices, true))>
@@ -886,8 +947,11 @@
                                 <label for="mis_others">Others</label>
                             </div>
                         </div>
-                        <input type="text" class="service-extra-input" name="mis_other" placeholder="Specify Other Service">
-                    </div>
+                        <label class="service-extra-field" for="mis_other">Other MIS software service
+                            <input type="text" id="mis_other" class="service-extra-input" name="mis_other" value="{{ old('mis_other', $requestModel?->mis_others) }}" placeholder="Describe the service">
+                        </label>
+                        </div>
+                    </details>
                 </div>
 
                 <!-- Additional Information -->
@@ -908,7 +972,7 @@
                         <div class="form-group">
                             <label for="attachments">Attachments (Optional)</label>
                             <input type="file" id="attachments" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
-                            <small>Up to 5 files. PDF, DOC, DOCX, JPG, or PNG; maximum 10MB each. Files are not stored in drafts.</small>
+                            <small>Up to 5 files. PDF, DOC, DOCX, JPG, or PNG; maximum {{ (int) \App\Models\Setting::get('max_upload_size', 10) }}MB each. Files are not stored in drafts.</small>
                             @if($isEdit && $requestModel?->attachment)
                             <small>Current file: <a href="{{ route('requests.attachment', $requestModel) }}">Download current attachment</a></small>
                             @endif
@@ -917,13 +981,38 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="action-buttons form-action-bar" aria-label="Form actions">
+                <div class="action-buttons form-action-bar" role="group" aria-label="Form actions">
                     <a href="{{ route('requests.index') }}" class="btn btn-secondary">{{ $isEdit ? 'Discard changes' : 'Cancel' }}</a>
                     <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Save changes' : 'Submit request' }}</button>
                 </div>
             </form>
         </div>
     </main>
+    <script>
+        (function() {
+            const form = document.querySelector('[data-service-request-form]');
+            if (!form) return;
+            const categories = Array.from(form.querySelectorAll('.service-category'));
+
+            function updateCategories(openSelected = false) {
+                categories.forEach(function(category) {
+                    const count = category.querySelectorAll('input[name="services[]"]:checked').length;
+                    const label = category.querySelector('[data-selected-count]');
+                    label.textContent = count === 1 ? '1 selected' : count + ' selected';
+                    label.hidden = count === 0;
+                    if (openSelected && count > 0) category.open = true;
+                });
+            }
+
+            form.addEventListener('change', function(event) {
+                if (event.target.matches('input[name="services[]"]')) updateCategories();
+            });
+            form.addEventListener('service-selection-restored', function() {
+                updateCategories(true);
+            });
+            updateCategories(true);
+        })();
+    </script>
     @if(!$isEdit)
     <script>
         (function() {
@@ -967,6 +1056,7 @@
                 });
                 banner.hidden = true;
                 status.textContent = 'Draft restored. Attachments must be selected again.';
+                form.dispatchEvent(new Event('service-selection-restored'));
             }
 
             function save() {

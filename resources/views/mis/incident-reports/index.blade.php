@@ -285,6 +285,7 @@
         }
     </style>
     @include('user.partials.theme')
+    @include('user.partials.record-index-style')
 </head>
 
 <body>
@@ -297,37 +298,45 @@
 
     @include('partials.header')
 
-    <main class="page" id="mainContent" tabindex="-1">
+    <main class="page record-index" id="mainContent" tabindex="-1">
         @include('user.partials.navigation')
 
         <section class="panel">
             <div class="section-header">
                 <div class="header-content">
                     <div>
-                        <h1>Your Reports</h1>
-                        <small>ICT Incident Reports · West Visayas State University</small>
+                        <h1>ICT Incident Reports</h1>
+                        <small>Incident records &middot; West Visayas State University</small>
                     </div>
                     <a href="{{ route('incident-reports.create') }}" class="button">+ New ICT Incident Report</a>
                 </div>
             </div>
-            <div class="toolbar-pills">
-                <a href="{{ route('incident-reports.index', ['search' => request('search')]) }}" class="button secondary">All</a>
-                <a href="{{ route('incident-reports.index', ['status' => 'open', 'search' => request('search')]) }}" class="button secondary">Open</a>
-                <a href="{{ route('incident-reports.index', ['status' => 'resolved', 'search' => request('search')]) }}" class="button secondary">Resolved</a>
-                <a href="{{ route('incident-reports.index', ['status' => 'closed', 'search' => request('search')]) }}" class="button secondary">Closed</a>
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-label">Total Reports</span><span class="stat-value">{{ $stats['total'] }}</span><div class="stat-hint">All incident reports in your history.</div></div>
+                <div class="stat-card"><span class="stat-label">Submitted</span><span class="stat-value">{{ $stats['submitted'] }}</span><div class="stat-hint">New reports sent to MIS.</div></div>
+                <div class="stat-card"><span class="stat-label">Pending</span><span class="stat-value">{{ $stats['pending'] }}</span><div class="stat-hint">Reports waiting for MIS action.</div></div>
+                <div class="stat-card"><span class="stat-label">Processing</span><span class="stat-value">{{ $stats['processing'] }}</span><div class="stat-hint">Incidents being handled.</div></div>
+                <div class="stat-card"><span class="stat-label">Completed</span><span class="stat-value">{{ $stats['completed'] }}</span><div class="stat-hint">Completed incident records.</div></div>
             </div>
-            <form method="GET" class="search-form record-search-form">
+            <div class="filters" role="group" aria-label="Filter incident reports">
+                <a href="{{ route('incident-reports.index', ['search' => request('search')]) }}" class="filter-btn {{ request('status') ? '' : 'active' }}">All</a>
+                @foreach(\App\Models\IctIncidentReport::STATUS_OPTIONS as $stage => $label)
+                <a href="{{ route('incident-reports.index', ['status' => $stage, 'search' => request('search')]) }}" class="filter-btn {{ request('status') === $stage ? 'active' : '' }}">{{ $label }}</a>
+                @endforeach
+            </div>
+            <form method="GET" class="search-container record-search-form">
                 @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
-                <input type="text" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search document number, department, or details">
+                <label for="incidentSearch" class="visually-hidden">Search incident reports</label>
+                <input type="search" id="incidentSearch" class="search-input" name="search" value="{{ request('search') }}" placeholder="Search document number, department, or details">
                 <button type="submit" class="button">Search</button>
             </form>
             @if (session('success')) <p style="margin-top:12px;color:#166534;">{{ session('success') }}</p> @endif
             @if ($reports->count())
-            <p class="client-record-note" id="incidentRecordHint">Scroll inside the records area to review more reports.</p>
+            <p class="record-list-note" id="incidentRecordHint">Showing {{ $reports->count() }} report{{ $reports->count() === 1 ? '' : 's' }} on this page.</p>
             <div class="client-record-scroll" tabindex="0" role="region" aria-label="ICT incident report records" aria-describedby="incidentRecordHint">
-                <table class="client-record-table">
+                <table class="client-record-table incident-record-table">
                     <thead>
                         <tr>
                             <th>Document No.</th>
@@ -351,16 +360,16 @@
                                 <span>Standalone incident</span>
                                 @endif
                             </td>
-                            <td data-label="Status">{{ ucfirst(str_replace('_', ' ', $report->status)) }}</td>
+                            <td data-label="Status"><span class="status-badge status-{{ $report->stage_status }}">{{ str($report->stage_status)->title() }}</span></td>
                             <td data-label="Actions">
-                                <div class="record-actions"><a class="record-action primary" href="{{ route('incident-reports.show', $report) }}">View details</a><a class="record-action" href="{{ route('incident-reports.pdf', ['incidentReport' => $report, 'v' => $report->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
+                                <div class="record-actions"><a class="record-action primary" href="{{ route('incident-reports.show', $report) }}">View details</a><a class="record-action" href="{{ route('incident-reports.pdf', ['incidentReport' => $report, 'v' => 'logo-2-'.$report->updated_at?->timestamp]) }}" target="_blank" rel="noopener">View PDF</a></div>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <div style="margin-top:16px;">{{ $reports->links() }}</div>
+            @include('user.partials.record-pagination', ['records' => $reports, 'paginationLabel' => 'Incident report pages'])
             @else
             <p class="empty">No ICT incident reports submitted yet.</p>
             @endif

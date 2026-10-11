@@ -283,8 +283,6 @@
                         <small>Incident Report · West Visayas State University</small>
                     </div>
                     <div class="detail-document-actions">
-                        <a href="{{ route('incident-reports.pdf', ['incidentReport' => $report, 'v' => $report->updated_at?->timestamp]) }}" target="_blank" rel="noopener" class="button">Print PDF</a>
-                        <button onclick="window.print()" class="button" type="button">Print</button>
                         <a href="{{ route('incident-reports.index') }}" class="button secondary">&larr; Back to Reports</a>
                     </div>
                 </div>
@@ -300,7 +298,7 @@
                 <div class="item"><strong>Reported By</strong>{{ $report->reported_by }}</div>
                 <div class="item"><strong>Date of Incident</strong>{{ optional($report->date_of_incident)->format('M d, Y') }}</div>
                 <div class="item"><strong>Department</strong>{{ $report->department ?? 'N/A' }}</div>
-                <div class="item"><strong>Status</strong>{{ ucfirst(str_replace('_', ' ', $report->status)) }}</div>
+                <div class="item"><strong>Status</strong>{{ str($report->stage_status)->title() }}</div>
             </div>
 
             @if($report->serviceRequest)

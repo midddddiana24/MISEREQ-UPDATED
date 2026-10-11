@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\PreventiveMaintenanceChecklist;
 use App\Models\ServiceRequest;
 use App\Services\EmailNotificationService;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -111,6 +112,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
             ->where('notification_type', 'admin_action_required');
         $totalUnread = (clone $query)->whereNull('read_at')->count();
         $notifications = $query
+            ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END')
             ->latest()
             ->limit(10)
             ->get()
@@ -136,6 +138,11 @@ class AdminDashboardController extends Controller implements HasMiddleware
 
     public function notificationsPage()
     {
+        $adminAlerts = Notification::where('user_id', auth()->id())
+            ->where('notification_type', 'admin_action_required');
+        $alertCount = (clone $adminAlerts)->count();
+        $unreadCount = (clone $adminAlerts)->whereNull('read_at')->count();
+        $failedCount = Notification::where('status', 'failed')->count();
         $notifications = Notification::query()
             ->where(function ($query) {
                 $query->where('user_id', auth()->id())
@@ -145,7 +152,7 @@ class AdminDashboardController extends Controller implements HasMiddleware
             ->latest()
             ->paginate(25);
 
-        return view('admin.notifications.index', compact('notifications'));
+        return view('admin.notifications.index', compact('notifications', 'alertCount', 'unreadCount', 'failedCount'));
     }
 
     public function retryNotification(Notification $notification)
@@ -156,29 +163,47 @@ class AdminDashboardController extends Controller implements HasMiddleware
         return back()->with($sent ? 'success' : 'error', $sent ? 'Notification sent successfully.' : 'Notification could not be sent. Review its delivery error.');
     }
 
-    public function markNotificationRead(Notification $notification)
+    public function markNotificationRead(Request $request, Notification $notification)
     {
         $this->ensureNotificationOwner($notification);
         $notification->markAsRead();
 
-        return response()->json(['success' => true]);
+        return $request->expectsJson()
+            ? response()->json(['success' => true])
+            : back()->with('success', 'Notification marked as read.');
     }
 
-    public function deleteNotification(Notification $notification)
+    public function markAllNotificationsRead(Request $request)
+    {
+        $updated = Notification::where('user_id', auth()->id())
+            ->where('notification_type', 'admin_action_required')
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'updated' => $updated])
+            : back()->with('success', $updated.' '.\Illuminate\Support\Str::plural('notification', $updated).' marked as read.');
+    }
+
+    public function deleteNotification(Request $request, Notification $notification)
     {
         $this->ensureNotificationOwner($notification);
         $notification->delete();
 
-        return response()->json(['success' => true]);
+        return $request->expectsJson()
+            ? response()->json(['success' => true])
+            : back()->with('success', 'Notification deleted.');
     }
 
-    public function clearNotifications()
+    public function clearNotifications(Request $request)
     {
         $deleted = Notification::where('user_id', auth()->id())
             ->where('notification_type', 'admin_action_required')
             ->delete();
 
-        return response()->json(['success' => true, 'deleted' => $deleted]);
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'deleted' => $deleted])
+            : back()->with('success', $deleted.' '.\Illuminate\Support\Str::plural('notification', $deleted).' cleared.');
     }
 
     private function ensureNotificationOwner(Notification $notification): void

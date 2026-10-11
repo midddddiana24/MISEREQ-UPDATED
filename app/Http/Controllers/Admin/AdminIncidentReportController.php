@@ -21,18 +21,61 @@ class AdminIncidentReportController extends Controller
 
     public function index(Request $request)
     {
-        $validated = $request->validate(['status' => ['nullable', 'in:open,in_progress,resolved,closed']]);
-        $statusFilter = $validated['status'] ?? null;
-        $archived = request()->boolean('archived');
-        $query = $archived ? IctIncidentReport::onlyTrashed() : IctIncidentReport::query();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:150'],
+            'status' => ['nullable', 'in:submitted,pending,processing,completed,open,in_progress,resolved,closed'],
+            'group' => ['nullable', 'in:active,needs_review,processing,in_progress,linked,standalone,archived'],
+            'archived' => ['nullable', 'boolean'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+        $statusFilter = IctIncidentReport::LEGACY_STATUSES[$filters['status'] ?? ''] ?? ($filters['status'] ?? null);
+        $group = ($filters['group'] ?? null) === 'in_progress'
+            ? 'processing' : ($filters['group'] ?? (! empty($filters['archived']) ? 'archived' : 'active'));
+        $archived = $group === 'archived';
+        $baseQuery = $archived ? IctIncidentReport::onlyTrashed() : IctIncidentReport::query();
+        match ($group) {
+            'needs_review' => $baseQuery->whereIn('status', ['submitted', 'pending', 'open']),
+            'processing', 'in_progress' => $baseQuery->whereIn('status', IctIncidentReport::storedStatusesFor('processing')),
+            'linked' => $baseQuery->whereNotNull('service_request_id'),
+            'standalone' => $baseQuery->whereNull('service_request_id'),
+            default => null,
+        };
+        if ($search = trim($filters['search'] ?? '')) {
+            $baseQuery->where(function ($query) use ($search) {
+                $query->where('document_number', 'like', "%{$search}%")
+                    ->orWhere('reported_by', 'like', "%{$search}%")
+                    ->orWhere('id_number', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%")
+                    ->orWhere('details_of_incident', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($owner) use ($search) {
+                        $owner->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('serviceRequest', function ($serviceRequest) use ($search) {
+                        $serviceRequest->where('control_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+        if (! empty($filters['date_from'])) {
+            $baseQuery->whereDate('date_of_incident', '>=', $filters['date_from']);
+        }
+        if (! empty($filters['date_to'])) {
+            $baseQuery->whereDate('date_of_incident', '<=', $filters['date_to']);
+        }
+        $statusCounts = (clone $baseQuery)->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')->pluck('aggregate', 'status')
+            ->reduce(function ($counts, $count, $status) {
+                $stage = IctIncidentReport::LEGACY_STATUSES[$status] ?? $status;
+                $counts[$stage] = ($counts[$stage] ?? 0) + $count;
+                return $counts;
+            }, collect());
+        $query = clone $baseQuery;
         if ($statusFilter) {
-            $query->where('status', $statusFilter);
+            $query->whereIn('status', IctIncidentReport::storedStatusesFor($statusFilter));
         }
         $reports = $query->with('user')->latest()->paginate(15)->withQueryString();
-        $statusCounts = ($archived ? IctIncidentReport::onlyTrashed() : IctIncidentReport::query())
-            ->selectRaw('status, COUNT(*) as aggregate')
-            ->groupBy('status')
-            ->pluck('aggregate', 'status');
 
         return view('admin.incident-reports.index', [
             'reports' => $reports,
@@ -41,6 +84,16 @@ class AdminIncidentReportController extends Controller
             'statusCounts' => $statusCounts,
             'statusFilter' => $statusFilter,
             'archived' => $archived,
+            'group' => $group,
+            'groupOptions' => [
+                'active' => 'Active Records',
+                'needs_review' => 'Awaiting Review',
+                'processing' => 'Processing',
+                'linked' => 'Linked to Request',
+                'standalone' => 'Standalone Reports',
+                'archived' => 'Archived Records',
+            ],
+            'filters' => $filters,
         ]);
     }
 
@@ -73,7 +126,7 @@ class AdminIncidentReportController extends Controller
             'received_time' => $validated['received_time'] ?? now()->format('H:i:s'),
             'noted_by_name' => $validated['noted_by_name'] ?? 'JAY C. LIZA, PhD.',
             'noted_by_role' => $validated['noted_by_role'] ?? 'MIS Head',
-            'status' => $validated['status'] ?? 'open',
+            'status' => $validated['status'] ?? 'pending',
         ]);
         $this->notifyUser($report, 'An ICT incident report was created for your account.');
         $this->logLinkedActivity(
@@ -177,7 +230,7 @@ class AdminIncidentReportController extends Controller
 
     public function pdf(IctIncidentReport $incidentReport)
     {
-        $cacheKey = 'incident_pdf_v2_'.$incidentReport->id.'_'.$incidentReport->updated_at->timestamp;
+        $cacheKey = 'incident_pdf_v6_'.$incidentReport->id.'_'.$incidentReport->updated_at->timestamp;
         $content = Cache::store('file')->remember($cacheKey, now()->addDays(30), function () use ($incidentReport) {
             $pdf = Pdf::loadView('pdf.incident-report', ['report' => $incidentReport])->setPaper('A4', 'portrait');
             $options = $pdf->getDomPDF()->getOptions();
@@ -246,7 +299,7 @@ class AdminIncidentReportController extends Controller
             'updo_director_name' => ['nullable', 'string', 'max:255'],
             'acknowledged_by_name' => ['nullable', 'string', 'max:255'],
             'acknowledged_by_role' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'in:open,in_progress,resolved,closed'],
+            'status' => ['nullable', 'in:submitted,pending,processing,completed'],
         ];
     }
 
@@ -265,12 +318,7 @@ class AdminIncidentReportController extends Controller
 
     private function statusOptions(): array
     {
-        return [
-            'open' => 'Open',
-            'in_progress' => 'In Progress',
-            'resolved' => 'Resolved',
-            'closed' => 'Closed',
-        ];
+        return IctIncidentReport::STATUS_OPTIONS;
     }
 
     private function requesterOptions(?int $currentUserId = null)

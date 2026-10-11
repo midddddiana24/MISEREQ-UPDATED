@@ -90,7 +90,7 @@ class ServiceRequestFlowTest extends TestCase
     {
         $owner = $this->createUser();
         $request = $this->makeRequest($owner);
-        $cacheKey = 'pdf_v11_'.$request->id.'_'.$request->updated_at->timestamp;
+        $cacheKey = 'pdf_v11_' . $request->id . '_' . $request->updated_at->timestamp;
 
         // Match production's database default. PDF bytes must still use the
         // dedicated file store instead of being inserted into MySQL.
@@ -107,16 +107,60 @@ class ServiceRequestFlowTest extends TestCase
                 ->get(route('request.download-pdf', $request))
                 ->assertOk()
                 ->assertHeader('Content-Type', 'application/pdf')
-                ->assertDownload('MIS-Request-'.$request->control_number.'.pdf');
+                ->assertDownload('MIS-Request-' . $request->control_number . '.pdf');
         } finally {
             Cache::store('file')->forget($cacheKey);
         }
     }
 
+    public function test_stale_admin_action_is_rejected_when_request_changed_since_load(): void
+    {
+        $admin = $this->createUser([
+            'role' => 'admin',
+            'is_admin' => true,
+            'is_active' => true,
+        ]);
+        $request = ServiceRequest::create([
+            'control_number' => 'STALE-ADMIN-' . now()->format('YmdHisv'),
+            'user_id' => $this->createUser()->id,
+            'requester_name' => 'Stale Reviewer',
+            'requester_office' => 'MIS Office',
+            'office' => 'MIS Office',
+            'services' => ['troubleshoot_pc'],
+            'description' => 'Two admins act on the same request at once.',
+            'status' => 'submitted',
+            'date_of_request' => now()->toDateString(),
+            'time_of_request' => now()->format('H:i:s'),
+        ]);
+        $staleVersion = $request->version;
+
+        $request->update([
+            'status' => 'pending',
+            'assigned_technician_id' => null,
+            'version' => $staleVersion + 1,
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.service-requests.show', $request))
+            ->post(route('admin.service-requests.triage', $request), [
+                'assigned_technician_id' => null,
+                'technician_notes' => 'Second admin attempt with stale state.',
+                'version' => $staleVersion,
+            ])
+            ->assertSessionHasErrors('version')
+            ->assertSessionHas('errors', function ($errors) {
+                return str_contains((string) $errors->first('version'), 'already updated by someone else');
+            });
+
+        $request->refresh();
+        $this->assertSame('pending', $request->status);
+        $this->assertNull($request->technician_notes);
+    }
+
     private function makeRequest($owner): ServiceRequest
     {
         return ServiceRequest::create([
-            'control_number' => 'TEST-'.$owner->id.'-'.now()->format('Hisv'),
+            'control_number' => 'TEST-' . $owner->id . '-' . now()->format('Hisv'),
             'user_id' => $owner->id,
             'requester_name' => $owner->full_name,
             'requester_office' => $owner->office,

@@ -16,7 +16,7 @@ class StrongPassword implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         // Check minimum length (12 characters)
-        if (strlen($value) < 12) {
+        if (mb_strlen((string) $value, 'UTF-8') < 12) {
             $fail('The :attribute must be at least 12 characters long.');
 
             return;

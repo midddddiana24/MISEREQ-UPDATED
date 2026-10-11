@@ -4,13 +4,13 @@ $root = dirname(__DIR__, 2);
 $requirements = [
     'resources/views/welcome.blade.php' => [
         'name="viewport"',
-        '@media (max-width: 820px)',
-        '@media (max-width: 600px)',
+        '@media (max-width: 900px)',
+        '@media (max-width: 640px)',
         '@media (max-width: 360px)',
     ],
     'resources/views/layouts/auth.blade.php' => [
         'name="viewport"',
-        '@media (max-width: 640px)',
+        '@media (max-width: 760px)',
         '@media (max-width: 380px)',
     ],
     'resources/views/admin/layout.blade.php' => [

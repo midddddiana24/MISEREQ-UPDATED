@@ -110,7 +110,8 @@ class AdminDeviceVerificationController extends Controller
         string $message
     ): RedirectResponse {
         $cookie = $devices->trustCurrentDevice($request->user(), $request);
-        app(SecurityNotificationService::class)->notify(
+        app(SecurityNotificationService::class)->notifyMandatory(
+            SecurityNotificationService::EVENT_NEW_DEVICE,
             $request->user(),
             'Administrator device trusted',
             'A device was approved for administrator access: '

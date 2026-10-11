@@ -43,6 +43,9 @@
             background: #fff2f2;
         }
 
+        .settings-policy { margin-bottom: 13px; padding: 11px 13px; border: 1px solid #d4e2eb; border-radius: 7px; color: #304d60; background: #f3f8fb; font-size: 12px; line-height: 1.5; }
+        .settings-policy strong { color: #173d57; }
+
         .security-overview {
             margin-bottom: 16px;
             display: grid;
@@ -457,8 +460,8 @@
         .settings-heading-action {
             width: auto !important;
             min-width: max-content;
-            min-height: 38px !important;
-            padding: 8px 12px !important;
+            min-height: 44px !important;
+            padding: 10px 12px !important;
             display: inline-flex !important;
             flex: 0 0 auto;
             align-items: center;
@@ -535,6 +538,8 @@
                             @unless($session->is_current)
                             <form method="POST" action="{{ route('settings.sessions.destroy', $session) }}">
                                 @csrf @method('DELETE')
+                                <label class="sr-only" for="session_password_{{ $session->id }}">Current password for {{ $session->device_name ?: 'this device' }}</label>
+                                <input id="session_password_{{ $session->id }}" type="password" name="current_password" autocomplete="current-password" placeholder="Current password" required>
                                 <button type="submit" class="button-danger">Sign out</button>
                             </form>
                             @endunless
@@ -665,7 +670,7 @@
                             'notify_email_enabled' => ['Email delivery', 'Master control for optional account emails.'],
                             'notify_request_updates' => ['Request updates', 'Status changes and new messages from MIS.'],
                             'notify_request_reminders' => ['Request reminders', 'Reminders when your response or confirmation is needed.'],
-                            'notify_security_alerts' => ['Security alerts', 'Password, 2FA, session, and new-device activity.'],
+                            'notify_security_alerts' => ['Optional security emails', 'Account locks, 2FA setup, and session activity. Password changes, 2FA removal, new devices, and email changes still send security emails.'],
                             ] as $key => [$label, $description])
                             <label class="preference">
                                 <span><strong>{{ $label }}</strong><small>{{ $description }}</small></span>
@@ -685,6 +690,7 @@
                         </div>
                         <a href="{{ route('user.security') }}" class="button secondary settings-heading-action">View All</a>
                     </div>
+                    <div class="settings-policy"><strong>Sign-in protection:</strong> {{ $loginLockThreshold }} incorrect passwords within {{ $loginFailureWindowMinutes }} minutes temporarily lock your account for {{ $loginLockMinutes }} minutes. If locked, wait for the time shown on the sign-in page or contact the MIS Office.</div>
                     <div class="activity-list">
                         @forelse($loginAttempts as $attempt)
                         <article class="activity-row">

@@ -3,518 +3,311 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#174f75">
-    <title>WVSU MIS Service Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
+        <meta name="theme-color" content="#103d60">
+    <title>MISEREQ | WVSU Janiuay Campus</title>
     @php
-    $wvsuLogo = file_exists(public_path('images/wvsu-janiuay-logo.png'))
-    ? asset('images/wvsu-janiuay-logo.png')
-    : asset('images/wvsu-logo.png');
-    $bagongPilipinasLogo = asset('images/Bagong_Pilipinas_logo.png');
-    $isAdmin = auth()->check() && auth()->user()->isAdmin();
-    $dashboardUrl = auth()->check()
-    ? ($isAdmin ? route('admin.dashboard') : route('dashboard'))
-    : route('login');
-    $submitUrl = auth()->check() && !$isAdmin
-    ? route('requests.create')
-    : ($isAdmin ? route('admin.requests.index') : route('login'));
-    $trackUrl = auth()->check()
-    ? ($isAdmin ? route('admin.requests.index') : route('requests.index'))
-    : route('login');
-    $messagesUrl = auth()->check()
-    ? ($isAdmin ? route('admin.messenger') : route('user.messenger'))
-    : route('login');
+        $isAdmin = auth()->check() && auth()->user()->isAdmin();
+        $dashboardUrl = auth()->check()
+            ? ($isAdmin ? route('admin.dashboard') : route('dashboard'))
+            : route('login');
     @endphp
     <style>
+        /* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 */
         :root {
-            --navy: #123f63;
-            --blue: #1d648f;
-            --blue-soft: #edf5f8;
-            --page: #f4f7f8;
-            --surface: #ffffff;
-            --ink: #20313b;
-            --muted: #64757f;
-            --line: #d8e2e7;
-            --gold: #ddb528;
+            color-scheme: light;
+            --color-ink: #19354a;
+            --color-muted: #415b6d;
+            --color-navy: #103d60;
+            --color-blue: #0b5e92;
+            --color-blue-bright: #167cb1;
+            --color-paper: #f3f7f9;
+            --color-white: #fff;
+            --color-gold: #f4cc59;
+            --color-gold-hover: #ffe084;
+            --color-line: #c6d7e2;
+            --color-on-blue-muted: #e6f1f7;
+            --color-ring-line: rgba(255, 255, 255, .17);
+            --color-ring-inner: rgba(255, 255, 255, .045);
+            --color-ring-outer: rgba(255, 255, 255, .035);
+            --color-seal-border: rgba(255, 255, 255, .9);
+            --color-seal-shadow: rgba(0, 28, 50, .28);
+            --color-mobile-text-shadow: rgba(0, 28, 50, .6);
+            --font-ui: "Segoe UI", Arial, sans-serif;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         html {
             min-width: 320px;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         body {
             min-height: 100vh;
+            min-height: 100svh;
             margin: 0;
             display: flex;
             flex-direction: column;
-            color: var(--ink);
-            background: var(--page);
-            font-family: "Segoe UI", Arial, sans-serif;
+            overflow-x: hidden;
+            color: var(--color-ink);
+            background: var(--color-paper);
+            font-family: var(--font-ui);
             -webkit-font-smoothing: antialiased;
-            position: relative;
-        }
-
-        body::before {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            background-image: url("{{ $wvsuLogo }}"),
-            url("{{ $bagongPilipinasLogo }}");
-            background-position:
-                left 4vw center,
-                right 4vw center;
-            background-size:
-                min(29vw, 370px) auto,
-                min(25vw, 320px) auto;
-            background-repeat: no-repeat;
-            content: "";
-            opacity: .065;
-            pointer-events: none;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        a:focus-visible {
-            outline: 3px solid rgba(221, 181, 40, .72);
-            outline-offset: 3px;
-        }
-
-        .site-header {
-            position: relative;
-            z-index: 1;
-            border-top: 4px solid var(--navy);
-            border-bottom: 1px solid var(--line);
-            background: var(--surface);
-        }
-
-        .header-inner {
-            width: min(100% - 40px, 1140px);
-            min-height: 78px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        .brand {
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 13px;
-        }
-
-        .brand-marks {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 0 0 auto;
-        }
-
-        .brand-marks img {
-            width: 53px;
-            height: 53px;
-            object-fit: contain;
-        }
-
-        .brand-marks .national {
-            width: 47px;
-            height: 47px;
-        }
-
-        .brand-copy {
-            min-width: 0;
-        }
-
-        .brand-copy small {
-            display: block;
-            color: #627783;
-            font-size: 9px;
-            font-weight: 750;
-            letter-spacing: .11em;
-            text-transform: uppercase;
-        }
-
-        .brand-copy strong {
-            display: block;
-            margin-top: 2px;
-            color: var(--navy);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(17px, 2vw, 21px);
-            line-height: 1.15;
-        }
-
-        .brand-copy span {
-            display: block;
-            margin-top: 3px;
-            color: var(--muted);
-            font-size: 11px;
-            font-weight: 650;
         }
 
         main {
-            width: min(100% - 40px, 1060px);
-            margin: 0 auto;
-            padding: clamp(30px, 5vw, 48px) 0 38px;
+            width: 100%;
+            min-width: 0;
             flex: 1;
-            position: relative;
-            z-index: 1;
+            display: flex;
+            flex-direction: column;
         }
 
-        .page-heading {
-            max-width: 820px;
-            margin: 0 auto 32px;
-            text-align: center;
+        .welcome-layout {
+            position: relative;
+            isolation: isolate;
+            flex: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(220px, .75fr);
+            align-items: center;
+            gap: clamp(28px, 5vw, 80px);
+            overflow: hidden;
+            padding: 68px max(32px, calc((100% - 1080px) / 2));
+            background: linear-gradient(112deg, var(--color-navy) 0%, var(--color-blue) 65%, var(--color-blue-bright) 100%);
         }
+
+        .welcome-layout::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            width: min(60vw, 700px);
+            aspect-ratio: 1;
+            top: -55%;
+            right: -11%;
+            border: 1px solid var(--color-ring-line);
+            border-radius: 50%;
+            box-shadow: 0 0 0 88px var(--color-ring-inner), 0 0 0 180px var(--color-ring-outer);
+            pointer-events: none;
+        }
+
+        .welcome-copy { min-width: 0; }
 
         .eyebrow {
-            margin: 0 0 10px;
-            color: var(--blue);
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: .1em;
-            text-transform: uppercase;
+            margin: 0 0 15px;
+            color: var(--color-gold);
+            font-size: 14px;
+            font-weight: 750;
+            letter-spacing: .045em;
         }
 
         h1 {
+            max-width: 680px;
             margin: 0;
-            color: var(--navy);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(32px, 4.5vw, 44px);
-            line-height: 1.12;
+            color: var(--color-white);
+            font-size: clamp(36px, 4.3vw, 57px);
+            font-weight: 750;
+            letter-spacing: -.045em;
+            line-height: 1.08;
         }
 
-        .page-heading>p:not(.eyebrow) {
-            max-width: 700px;
-            margin: 14px auto 0;
-            color: var(--muted);
-            font-size: 15px;
-            line-height: 1.6;
+        h1 span {
+            display: block;
+            margin-top: 10px;
+            color: var(--color-white);
+            font-size: clamp(25px, 2.45vw, 33px);
+            font-weight: 650;
+            letter-spacing: -.025em;
+            line-height: 1.2;
+        }
+
+        .intro {
+            max-width: 550px;
+            margin: 23px 0 0;
+            color: var(--color-on-blue-muted);
+            font-size: 17px;
+            line-height: 1.65;
         }
 
         .welcome-actions {
-            margin-top: 22px;
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .services-panel {
-            padding: 24px 0 8px;
-            border-top: 1px solid var(--line);
-        }
-
-        .panel-heading {
-            margin-bottom: 18px;
-            text-align: center;
-        }
-
-        .panel-heading h2 {
-            margin: 0;
-            color: var(--ink);
-            font-size: 18px;
-        }
-
-        .panel-heading p {
-            margin: 5px 0 0;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .service-list {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .service-link {
-            min-height: 92px;
-            padding: 6px 20px;
-            display: grid;
-            grid-template-columns: 42px minmax(0, 1fr);
-            align-items: start;
+            align-items: center;
             gap: 12px;
-            border-left: 1px solid var(--line);
+            margin-top: 30px;
         }
 
-        .service-link:first-child {
-            border-left: 0;
-        }
-
-        .service-link:hover .service-copy strong {
-            color: var(--blue);
-        }
-
-        .service-icon {
-            width: 42px;
-            height: 42px;
-            display: grid;
-            place-items: center;
-            color: var(--blue);
-            border-radius: 50%;
-            background: var(--blue-soft);
-        }
-
-        .service-icon svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        .service-copy {
-            min-width: 0;
-        }
-
-        .service-copy strong {
-            display: block;
-            color: var(--ink);
-            font-size: 14px;
-        }
-
-        .service-copy span {
-            display: block;
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.45;
-        }
+        .welcome-mobile-logout { display: none; }
 
         .button {
-            min-height: 44px;
-            padding: 10px 16px;
+            min-height: 48px;
+            min-width: 142px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid var(--blue);
-            border-radius: 7px;
-            background: var(--blue);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 750;
+            padding: 11px 24px;
+            border: 2px solid var(--color-gold);
+            border-radius: 8px;
+            color: var(--color-navy);
+            background: var(--color-gold);
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color .15s ease, border-color .15s ease;
         }
 
-        .button:hover {
-            border-color: var(--navy);
-            background: var(--navy);
-        }
+        .button:hover { background: var(--color-gold-hover); border-color: var(--color-gold-hover); }
 
         .button.secondary {
-            color: var(--blue);
-            border-color: #b9ccd7;
-            background: #fff;
+            color: var(--color-white);
+            border-color: var(--color-white);
+            background: transparent;
         }
 
-        .button.secondary:hover {
-            border-color: var(--blue);
-            background: var(--blue-soft);
+        .button.secondary:hover { color: var(--color-navy); background: var(--color-white); }
+
+        .button:focus-visible {
+            outline: 3px solid var(--color-white);
+            outline-offset: 3px;
         }
 
-        .campus-bar {
-            margin-top: 14px;
-            padding: 16px 4px 0;
+        .button:active { transform: translateY(1px); }
+
+        .seal-wrap {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            border-top: 1px solid var(--line);
-            color: #536872;
-            font-size: 12px;
+            min-width: 0;
+        }
+
+        .welcome-seal {
+            display: block;
+            width: min(100%, 340px);
+            height: auto;
+            aspect-ratio: 1021 / 1024;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 10px solid var(--color-seal-border);
+            box-shadow: 0 24px 60px var(--color-seal-shadow);
+        }
+
+        .quick-steps { display: none; }
+
+        .walk-in {
+            width: min(100% - 64px, 1080px);
+            margin: 0 auto;
+            padding: 21px 0;
+            color: var(--color-muted);
+            font-size: 15px;
+            line-height: 1.5;
             text-align: center;
         }
 
-        .campus-bar strong {
-            color: var(--navy);
+        .walk-in::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 7px;
+            border-radius: 50%;
+            background: var(--color-blue);
+            vertical-align: middle;
         }
+
+        .walk-in strong { color: var(--color-navy); }
 
         footer {
-            width: min(100% - 40px, 1060px);
+            width: min(100% - 64px, 1080px);
             margin: 0 auto;
-            padding: 17px 0 22px;
-            border-top: 1px solid var(--line);
-            color: #687985;
-            font-size: 12px;
+            padding: 12px 0 19px;
+            border-top: 1px solid var(--color-line);
+            color: var(--color-muted);
+            font-size: 13px;
+            line-height: 1.45;
             text-align: center;
-            position: relative;
-            z-index: 1;
         }
 
-        @media (max-width: 820px) {
-            body::before {
-                background-position:
-                    left -78px top 132px,
-                    right -70px bottom 50px;
-                background-size:
-                    270px auto,
-                    235px auto;
-                opacity: .06;
-            }
+        @media (max-width: 900px) {
+            .welcome-layout { grid-template-columns: minmax(0, 1.15fr) minmax(245px, .85fr); gap: 24px; padding: 60px 32px; }
+            .eyebrow { font-size: 16px; }
+            h1 { font-size: clamp(46px, 6vw, 54px); }
+            h1 span { font-size: clamp(30px, 3.9vw, 35px); }
+            .intro { font-size: 20px; line-height: 1.55; }
+            .welcome-actions { margin-top: 34px; }
+            .button { min-height: 54px; font-size: 18px; }
+            .welcome-seal { width: min(100%, 310px); }
+            .walk-in, footer { width: min(100% - 48px, 760px); }
+        }
 
-            .service-list {
-                grid-template-columns: 1fr 1fr;
-            }
+        @media (max-width: 860px) {
+            .welcome-mobile-logout { display: block; }
+            .welcome-mobile-logout button { cursor: pointer; font-family: inherit; }
+        }
 
-            .service-link:last-child {
+        @media (max-width: 640px) {
+            .welcome-layout { display: flex; flex-direction: column; justify-content: center; align-items: stretch; padding: 45px 18px; }
+            .welcome-layout::before { width: 400px; top: -240px; right: -220px; }
+            .eyebrow { margin-bottom: 12px; font-size: 13px; }
+            h1 { font-size: clamp(34px, 9vw, 42px); }
+            h1 span { margin-top: 8px; font-size: clamp(23px, 6vw, 28px); }
+            .intro { margin-top: 18px; font-size: 16px; line-height: 1.55; }
+            .welcome-actions { margin-top: 24px; }
+            .button { min-height: 48px; font-size: 16px; }
+            .seal-wrap {
+                position: absolute;
+                z-index: -1;
+                right: -45vw;
+                top: 44%;
+                width: min(90vw, 380px);
+                transform: translateY(-50%);
+                opacity: .20;
+                pointer-events: none;
+            }
+            .welcome-seal { width: 100%; border-width: 0; box-shadow: none; }
+            .eyebrow, h1, .intro { text-shadow: 0 1px 2px var(--color-mobile-text-shadow); }
+            .walk-in { font-size: 14px; }
+            .walk-in, footer { width: min(100% - 36px, 480px); }
+        }
+
+        @media (min-width: 901px) and (max-width: 1100px) {
+            h1 { font-size: 50px; }
+            h1 span { font-size: 32px; }
+            .intro { font-size: 19px; }
+            .welcome-seal { width: min(100%, 320px); }
+        }
+
+        @media (min-width: 641px) and (max-width: 900px) and (orientation: portrait) {
+            .welcome-layout { grid-template-rows: 1fr auto; }
+            .quick-steps {
+                display: grid;
                 grid-column: 1 / -1;
-                padding-top: 20px;
-                border-top: 1px solid var(--line);
-                border-left: 0;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 16px;
+                width: 100%;
+                margin: 0;
+                padding: 20px 0 0;
+                border-top: 1px solid var(--color-ring-line);
+                list-style: none;
             }
-        }
-
-        @media (max-width: 600px) {
-            body::before {
-                background-position:
-                    left -92px top 115px,
-                    right -82px bottom 28px;
-                background-size:
-                    230px auto,
-                    200px auto;
-                opacity: .05;
-            }
-
-            .header-inner {
-                width: calc(100% - 24px);
-                min-height: 68px;
-                gap: 8px;
-            }
-
-            .brand {
-                gap: 8px;
-            }
-
-            .brand-marks {
-                gap: 3px;
-            }
-
-            .brand-marks img {
-                width: 39px;
-                height: 39px;
-            }
-
-            .brand-marks .national {
-                width: 34px;
-                height: 34px;
-            }
-
-            .brand-copy small,
-            .brand-copy span {
-                display: none;
-            }
-
-            .brand-copy strong {
-                max-width: 175px;
-                font-size: 14px;
-            }
-
-            main {
-                width: calc(100% - 24px);
-                padding: 27px 0 34px;
-            }
-
-            .page-heading {
-                margin-bottom: 30px;
-            }
-
-            .eyebrow {
-                font-size: 12px;
-            }
-
-            h1 {
-                font-size: clamp(30px, 10vw, 38px);
-            }
-
-            .page-heading>p:not(.eyebrow) {
-                margin-top: 12px;
-                font-size: 14px;
-            }
-
-            .welcome-actions .button {
-                flex: 1 1 140px;
-                max-width: 210px;
-            }
-
-            .services-panel {
-                padding: 24px 0 8px;
-            }
-
-            .service-list {
-                grid-template-columns: 1fr;
-            }
-
-            .service-link,
-            .service-link:first-child,
-            .service-link:last-child {
-                grid-column: auto;
-                min-height: 0;
-                padding: 16px 2px;
-                border-top: 1px solid var(--line);
-                border-left: 0;
-            }
-
-            .service-link:first-child {
-                padding-top: 4px;
-                border-top: 0;
-            }
-
-            .campus-bar {
-                flex-direction: column;
-                gap: 3px;
-            }
-
-            footer {
-                width: calc(100% - 24px);
-            }
+            .quick-steps li { display: flex; align-items: baseline; gap: 9px; color: var(--color-white); font-size: 16px; font-weight: 600; }
+            .quick-steps span { color: var(--color-gold); font-size: 14px; font-weight: 800; }
         }
 
         @media (max-width: 360px) {
-            body::before {
-                opacity: .045;
-            }
+            .welcome-actions { display: grid; }
+            .button { width: 100%; }
+        }
 
-            .header-inner {
-                width: calc(100% - 16px);
-            }
-
-            .brand-marks img {
-                width: 33px;
-                height: 33px;
-            }
-
-            .brand-marks .national {
-                width: 29px;
-                height: 29px;
-            }
-
-            .brand-copy strong {
-                max-width: 122px;
-                font-size: 12px;
-            }
-
-            main {
-                width: calc(100% - 16px);
-            }
-
-            .services-panel {
-                padding-inline: 4px;
-            }
+        @media (max-height: 500px) and (orientation: landscape) {
+            .welcome-layout { padding-top: 28px; padding-bottom: 28px; }
+            .welcome-seal { width: min(100%, 190px); }
         }
 
         @media (prefers-reduced-motion: reduce) {
-
-            *,
-            *::before,
-            *::after {
-                transition: none !important;
-            }
+            .button { transition: none; }
         }
     </style>
 </head>
@@ -523,56 +316,41 @@
     @include('partials.public-header')
 
     <main id="mainContent" tabindex="-1">
-        <div class="page-heading">
-            <p class="eyebrow">Official campus service portal</p>
-            <h1>MIS Service Request System</h1>
-            <p>Submit ICT concerns, monitor request progress, and communicate with the MIS Office using your university account.</p>
+        <div class="welcome-layout">
+            <div class="welcome-copy">
+                <p class="eyebrow">WVSU Janiuay Campus · MIS Office</p>
+                <h1>MISEREQ <span>MIS Service Request Portal</span></h1>
+                <p class="intro">Submit ICT concerns, track request updates, and message the MIS Office in one place.</p>
 
-            <div class="welcome-actions">
-                @auth
-                <a href="{{ $dashboardUrl }}" class="button">Open dashboard</a>
-                @else
-                <a href="{{ route('login') }}" class="button">Sign in</a>
-                <a href="{{ route('register') }}" class="button secondary">Create account</a>
-                @endauth
+                <div class="welcome-actions">
+                    @auth
+                        <a href="{{ $dashboardUrl }}" class="button">Open dashboard</a>
+                        <form class="welcome-mobile-logout" method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="button secondary">Log out</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="button">Sign in</a>
+                        <a href="{{ route('register') }}" class="button secondary">Create account</a>
+                    @endauth
+                </div>
             </div>
+
+            <div class="seal-wrap">
+                <img class="welcome-seal" src="{{ asset('images/janiuay2-1021x1024.jpg') }}" alt="" width="340" height="341">
+            </div>
+
+            <ol class="quick-steps">
+                <li><span>01</span>Submit a request</li>
+                <li><span>02</span>Track its status</li>
+                <li><span>03</span>Message the MIS Office</li>
+            </ol>
         </div>
 
-        <section class="services-panel" aria-labelledby="servicesTitle">
-            <div class="panel-heading">
-                <h2 id="servicesTitle">Campus services</h2>
-                <p>Choose what you need to do.</p>
-            </div>
-
-            <nav class="service-list" aria-label="MIS service actions">
-                <a href="{{ $submitUrl }}" class="service-link">
-                    <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
-                            <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm6 4v4H7v2h4v4h2v-4h4v-2h-4V7h-2Z" />
-                        </svg></span>
-                    <span class="service-copy"><strong>Submit Request</strong><span>Report an ICT concern to the MIS Office.</span></span>
-                </a>
-                <a href="{{ $trackUrl }}" class="service-link">
-                    <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
-                            <path d="M6 2h10l4 4v16H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm9 1.5V7h3.5L15 3.5ZM8 11v2h8v-2H8Zm0 4v2h6v-2H8Z" />
-                        </svg></span>
-                    <span class="service-copy"><strong>Track Request</strong><span>Review its status and MIS updates.</span></span>
-                </a>
-                <a href="{{ $messagesUrl }}" class="service-link">
-                    <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
-                            <path d="M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 5v2h12V8H6Zm0 4v2h8v-2H6Z" />
-                        </svg></span>
-                    <span class="service-copy"><strong>Messages</strong><span>Communicate about an existing request.</span></span>
-                </a>
-            </nav>
-        </section>
-
-        <div class="campus-bar">
-            <strong>For walk-in assistance,</strong>
-            <span>visit the MIS Office during official campus office hours.</span>
-        </div>
+        <p class="walk-in"><strong>Need walk-in assistance?</strong> Visit the MIS Office during official campus office hours.</p>
     </main>
 
-    <footer>West Visayas State University · Janiuay Campus · Management Information Systems Office</footer>
+    <footer>West Visayas State University · Janiuay Campus</footer>
 </body>
 
 </html>

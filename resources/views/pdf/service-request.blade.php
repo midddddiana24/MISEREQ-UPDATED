@@ -602,7 +602,7 @@
                     <table class="header-info">
                         <tr>
                             <td rowspan="6" class="center header-logo" style="width: 10%;">
-                                <img src="{{ public_path('images/wvsu-logo.png') }}" alt="WVSU Logo">
+                                @include('pdf.partials.wvsu-header-logo')
                             </td>
                             <td rowspan="3" class="header-title" style="width: 45%; padding: 3px; font-weight: bold;">
                                 ICT RELATED INCIDENT<br>REPORT FORM
@@ -877,7 +877,7 @@
             <table class="header-info">
                 <tr>
                     <td rowspan="6" class="center header-logo" style="width: 10%;">
-                        <img src="{{ public_path('images/wvsu-janiuay-logo.png') }}" alt="WVSU Logo">
+                        @include('pdf.partials.wvsu-header-logo')
                     </td>
                     <td rowspan="3" class="header-title" style="width: 45%; padding: 3px; font-weight: bold;">
                         MIS SERVICE REQUEST FORM

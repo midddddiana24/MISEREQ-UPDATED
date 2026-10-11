@@ -2,26 +2,70 @@
 
 namespace App\Services;
 
+use App\Mail\SecurityAlertMail;
 use App\Models\Notification;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use InvalidArgumentException;
 use Throwable;
 
 class SecurityNotificationService
 {
+    public const EVENT_PASSWORD_CHANGED = 'password_changed';
+
+    public const EVENT_TWO_FACTOR_DISABLED = 'two_factor_disabled';
+
+    public const EVENT_NEW_DEVICE = 'new_device';
+
+    public const EVENT_EMAIL_CHANGED = 'email_changed';
+
+    private const MANDATORY_EMAIL_EVENTS = [
+        self::EVENT_PASSWORD_CHANGED,
+        self::EVENT_TWO_FACTOR_DISABLED,
+        self::EVENT_NEW_DEVICE,
+        self::EVENT_EMAIL_CHANGED,
+    ];
+
     public function notify(
         User $user,
         string $subject,
         string $message,
         ?string $actionUrl = null,
+        ?string $emailMessage = null
+    ): Notification {
+        return $this->deliver($user, $subject, $message, $actionUrl, $emailMessage, false);
+    }
+
+    public function notifyMandatory(
+        string $event,
+        User $user,
+        string $subject,
+        string $message,
+        ?string $actionUrl = null,
         ?string $emailMessage = null,
-        bool $forceEmail = false
+        ?string $recipientEmail = null
+    ): Notification {
+        if (! in_array($event, self::MANDATORY_EMAIL_EVENTS, true)) {
+            throw new InvalidArgumentException("{$event} is not a mandatory security email event.");
+        }
+
+        return $this->deliver($user, $subject, $message, $actionUrl, $emailMessage, true, $recipientEmail);
+    }
+
+    private function deliver(
+        User $user,
+        string $subject,
+        string $message,
+        ?string $actionUrl,
+        ?string $emailMessage,
+        bool $mandatory,
+        ?string $recipientEmail = null
     ): Notification {
         $notification = Notification::create([
             'service_request_id' => null,
             'user_id' => $user->id,
-            'recipient_email' => $user->email,
+            'recipient_email' => $recipientEmail ?? $user->email,
             'notification_type' => 'security_alert',
             'subject' => $subject,
             'message' => $message,
@@ -29,7 +73,7 @@ class SecurityNotificationService
             'status' => 'pending',
         ]);
 
-        $emailAllowed = $forceEmail || (
+        $emailAllowed = $mandatory || (
             Setting::get('security_login_alerts', true)
             && $user->notify_email_enabled
             && $user->notify_security_alerts
@@ -47,18 +91,10 @@ class SecurityNotificationService
                 $mailNotification->message = $emailMessage;
             }
 
-            Mail::send('emails.generic-notification', [
-                'notification' => $mailNotification,
-            ], function ($mail) use ($notification) {
-                $mail->to($notification->recipient_email)
-                    ->subject($notification->subject)
-                    ->replyTo(Setting::get('support_email', config('mail.from.address')))
-                    ->from(
-                        config('mail.from.address', 'noreply@example.com'),
-                        config('mail.from.name', 'MIS Service Request')
-                    );
-            });
-            $notification->markAsSent('Security email sent successfully.');
+            Mail::to($notification->recipient_email)->send(new SecurityAlertMail($mailNotification));
+            $notification->markAsSent($mandatory
+                ? 'Mandatory security email sent successfully.'
+                : 'Security email sent successfully.');
         } catch (Throwable $exception) {
             $notification->markAsFailed($exception->getMessage());
         }

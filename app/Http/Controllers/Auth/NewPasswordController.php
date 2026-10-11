@@ -53,7 +53,8 @@ class NewPasswordController
                 UserSession::where('user_id', $user->id)
                     ->whereNull('revoked_at')
                     ->update(['revoked_at' => now()]);
-                app(SecurityNotificationService::class)->notify(
+                app(SecurityNotificationService::class)->notifyMandatory(
+                    SecurityNotificationService::EVENT_PASSWORD_CHANGED,
                     $user,
                     'Your MIS password was reset',
                     'Your password was reset and all active sessions were signed out. If this was not you, contact the MIS Office immediately.'

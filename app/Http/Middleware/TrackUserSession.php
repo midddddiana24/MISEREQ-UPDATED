@@ -20,9 +20,10 @@ class TrackUserSession
         $sessionId = $request->session()->getId();
         $user = $request->user();
         $record = UserSession::where('session_id', $sessionId)->first();
+        $serverLifetime = max(15, (int) config('session.lifetime', 120));
         $idleMinutes = $user->isAdmin()
-            ? max(15, (int) config('session.lifetime', 120))
-            : max(15, min(240, (int) Setting::get('client_session_timeout', 120)));
+            ? $serverLifetime
+            : min($serverLifetime, max(15, min(240, (int) Setting::get('client_session_timeout', 120))));
 
         if ($record && (
             $record->revoked_at !== null

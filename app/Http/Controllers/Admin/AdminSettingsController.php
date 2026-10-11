@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AdminActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,8 @@ use Throwable;
 
 class AdminSettingsController extends Controller
 {
+    public function __construct(private readonly AdminActivityLogger $activityLogger) {}
+
     public function index()
     {
         $adminQuery = User::query()
@@ -29,6 +32,8 @@ class AdminSettingsController extends Controller
             'adminCount' => (clone $adminQuery)->count(),
             'adminsWithTwoFactor' => (clone $adminQuery)->whereNotNull('two_fa_enabled_at')->count(),
             'mailDriver' => (string) config('mail.default', 'Not configured'),
+            'clientTimeoutOptions' => $this->clientTimeoutOptions(),
+            'sessionLifetimeMinutes' => (int) config('session.lifetime', 30),
         ]);
     }
 
@@ -37,11 +42,18 @@ class AdminSettingsController extends Controller
         $validated = $request->validate([
             'support_email' => ['required', 'email', 'max:255'],
             'max_upload_size' => ['required', 'integer', Rule::in([5, 10, 15, 20])],
-            'client_session_timeout' => ['required', 'integer', Rule::in([15, 30, 60, 120, 240])],
+            'client_session_timeout' => ['required', 'integer', Rule::in($this->clientTimeoutOptions())],
             'max_active_client_sessions' => ['required', 'integer', Rule::in([1, 2, 3, 5])],
+            'client_login_lock_attempts' => ['required', 'integer', Rule::in(User::CLIENT_LOGIN_ATTEMPT_OPTIONS)],
+            'client_login_lock_minutes' => ['required', 'integer', Rule::in(User::CLIENT_LOGIN_LOCK_MINUTE_OPTIONS)],
         ]);
 
-        DB::transaction(function () use ($request, $validated) {
+        $previousLockPolicy = [
+            'attempts' => (int) Setting::get('client_login_lock_attempts', 5),
+            'minutes' => (int) Setting::get('client_login_lock_minutes', 30),
+        ];
+
+        DB::transaction(function () use ($request, $validated, $previousLockPolicy) {
             Setting::set(
                 'support_email',
                 $validated['support_email'],
@@ -113,11 +125,37 @@ class AdminSettingsController extends Controller
                 'Maximum simultaneous sessions allowed for a client account.'
             );
             Setting::set(
+                'client_login_lock_attempts',
+                $validated['client_login_lock_attempts'],
+                'integer',
+                'security',
+                'Client failed-login threshold within a 30-minute observation window.'
+            );
+            Setting::set(
+                'client_login_lock_minutes',
+                $validated['client_login_lock_minutes'],
+                'integer',
+                'security',
+                'Temporary client account-lock duration in minutes.'
+            );
+            $newLockPolicy = [
+                'attempts' => $validated['client_login_lock_attempts'],
+                'minutes' => $validated['client_login_lock_minutes'],
+            ];
+            if ($previousLockPolicy !== $newLockPolicy) {
+                $this->activityLogger->logAdministrative(
+                    'client_login_lock_policy_changed',
+                    'Client login lock policy changed in System Settings.',
+                    $previousLockPolicy,
+                    $newLockPolicy
+                );
+            }
+            Setting::set(
                 'security_login_alerts',
                 $request->boolean('security_login_alerts'),
                 'boolean',
                 'notifications',
-                'Create and email security alerts for important account events.'
+                'Email optional account activity; mandatory security emails remain enabled.'
             );
         });
 
@@ -150,9 +188,12 @@ class AdminSettingsController extends Controller
                 }
             );
 
-            return redirect()
-                ->route('admin.settings')
-                ->with('success', "Test email sent to {$recipient}.");
+            $mailer = (string) config('mail.default');
+            $message = in_array($mailer, ['array', 'log'], true)
+                ? "Test email processed by the {$mailer} mailer. No external email was delivered."
+                : "Test email handed to the {$mailer} mailer for {$recipient}. Check the inbox to confirm delivery.";
+
+            return redirect()->route('admin.settings')->with('success', $message);
         } catch (Throwable $exception) {
             Log::error('Admin settings email test failed', [
                 'admin_id' => auth()->id(),
@@ -164,5 +205,12 @@ class AdminSettingsController extends Controller
                 ->route('admin.settings')
                 ->with('error', 'The test email could not be sent. Check the protected mail-server configuration.');
         }
+    }
+
+    private function clientTimeoutOptions(): array
+    {
+        $sessionLifetime = (int) config('session.lifetime', 30);
+
+        return array_values(array_filter([15, 30, 60, 120, 240], fn (int $minutes) => $minutes <= $sessionLifetime));
     }
 }

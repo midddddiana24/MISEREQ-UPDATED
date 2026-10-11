@@ -352,9 +352,9 @@ $requests = isset($requests) ? $requests : [];
         }
 
         .alert-info {
-            background: #dbeafe;
-            color: #1e40af;
-            border-color: #3b82f6;
+            background: #edf5fa;
+            color: #123f63;
+            border-color: #1f628e;
         }
 
         .action-buttons {
@@ -609,6 +609,23 @@ $requests = isset($requests) ? $requests : [];
             opacity: 0;
         }
 
+        .chat-attachment:focus-within { outline: 3px solid #1f6fa8; outline-offset: 2px; }
+        .chat-selected-file { display: flex; align-items: center; gap: 9px; min-width: 0; margin-top: 8px; padding: 9px 10px; border: 1px solid #9dc5dc; border-radius: 8px; background: #f1f8fc; color: #173e59; }
+        .chat-selected-file[hidden] { display: none; }
+        .chat-selected-file-icon { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: #dceef8; font-size: 18px; }
+        .chat-selected-file-info { min-width: 0; flex: 1; }
+        .chat-selected-file-name { display: block; overflow: hidden; font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-selected-file-size { display: block; color: #526a79; font-size: 11px; }
+        .chat-selected-file-remove { flex: 0 0 auto; padding: 5px 7px; border: 0; border-radius: 5px; color: #8b2525; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .chat-selected-file-remove:hover, .chat-selected-file-remove:focus-visible { background: #fbe7e7; }
+        .chat-file-card { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 8px; padding: 8px 10px; border: 1px solid #a8bed0; border-radius: 8px; color: #123d61; background: #fff; text-decoration: none; }
+        .chat-file-card:hover, .chat-file-card:focus-visible { border-color: #1f6fa8; background: #f3f9fc; text-decoration: underline; }
+        .chat-file-card-icon { flex: 0 0 auto; font-size: 18px; }
+        .chat-file-card-info { min-width: 0; flex: 1; }
+        .chat-file-card-name { display: block; overflow-wrap: anywhere; font-size: 12px; font-weight: 700; }
+        .chat-file-card-size { display: block; color: #526a79; font-size: 11px; }
+        .chat-file-card-action { flex: 0 0 auto; font-size: 11px; font-weight: 700; }
+
         .chat-status {
             min-width: 0;
             color: #687985;
@@ -783,12 +800,17 @@ $requests = isset($requests) ? $requests : [];
         <form id="chatForm" class="chat-compose">
             <div class="chat-compose-row">
                 <label class="visually-hidden" for="chatInput">Message</label>
-                <textarea id="chatInput" maxlength="5000" placeholder="Write a message to the MIS Office..." required></textarea>
+                <textarea id="chatInput" maxlength="5000" placeholder="Write a message to the MIS Office..."></textarea>
                 <button type="submit" id="chatSendButton">Send</button>
             </div>
             <div class="chat-compose-meta">
                 <label class="chat-attachment">Attach file<input id="chatAttachment" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></label>
-                <span class="chat-status" id="chatStatus">PDF, document, or image up to the configured upload limit.</span>
+                <span class="chat-status" id="chatStatus">PDF, document, or image up to {{ (int) \App\Models\Setting::get('max_upload_size', 10) }}MB.</span>
+            </div>
+            <div class="chat-selected-file" id="chatSelectedFile" hidden>
+                <span class="chat-selected-file-icon" aria-hidden="true">&#128206;</span>
+                <span class="chat-selected-file-info"><span class="chat-selected-file-name" id="chatSelectedFileName"></span><span class="chat-selected-file-size" id="chatSelectedFileSize"></span></span>
+                <button type="button" class="chat-selected-file-remove" id="chatRemoveAttachment" aria-label="Remove selected attachment">Remove</button>
             </div>
         </form>
     </aside>
@@ -805,13 +827,24 @@ $requests = isset($requests) ? $requests : [];
         const chatForm = document.getElementById('chatForm');
         const chatInput = document.getElementById('chatInput');
         const chatAttachment = document.getElementById('chatAttachment');
+        const selectedFile = document.getElementById('chatSelectedFile');
+        const selectedFileName = document.getElementById('chatSelectedFileName');
+        const selectedFileSize = document.getElementById('chatSelectedFileSize');
+        const removeAttachment = document.getElementById('chatRemoveAttachment');
         const chatStatus = document.getElementById('chatStatus');
+        const uploadHint = chatStatus.textContent;
         const chatSendButton = document.getElementById('chatSendButton');
         const closeChat = document.getElementById('closeChat');
+        const messagesBase = @json(url('/api/messages/request'));
+        const sendUrl = @json(url('/api/messages/send'));
         const requestedConversation = new URLSearchParams(window.location.search).get('request');
         let activeRequestId = null;
         let pollInterval = null;
         let lastId = 0;
+        let oldestId = null;
+        let hasMore = false;
+        let loadingOlder = false;
+        let conversationVersion = 0;
         let sendNeedsRetry = false;
 
         function setChatStatus(message, isError = false) {
@@ -831,12 +864,14 @@ $requests = isset($requests) ? $requests : [];
             const bg = isAdmin ? '#eef2ff' : '#e6ffef';
             const color = '#111827';
             const files = Array.isArray(msg.attachments) ? msg.attachments.map(file => `
-                <a href="${escapeHtml(file.download_url)}" style="display:flex;justify-content:space-between;gap:8px;margin-top:6px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;color:#1f3b57;text-decoration:none;font-size:11px;">
-                    <span>${escapeHtml(file.name)}</span><span>${formatFileSize(file.size)}</span>
+                <a class="chat-file-card" href="${escapeHtml(file.download_url)}" aria-label="Download ${escapeHtml(file.name)}">
+                    <span class="chat-file-card-icon" aria-hidden="true">&#128206;</span>
+                    <span class="chat-file-card-info"><span class="chat-file-card-name">${escapeHtml(file.name)}</span><span class="chat-file-card-size">${formatFileSize(file.size)}</span></span>
+                    <span class="chat-file-card-action" aria-hidden="true">Download</span>
                 </a>
             `).join('') : '';
             return `
-            <div style="display:flex;justify-content:${align};">
+            <div class="chat-message-row" style="display:flex;justify-content:${align};">
                 <div style="max-width:78%;background:${bg};padding:10px 12px;border-radius:10px;color:${color};font-size:13px;">
                     <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(msg.sender_name)}</div>
                     <div style="white-space:pre-wrap;">${escapeHtml(msg.message)}</div>
@@ -853,6 +888,14 @@ $requests = isset($requests) ? $requests : [];
             if (size < 1024) return size + ' B';
             if (size < 1048576) return Math.round(size / 1024) + ' KB';
             return (size / 1048576).toFixed(1) + ' MB';
+        }
+
+        function renderSelectedFile() {
+            const file = chatAttachment.files[0];
+            selectedFile.hidden = !file;
+            selectedFileName.textContent = file?.name || '';
+            selectedFileSize.textContent = file ? formatFileSize(file.size) + ' · Ready to send' : '';
+            setChatStatus(file ? 'Attachment ready. Press Send to share it.' : uploadHint);
         }
 
         function escapeHtml(str) {
@@ -882,10 +925,52 @@ $requests = isset($requests) ? $requests : [];
             if (list && list.firstElementChild !== card) list.prepend(card);
         }
 
-        async function loadMessages(requestId) {
+        function updateLoadOlderButton(requestId, version) {
+            chatMessages.querySelector('.load-older-messages')?.remove();
+            if (!hasMore || !oldestId) return;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'load-older-messages';
+            button.textContent = 'Load older messages';
+            button.style.cssText = 'align-self:center;min-height:44px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#1f3b57;font-weight:700;cursor:pointer;';
+            button.addEventListener('click', () => loadOlderMessages(requestId, version));
+            chatMessages.prepend(button);
+        }
+
+        async function loadOlderMessages(requestId, version) {
+            if (loadingOlder || !oldestId || activeRequestId !== requestId || version !== conversationVersion) return;
+            loadingOlder = true;
+            const button = chatMessages.querySelector('.load-older-messages');
+            if (button) button.disabled = true;
+            const previousHeight = chatMessages.scrollHeight;
+            try {
+                const res = await fetch(`${messagesBase}/${requestId}?limit=100&before_id=${oldestId}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || data.message || 'Unable to load older messages.');
+                if (activeRequestId !== requestId || version !== conversationVersion) return;
+                const fragment = document.createDocumentFragment();
+                data.messages.forEach(message => fragment.appendChild(el(formatMessage(message))));
+                chatMessages.insertBefore(fragment, chatMessages.querySelector('.chat-message-row'));
+                oldestId = data.oldest_id;
+                hasMore = Boolean(data.has_more);
+                updateLoadOlderButton(requestId, version);
+                chatMessages.scrollTop += chatMessages.scrollHeight - previousHeight;
+            } catch (error) {
+                if (activeRequestId === requestId && version === conversationVersion) {
+                    setChatStatus(error.message || 'Unable to load older messages.', true);
+                    if (button) button.disabled = false;
+                }
+            } finally {
+                loadingOlder = false;
+            }
+        }
+
+        async function loadMessages(requestId, version) {
             setChatStatus('Loading conversation...');
             try {
-                const res = await fetch(`/api/messages/request/${requestId}?limit=100`, {
+                const res = await fetch(`${messagesBase}/${requestId}?limit=100`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
@@ -893,24 +978,30 @@ $requests = isset($requests) ? $requests : [];
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.error || data.message || 'Unable to load this conversation.');
+                if (activeRequestId !== requestId || version !== conversationVersion) return;
                 chatMessages.innerHTML = '';
                 data.messages.forEach(m => chatMessages.appendChild(el(formatMessage(m))));
                 if (data.messages.length) updateConversationCard(requestId, data.messages[data.messages.length - 1]);
                 lastId = Number(data.last_id || 0);
+                oldestId = data.oldest_id;
+                hasMore = Boolean(data.has_more);
+                updateLoadOlderButton(requestId, version);
                 const card = document.querySelector(`[data-conversation-card="${requestId}"]`);
                 card?.classList.remove('unread');
                 card?.querySelector('.client-unread')?.remove();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 setChatStatus(data.messages.length ? 'Conversation loaded.' : 'No messages yet. Send the first message below.');
             } catch (e) {
-                setChatStatus(e.message || 'Unable to load this conversation.', true);
+                if (activeRequestId === requestId && version === conversationVersion) {
+                    setChatStatus(e.message || 'Unable to load this conversation.', true);
+                }
             }
         }
 
-        async function pollNew(requestId) {
-            if (!requestId || document.hidden) return;
+        async function pollNew(requestId, version) {
+            if (!requestId || document.hidden || activeRequestId !== requestId || version !== conversationVersion) return;
             try {
-                const res = await fetch(`/api/messages/request/${requestId}/new?after_id=${lastId}`, {
+                const res = await fetch(`${messagesBase}/${requestId}/new?after_id=${lastId}`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
@@ -918,6 +1009,7 @@ $requests = isset($requests) ? $requests : [];
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) return;
+                if (activeRequestId !== requestId || version !== conversationVersion) return;
                 if (data.messages && data.messages.length) {
                     data.messages.forEach(m => chatMessages.appendChild(el(formatMessage(m))));
                     updateConversationCard(requestId, data.messages[data.messages.length - 1]);
@@ -933,39 +1025,59 @@ $requests = isset($requests) ? $requests : [];
                 const id = this.dataset.requestId;
                 const control = this.dataset.control || 'Conversation';
                 activeRequestId = id;
+                const version = ++conversationVersion;
                 lastId = 0;
+                oldestId = null;
+                hasMore = false;
+                chatInput.value = '';
+                chatAttachment.value = '';
+                renderSelectedFile();
+                chatSendButton.disabled = false;
+                chatSendButton.textContent = 'Send';
+                sendNeedsRetry = false;
+                chatMessages.innerHTML = '';
                 chatTitle.textContent = `Conversation • ${control}`;
                 chatSubtitle.textContent = `Request #${control}`;
                 chatPanel.style.display = 'flex';
-                loadMessages(id);
+                loadMessages(id, version);
                 if (pollInterval) clearInterval(pollInterval);
-                pollInterval = setInterval(() => pollNew(id), 4000);
+                pollInterval = setInterval(() => pollNew(id, version), 4000);
             });
         });
 
         closeChat.addEventListener('click', function() {
             chatPanel.style.display = 'none';
             activeRequestId = null;
+            conversationVersion++;
             lastId = 0;
+            oldestId = null;
+            hasMore = false;
+            chatInput.value = '';
             chatAttachment.value = '';
+            renderSelectedFile();
             if (pollInterval) clearInterval(pollInterval);
         });
 
         chatForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!activeRequestId) return;
+            const requestId = activeRequestId;
+            const version = conversationVersion;
             const text = chatInput.value.trim();
-            if (!text) return;
+            if (!text && !chatAttachment.files[0]) {
+                setChatStatus('Write a message or attach a file.', true);
+                return;
+            }
             chatSendButton.disabled = true;
             chatSendButton.textContent = sendNeedsRetry ? 'Retrying...' : 'Sending...';
             setChatStatus(sendNeedsRetry ? 'Retrying message...' : 'Sending message...');
             try {
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 const form = new FormData();
-                form.append('service_request_id', activeRequestId);
+                form.append('service_request_id', requestId);
                 form.append('message', text);
                 if (chatAttachment.files[0]) form.append('attachment', chatAttachment.files[0]);
-                const res = await fetch('/api/messages/send', {
+                const res = await fetch(sendUrl, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -982,16 +1094,20 @@ $requests = isset($requests) ? $requests : [];
                     error.retryAfter = Number(data.retry_after || res.headers.get('Retry-After') || 0);
                     throw error;
                 }
-                chatMessages.appendChild(el(formatMessage(data.message)));
-                updateConversationCard(activeRequestId, data.message);
-                lastId = Math.max(lastId, Number(data.message.id || 0));
-                chatInput.value = '';
-                chatAttachment.value = '';
-                sendNeedsRetry = false;
-                chatSendButton.textContent = 'Send';
-                setChatStatus('Message sent.');
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                updateConversationCard(requestId, data.message);
+                if (activeRequestId === requestId && version === conversationVersion) {
+                    chatMessages.appendChild(el(formatMessage(data.message)));
+                    lastId = Math.max(lastId, Number(data.message.id || 0));
+                    chatInput.value = '';
+                    chatAttachment.value = '';
+                    renderSelectedFile();
+                    sendNeedsRetry = false;
+                    chatSendButton.textContent = 'Send';
+                    setChatStatus('Message sent.');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
             } catch (err) {
+                if (activeRequestId !== requestId || version !== conversationVersion) return;
                 sendNeedsRetry = true;
                 chatSendButton.textContent = 'Retry';
                 const waitMessage = err.status === 429 && err.retryAfter ?
@@ -999,7 +1115,7 @@ $requests = isset($requests) ? $requests : [];
                     ' Your draft and attachment were kept.';
                 setChatStatus((err.message || 'Network error. Please try again.') + waitMessage, true);
             } finally {
-                chatSendButton.disabled = false;
+                if (activeRequestId === requestId && version === conversationVersion) chatSendButton.disabled = false;
             }
         });
 
@@ -1010,16 +1126,15 @@ $requests = isset($requests) ? $requests : [];
             }
         });
 
-        chatAttachment.addEventListener('change', function() {
-            setChatStatus(this.files[0] ? `Attached: ${this.files[0].name}` : 'PDF, document, or image up to the configured upload limit.');
-        });
+        chatAttachment.addEventListener('change', renderSelectedFile);
+        removeAttachment.addEventListener('click', () => { chatAttachment.value = ''; renderSelectedFile(); chatAttachment.focus(); });
 
         document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && activeRequestId) pollNew(activeRequestId);
+            if (!document.hidden && activeRequestId) pollNew(activeRequestId, conversationVersion);
         });
 
         if (requestedConversation) {
-            const target = document.querySelector(`.open-chat[data-request-id="${requestedConversation}"]`);
+            const target = Array.from(document.querySelectorAll('.open-chat')).find(link => link.dataset.requestId === requestedConversation);
             if (target) {
                 target.click();
             }

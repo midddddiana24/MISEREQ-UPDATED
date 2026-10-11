@@ -42,10 +42,15 @@ class GeneratePdfJob implements ShouldQueue
             $serviceRequest = ServiceRequest::with(['assignedTechnician', 'user'])->findOrFail($this->serviceRequestId);
 
             // Create cache key
-            $cacheKey = 'pdf_v11_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
+            $cacheKey = 'pdf_v13_'.$serviceRequest->id.'_'.$serviceRequest->updated_at->timestamp;
+
+            // PDF output is binary and cannot be stored safely in the database
+            // cache's text column. Keep it on the file cache, matching the
+            // user and admin PDF controllers.
+            $pdfCache = Cache::store('file');
 
             // Only generate if not already cached
-            if (! Cache::has($cacheKey)) {
+            if (! $pdfCache->has($cacheKey)) {
                 $html = \view('pdf.service-request', ['request' => $serviceRequest])->render();
 
                 // Generate PDF with optimizations
@@ -61,7 +66,7 @@ class GeneratePdfJob implements ShouldQueue
                 $options->set('enable_font_subsetting', false);
 
                 // Cache for 30 days
-                Cache::put($cacheKey, $pdf->output(), now()->addDays(30));
+                $pdfCache->put($cacheKey, $pdf->output(), now()->addDays(30));
 
                 Log::info('PDF generated and cached for request: '.$serviceRequest->id);
             }

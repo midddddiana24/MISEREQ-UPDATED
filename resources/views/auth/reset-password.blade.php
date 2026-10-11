@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="auth-heading">
-        <h2>Set a new password</h2>
+        <h1>Set a new password</h1>
         <p>Enter your account email and choose a strong password you haven’t used before.</p>
     </div>
 

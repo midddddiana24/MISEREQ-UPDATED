@@ -44,11 +44,17 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (ThrottleRequestsException $exception, Request $request) {
+            $retryAfter = (int) ($exception->getHeaders()['Retry-After'] ?? 60);
+
+            if ($request->isMethod('post') && $request->is('login') && ! $request->expectsJson()) {
+                return back()->withErrors([
+                    'username' => 'Too many sign-in attempts. Try again in about '.max(1, $retryAfter).' seconds, or use Forgot password if you need help.',
+                ])->onlyInput('username')->with('openLogin', true);
+            }
+
             if (! $request->expectsJson()) {
                 return null;
             }
-
-            $retryAfter = (int) ($exception->getHeaders()['Retry-After'] ?? 60);
 
             return new JsonResponse([
                 'success' => false,

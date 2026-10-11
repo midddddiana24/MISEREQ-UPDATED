@@ -38,12 +38,12 @@ $requirements = [
         'prefers-reduced-motion',
     ],
     'resources/views/partials/header.blade.php' => [
-        'href="#mainContent"',
-        'href="#clientNavMenu"',
-        'class="skip-link"',
+        "include('partials.public-header')",
+        '$showClientSkipNavigation = true',
     ],
     'resources/views/partials/public-header.blade.php' => [
         'href="#mainContent"',
+        'href="#clientNavMenu"',
         'public-skip-link',
     ],
     'resources/views/user/partials/navigation.blade.php' => [
@@ -60,7 +60,7 @@ $requirements = [
     'resources/views/welcome.blade.php' => [
         'id="mainContent"',
         'tabindex="-1"',
-        'a:focus-visible',
+        '.button:focus-visible',
     ],
 ];
 

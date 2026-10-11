@@ -42,13 +42,13 @@ class AdminDeviceTrustService
         ]);
 
         $request->session()->put('admin_device_challenge_id', $challenge->id);
-        app(SecurityNotificationService::class)->notify(
+        app(SecurityNotificationService::class)->notifyMandatory(
+            SecurityNotificationService::EVENT_NEW_DEVICE,
             $user,
             'Approve a new administrator sign-in',
             "A sign-in from {$challenge->device_name} at IP {$challenge->ip_address} is waiting for approval. Review it from a trusted device.",
             route('admin.device.review', $challenge->public_id),
-            "A sign-in from {$challenge->device_name} at IP {$challenge->ip_address} is waiting for approval. Verification code: {$code}. The code expires in 15 minutes.",
-            true
+            "A sign-in from {$challenge->device_name} at IP {$challenge->ip_address} is waiting for approval. Verification code: {$code}. The code expires in 15 minutes."
         );
 
         return $challenge;

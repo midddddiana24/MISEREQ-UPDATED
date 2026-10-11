@@ -503,7 +503,7 @@
         .recent-activity-header p {
             margin: 3px 0 0;
             color: var(--client-ink-500);
-            font-size: 12px;
+            font-size: 14px;
         }
 
         .stat-link:hover {
@@ -560,13 +560,13 @@
             .recent-table tr:not(.recent-empty-row) td:nth-child(1) {
                 grid-column: 1;
                 color: var(--client-brand-900);
-                font-size: 12px;
+                font-size: 14px;
             }
 
             .recent-table tr:not(.recent-empty-row) td:nth-child(3) {
                 grid-column: 1;
                 color: var(--client-ink-700);
-                font-size: 12px;
+                font-size: 14px;
                 line-height: 1.4;
             }
 
@@ -583,29 +583,30 @@
 
             .recent-table tr:not(.recent-empty-row) td:nth-child(6) .button {
                 width: auto !important;
-                min-height: 36px;
-                padding: 7px 10px !important;
-                font-size: 11px !important;
+                min-height: 44px;
+                padding: 8px 12px !important;
+                font-size: 14px !important;
             }
 
             .recent-table .status-badge {
-                padding: 3px 7px !important;
-                font-size: 10px !important;
+                padding: 4px 8px !important;
+                font-size: 12px !important;
             }
         }
 
         @media (min-width: 701px) and (max-width: 980px) {
             .stats {
-                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
 
             .stats .stat {
-                grid-column: span 2;
+                grid-column: auto;
             }
 
-            .stats .stat:nth-child(4),
-            .stats .stat:nth-child(5) {
-                grid-column: span 3;
+            .stats .stat-attention.is-zero { display: none; }
+            .stats .stat-attention:not(.is-zero) {
+                order: -1;
+                grid-column: 1 / -1;
             }
 
             .campus-tool-list {
@@ -618,22 +619,27 @@
                 border-bottom: 1px solid var(--client-line) !important;
             }
 
-            .campus-tool:nth-child(2) {
+            .campus-tool:nth-child(1) {
+                grid-column: 1 / -1;
+                min-height: 0 !important;
                 border-right: 0 !important;
             }
 
             .campus-tool:nth-child(3) {
-                grid-column: 1 / -1;
-                min-height: 0 !important;
                 border-right: 0 !important;
                 border-bottom: 0 !important;
             }
+
+            .campus-tool:nth-child(2) { border-bottom: 0 !important; }
         }
 
         @media (max-width: 700px) {
-            .stats .stat:last-child:nth-child(odd) {
+            .stats .stat-attention.is-zero { display: none; }
+            .stats .stat-attention:not(.is-zero) {
+                order: -1;
                 grid-column: 1 / -1;
             }
+            .grid .recent-activity-panel { order: -1; }
         }
 
         @media (max-width: 390px) {
@@ -656,7 +662,7 @@
 
             .stat>span {
                 margin-top: 2px;
-                font-size: 10px !important;
+                font-size: 13px !important;
                 line-height: 1.3;
             }
         }
@@ -685,7 +691,7 @@
         <section class="stats" aria-label="Your MIS record totals">
             <a class="stat stat-link" href="{{ route('requests.index') }}"><strong>{{ $stats['total'] }}</strong><span>Service Requests</span></a>
             <a class="stat stat-link" href="{{ route('requests.index', ['status' => 'active']) }}"><strong>{{ $stats['active'] }}</strong><span>Active Requests</span></a>
-            <a class="stat stat-link" href="{{ route('requests.index', ['status' => 'awaiting_confirmation']) }}"><strong>{{ $stats['awaiting_confirmation'] }}</strong><span>Needs Confirmation</span></a>
+            <a class="stat stat-link stat-attention {{ $stats['awaiting_confirmation'] ? '' : 'is-zero' }}" href="{{ route('requests.index', ['status' => 'awaiting_confirmation']) }}"><strong>{{ $stats['awaiting_confirmation'] }}</strong><span>Needs Confirmation</span></a>
             <a class="stat stat-link" href="{{ route('incident-reports.index') }}"><strong>{{ $stats['incident_reports'] }}</strong><span>ICT Incident Reports</span></a>
             <a class="stat stat-link" href="{{ route('pm-checklists.index') }}"><strong>{{ $stats['pm_checklists'] }}</strong><span>PM Checklists</span></a>
         </section>
@@ -712,7 +718,7 @@
         @endif
 
         <section class="grid">
-            <div class="panel campus-tools wide" aria-labelledby="serviceToolsTitle">
+            <section class="panel campus-tools wide" aria-labelledby="serviceToolsTitle">
                 <div class="campus-tools-header">
                     <h2 id="serviceToolsTitle">Service tools</h2>
                     <p>Choose the form that matches your concern.</p>
@@ -743,7 +749,7 @@
                             <small>Open form &rsaquo;</small>
                         </span>
                     </a>
-                    <a class="campus-tool" href="{{ route('requests.create', ['service' => 'preventive_maintenance']) }}">
+                    <a class="campus-tool" href="{{ route('pm-checklists.create') }}">
                         <span class="campus-tool-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14.7 6.3a4 4 0 0 0-5-5L7 4l3 3 2.7-2.7a4 4 0 0 0 2 5L6 18l-2 3 3-2 8.7-8.7a4 4 0 0 0 5-5L18 8l-3-3 2.7-2.7" />
@@ -751,14 +757,14 @@
                         </span>
                         <span class="campus-tool-copy">
                             <strong>Preventive maintenance</strong>
-                            <span>Submit a service request for routine inspection. MIS completes the maintenance checklist.</span>
+                            <span>Request routine inspection. MIS reviews and completes the maintenance checklist.</span>
                             <small>Open form &rsaquo;</small>
                         </span>
                     </a>
                 </div>
-            </div>
+            </section>
 
-            <div class="panel wide">
+            <div class="panel wide recent-activity-panel">
                 <div class="recent-activity-header">
                     <div>
                         <h2>Recent activity</h2>
@@ -786,8 +792,8 @@
                         <tbody>
                             @foreach ($recentCombined as $item)
                             @php
-                            $control = $item->control_number ?? ($item->control_no ?? 'N/A');
-                            $title = $item->title ?? $item->subject ?? $item->name ?? '-';
+                            $control = $item->control_number ?? $item->document_number ?? ($item->control_no ?? 'N/A');
+                            $title = trim((string) ($item->title ?: ($item->subject ?? $item->name ?? '')));
                             $status = $item->status ?? $item->report_status ?? $item->checklist_status ?? '';
                             $statusLabel = ucfirst(str_replace('_', ' ', $status));
                             $typeLabel = 'Service Request';
@@ -797,18 +803,21 @@
                             $typeLabel = 'Service Request';
                             $showUrl = route('requests.show', $item);
                             $statusLabel = $item->status_label;
+                            $firstService = collect($item->services ?? [])->first();
+                            $title = $title ?: trim((string) $item->description);
+                            $title = $title ?: ($firstService
+                            ? str_replace([' Pc', ' Ict', ' Mis'], [' PC', ' ICT', ' MIS'], \Illuminate\Support\Str::headline($firstService))
+                            : 'Service request');
                             } elseif ($item instanceof \App\Models\IctIncidentReport) {
                             $typeLabel = 'ICT Incident Report';
                             $showUrl = route('incident-reports.show', $item);
-                            $title = $item->serviceRequest
-                            ? 'Linked to ' . $item->serviceRequest->control_number
-                            : \Illuminate\Support\Str::limit($item->details_of_incident ?: 'Standalone incident report', 80);
+                            $title = trim((string) $item->details_of_incident)
+                            ?: \Illuminate\Support\Str::headline(collect($item->nature_of_incident ?? [])->first() ?: 'ICT incident report');
                             } elseif ($item instanceof \App\Models\PreventiveMaintenanceChecklist) {
                             $typeLabel = 'PM Checklist';
                             $showUrl = route('pm-checklists.show', $item);
-                            $title = $item->serviceRequest
-                            ? 'Linked to ' . $item->serviceRequest->control_number
-                            : 'Standalone maintenance record';
+                            $title = trim((string) $item->findings)
+                            ?: (trim((string) $item->ict_type) ? \Illuminate\Support\Str::headline($item->ict_type).' maintenance' : 'Preventive maintenance checklist');
                             }
                             @endphp
                             <tr>

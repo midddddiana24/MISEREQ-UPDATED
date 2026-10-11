@@ -22,9 +22,20 @@ class IctIncidentReportController extends Controller
     public function index(Request $request)
     {
         $query = IctIncidentReport::where('user_id', Auth::id());
+        $statsQuery = clone $query;
+        $stats = [
+            'total' => (clone $statsQuery)->count(),
+            'submitted' => (clone $statsQuery)->whereIn('status', IctIncidentReport::storedStatusesFor('submitted'))->count(),
+            'pending' => (clone $statsQuery)->whereIn('status', IctIncidentReport::storedStatusesFor('pending'))->count(),
+            'processing' => (clone $statsQuery)->whereIn('status', IctIncidentReport::storedStatusesFor('processing'))->count(),
+            'completed' => (clone $statsQuery)->whereIn('status', IctIncidentReport::storedStatusesFor('completed'))->count(),
+        ];
 
         if ($status = $request->query('status')) {
-            $query->where('status', $status);
+            $stage = IctIncidentReport::LEGACY_STATUSES[$status] ?? $status;
+            if (array_key_exists($stage, IctIncidentReport::STATUS_OPTIONS)) {
+                $query->whereIn('status', IctIncidentReport::storedStatusesFor($stage));
+            }
         }
 
         if ($search = trim((string) $request->query('search'))) {
@@ -39,10 +50,10 @@ class IctIncidentReportController extends Controller
 
         $reports = $query->with('serviceRequest:id,control_number,status')
             ->latest()
-            ->paginate(15);
+            ->paginate(5);
         $reports->appends($request->query());
 
-        return view('mis.incident-reports.index', compact('reports'));
+        return view('mis.incident-reports.index', compact('reports', 'stats'));
     }
 
     public function create(Request $request)
@@ -87,7 +98,7 @@ class IctIncidentReportController extends Controller
                 'acknowledged_by_role' => $user->designation,
                 'noted_by_name' => 'JAY C. LIZA, PhD.',
                 'noted_by_role' => 'MIS Head',
-                'status' => 'open',
+                'status' => 'submitted',
             ]));
 
             return $report;
@@ -129,7 +140,7 @@ class IctIncidentReportController extends Controller
     {
         $this->ensureOwner($incidentReport);
 
-        abort_if(in_array($incidentReport->status, ['resolved', 'closed'], true), 403, 'Completed incident reports can no longer be edited.');
+        abort_if($incidentReport->stage_status === 'completed', 403, 'Completed incident reports can no longer be edited.');
 
         $validated = $request->validate([
             'id_number' => 'nullable|string|max:100',

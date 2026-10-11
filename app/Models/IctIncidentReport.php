@@ -14,6 +14,30 @@ class IctIncidentReport extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_OPTIONS = [
+        'submitted' => 'Submitted',
+        'pending' => 'Pending',
+        'processing' => 'Processing',
+        'completed' => 'Completed',
+    ];
+
+    public const LEGACY_STATUSES = [
+        'open' => 'pending',
+        'in_progress' => 'processing',
+        'resolved' => 'completed',
+        'closed' => 'completed',
+    ];
+
+    public function getStageStatusAttribute(): string
+    {
+        return self::LEGACY_STATUSES[$this->status] ?? $this->status;
+    }
+
+    public static function storedStatusesFor(string $stage): array
+    {
+        return array_merge([$stage], array_keys(self::LEGACY_STATUSES, $stage, true));
+    }
+
     protected $table = 'ict_incident_reports';
 
     protected $fillable = [

@@ -51,7 +51,7 @@
 
 @section('content')
     @php
-        $formLogo = file_exists(public_path('images/wvsu-janiuay-logo.png')) ? asset('images/wvsu-janiuay-logo.png') : asset('images/wvsu-logo.png');
+        $formLogo = asset('images/wvsu-logo.png');
         $selectedServices = collect(old('services', []))->map(fn ($service) => (string) $service)->all();
     @endphp
     <section class="panel walkin-sheet">

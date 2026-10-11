@@ -158,7 +158,7 @@
             </tbody></table>
         </div>
         @if($recentActivity->hasPages())
-            <div style="margin-top:12px;">{{ $recentActivity->links() }}</div>
+            <div style="margin-top:12px;">{{ $recentActivity->links('admin.partials.pagination', ['paginationLabel' => 'Audit activity pages']) }}</div>
         @endif
     </section>
 @endsection

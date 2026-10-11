@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="auth-heading">
-        <h2>Forgot your password?</h2>
+        <h1>Forgot your password?</h1>
         <p>Enter your registered email and we’ll send a secure link to create a new password.</p>
     </div>
 
@@ -23,7 +23,7 @@
             <label for="email">Registered email address</label>
             <div class="input-wrap">
                 <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="name@wvsu.edu.ph">
+                <input type="email" id="email" name="email" value="{{ old('email') }}" required data-desktop-autofocus autocomplete="email" placeholder="name@wvsu.edu.ph">
             </div>
             @error('email')<div class="error-message">{{ $message }}</div>@enderror
         </div>
@@ -35,5 +35,4 @@
     </form>
 
     <p class="auth-footer">Remembered your password? <a href="{{ route('login') }}" class="text-link">Return to sign in</a></p>
-    <div class="back-home"><a href="{{ route('home') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back to home</a></div>
 @endsection

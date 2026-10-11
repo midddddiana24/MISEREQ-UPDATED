@@ -7,8 +7,8 @@
         --client-page: #f3f5f7;
         --client-surface: #ffffff;
         --client-surface-soft: #f7f9fa;
-        --client-line: #dde4e8;
-        --client-line-strong: #c8d3d9;
+        --client-line: #a4adb3;
+        --client-line-strong: #7f8b93;
         --client-ink-900: #1d303c;
         --client-ink-700: #3f535f;
         --client-ink-500: #62737d;
@@ -24,10 +24,18 @@
         --client-radius-sm: 5px;
     }
 
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+        min-width: 320px;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
     body {
         font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
-        font-size: 15px;
-        line-height: 1.5;
+        font-size: 16px;
+        line-height: 1.6;
         color: var(--client-ink-900) !important;
         background: var(--client-page) !important;
         overflow-x: hidden;
@@ -97,7 +105,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        border: 1px solid var(--client-line);
+        border: 1.5px solid var(--client-line-strong);
         border-left: 3px solid var(--client-brand-700);
         border-radius: var(--client-radius-lg);
         background: var(--client-surface);
@@ -108,7 +116,7 @@
         display: block;
         margin-bottom: 5px;
         color: var(--client-brand-700);
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
@@ -121,7 +129,7 @@
         line-height: 1.2;
     }
 
-    .client-page-heading p { margin: 0; color: var(--client-ink-500); font-size: 13px; line-height: 1.55; }
+    .client-page-heading p { margin: 0; color: var(--client-ink-500); font-size: 15px; line-height: 1.55; }
 
     .panel,
     .message-item,
@@ -133,7 +141,7 @@
     .attachment-section,
     .services-list,
     .description-box {
-        border: 1px solid var(--client-line) !important;
+        border: 1.5px solid var(--client-line-strong) !important;
         border-radius: var(--client-radius-lg) !important;
         background: var(--client-surface) !important;
         box-shadow: var(--client-shadow) !important;
@@ -144,7 +152,7 @@
     .section-header {
         margin: 0 0 20px !important;
         padding: 16px 18px !important;
-        border: 1px solid var(--client-line) !important;
+        border: 1.5px solid var(--client-line) !important;
         border-radius: var(--client-radius-md) !important;
         background: var(--client-surface-soft) !important;
     }
@@ -351,7 +359,7 @@
     .form-section { margin-bottom: 24px !important; }
     .form-section + .form-section {
         padding-top: 22px;
-        border-top: 1px solid var(--client-line);
+        border-top: 1px solid var(--client-line-strong);
     }
 
     .form-section h3 {
@@ -362,8 +370,8 @@
     }
 
     .form-group { margin-bottom: 14px !important; }
-    .form-group label { margin-bottom: 6px !important; color: #344753 !important; font-size: 13px !important; line-height: 1.4; }
-    .form-group small { display: block; margin-top: 5px; color: var(--client-ink-500) !important; font-size: 11px !important; line-height: 1.45; }
+    .form-group label { margin-bottom: 6px !important; color: #344753 !important; font-size: 15px !important; line-height: 1.4; }
+    .form-group small { display: block; margin-top: 5px; color: var(--client-ink-500) !important; font-size: 14px !important; line-height: 1.5; }
 
     .service-box { padding: 17px !important; box-shadow: none !important; }
     .service-box h4 { margin-bottom: 12px !important; color: var(--client-brand-900) !important; font-size: 14px !important; line-height: 1.4; }
@@ -397,7 +405,7 @@
 
     .section { margin-bottom: 24px !important; }
     .section:last-child { margin-bottom: 0 !important; }
-    .panel > .section + .section { padding-top: 22px; border-top: 1px solid var(--client-line); }
+    .panel > .section + .section { padding-top: 22px; border-top: 1px solid var(--client-line-strong); }
     .section > h3 { margin-bottom: 14px !important; color: var(--client-ink-900) !important; font-size: 16px !important; line-height: 1.4; }
 
     .info-grid { gap: 11px !important; }
@@ -479,10 +487,10 @@
     .message-header > div { min-width: 0; }
     .message-from { margin-bottom: 4px !important; color: var(--client-ink-900) !important; font-size: 14px !important; line-height: 1.4; }
     .message-subject,
-    .message-time { color: var(--client-ink-500) !important; font-size: 11px !important; line-height: 1.4; }
+    .message-time { color: var(--client-ink-500) !important; font-size: 14px !important; line-height: 1.5; }
     .message-preview { margin: 11px 0 !important; font-size: 13px !important; line-height: 1.6 !important; }
     .message-actions { margin-top: 10px !important; display: flex; flex-wrap: wrap; }
-    .message-actions .action-link { min-height: 35px; padding: 7px 10px !important; display: inline-flex; align-items: center; font-size: 12px !important; text-decoration: none; }
+    .message-actions .action-link { min-height: 44px; padding: 9px 12px !important; display: inline-flex; align-items: center; font-size: 14px !important; text-decoration: none; }
 
     #editPanel,
     #twoFaPanel_profile { padding: 16px !important; }
@@ -498,14 +506,14 @@
     #chatForm { align-items: center; gap: 8px !important; }
     #chatForm button { min-height: 42px; }
 
-    .table-wrap { border: 1px solid var(--client-line); border-radius: var(--client-radius-md); overflow: auto; overscroll-behavior-inline: contain; }
+    .table-wrap { border: 1.5px solid var(--client-line-strong); border-radius: var(--client-radius-md); overflow: auto; overscroll-behavior-inline: contain; }
 
     table { width: 100% !important; max-width: 100%; border-collapse: collapse !important; }
     table thead,
     table th { background: #f5f8fa !important; }
     table th { color: #53636e !important; font-size: 11px !important; letter-spacing: .045em; text-transform: uppercase; }
     table th,
-    table td { padding: 11px 12px !important; border-color: #e4eaee !important; }
+    table td { padding: 11px 12px !important; border-color: var(--client-line) !important; }
     table td { color: var(--client-ink-700) !important; }
     table tbody tr:nth-child(even) { background: #fcfdfe; }
     table tbody tr:hover { background: #f5f9fc; }
@@ -854,7 +862,8 @@
 
     /* Unified institutional client interface */
     body {
-        font-size: 14px;
+        min-width: 320px;
+        font-size: 16px;
         letter-spacing: 0;
         background:
             linear-gradient(180deg, rgba(31, 98, 142, .035), transparent 180px),
@@ -863,12 +872,12 @@
 
     .page {
         width: min(100%, 1240px) !important;
-        padding: 20px 20px 42px !important;
+        padding: 24px 24px 48px !important;
     }
 
     .panel {
         padding: 18px !important;
-        border-color: var(--client-line) !important;
+        border-color: var(--client-line-strong) !important;
         box-shadow: var(--client-shadow) !important;
     }
 
@@ -877,7 +886,7 @@
         margin-bottom: 18px !important;
         padding: 0 0 15px !important;
         border: 0 !important;
-        border-bottom: 1px solid var(--client-line) !important;
+        border-bottom: 2px solid var(--client-line) !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -897,7 +906,8 @@
     .client-page-heading p {
         max-width: 720px;
         color: var(--client-ink-500) !important;
-        font-size: 12px !important;
+        font-size: 15px !important;
+        line-height: 1.55 !important;
     }
 
     .section > h3,
@@ -916,10 +926,10 @@
     .action-link,
     .filter-btn,
     .attachment-link {
-        min-height: 38px !important;
-        padding: 8px 12px !important;
+        min-height: 44px !important;
+        padding: 10px 14px !important;
         border-radius: 6px !important;
-        font-size: 12px !important;
+        font-size: 14px !important;
         font-weight: 700 !important;
         line-height: 1.2 !important;
     }
@@ -933,7 +943,7 @@
     .stat-card {
         min-height: 104px;
         padding: 14px 15px !important;
-        border: 1px solid var(--client-line) !important;
+        border: 1.5px solid var(--client-line-strong) !important;
         border-top: 3px solid var(--client-brand-700) !important;
         border-radius: 8px !important;
         box-shadow: none !important;
@@ -948,14 +958,14 @@
 
     .stat > span,
     .stat-card .stat-label {
-        font-size: 11px !important;
+        font-size: 14px !important;
     }
 
     .service-card,
     .campus-tool,
     .tracking-card,
     .workflow-item {
-        border-color: var(--client-line) !important;
+        border-color: var(--client-line-strong) !important;
         border-radius: 8px !important;
         box-shadow: none !important;
     }
@@ -988,7 +998,9 @@
     input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
     select,
     textarea {
-        min-height: 42px;
+        min-height: 48px;
+        padding: 10px 12px;
+        font-size: 16px !important;
         border-color: var(--client-line-strong) !important;
         border-radius: 6px !important;
         box-shadow: none !important;
@@ -1002,7 +1014,7 @@
     th {
         color: #4c626f !important;
         background: #f3f6f8 !important;
-        font-size: 10px !important;
+        font-size: 13px !important;
         font-weight: 800 !important;
         letter-spacing: .045em !important;
         text-transform: uppercase;
@@ -1010,18 +1022,19 @@
 
     td {
         color: var(--client-ink-700) !important;
-        font-size: 12px !important;
+        font-size: 14px !important;
+        line-height: 1.55 !important;
     }
 
     tr:last-child td { border-bottom: 0 !important; }
 
     .status-badge,
     .type-badge {
-        min-height: 24px;
+        min-height: 28px;
         padding: 4px 8px !important;
         border-radius: 999px !important;
         box-shadow: none !important;
-        font-size: 10px !important;
+        font-size: 13px !important;
         font-weight: 750 !important;
     }
 
@@ -1031,8 +1044,8 @@
     }
 
     .toolbar-pills .button {
-        min-height: 34px !important;
-        padding: 7px 10px !important;
+        min-height: 44px !important;
+        padding: 9px 12px !important;
     }
 
     .client-record-scroll {
@@ -1041,10 +1054,27 @@
     }
 
     .record-action {
-        min-height: 34px;
+        min-height: 44px;
         border-radius: 5px;
-        font-size: 11px;
+        font-size: 14px;
     }
+
+    .form-group label,
+    .checks label { font-size: 15px !important; line-height: 1.5 !important; }
+    .form-group small,
+    .password-hint,
+    .helper-text { font-size: 14px !important; line-height: 1.5 !important; }
+    .info-label,
+    .item strong { font-size: 14px !important; }
+    .info-value,
+    .message-from,
+    .message-preview,
+    .description-box { font-size: 15px !important; line-height: 1.6 !important; }
+    .message-subject,
+    .message-time,
+    .stat-hint { font-size: 14px !important; line-height: 1.5 !important; }
+    .detail-document-actions .button,
+    .detail-document-actions button.button { min-height: 44px !important; font-size: 14px !important; }
 
     .alert,
     .workflow-alert,
@@ -1053,9 +1083,35 @@
         box-shadow: none !important;
     }
 
+    .record-pagination {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .record-pagination a,
+    .record-pagination .record-pagination-disabled {
+        min-height: 44px;
+        padding: 9px 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #c5d3dc;
+        border-radius: 6px;
+        color: #174f75;
+        background: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .record-pagination a:hover { background: #eef6fb; }
+    .record-pagination .record-pagination-disabled { color: #405764; background: #f3f5f6; }
+    .record-pagination-current { color: #405764; font-size: 13px; font-weight: 700; text-align: center; }
+
     @media (max-width: 860px) {
-        .page { padding-inline: 15px !important; }
-        .panel { padding: 16px !important; }
+        .page { padding: 20px 20px 40px !important; }
+        .panel { padding: 18px !important; }
         .section-header,
         .client-page-heading { align-items: flex-start !important; }
     }
@@ -1090,9 +1146,13 @@
     }
 
     @media (max-width: 640px) {
-        body { font-size: 13px; }
-        .page { padding: 12px 10px 28px !important; }
-        .panel { padding: 13px !important; border-radius: 8px !important; }
+        .record-pagination { gap: 6px; }
+        .record-pagination a,
+        .record-pagination .record-pagination-disabled { padding-inline: 9px; font-size: 13px; }
+        .record-pagination-current { font-size: 12px; }
+        body { font-size: 16px; }
+        .page { padding: 16px 12px 32px !important; }
+        .panel { padding: 16px !important; border-radius: 8px !important; }
         .section-header,
         .client-page-heading { gap: 11px !important; }
         .section-header .header-content,
@@ -1101,15 +1161,15 @@
         .client-page-heading .button { width: 100% !important; min-width: 0 !important; }
         .service-card { padding: 14px !important; }
         .stat,
-        .stat-card { min-height: 92px; padding: 12px !important; }
+        .stat-card { min-height: 96px; padding: 12px !important; }
         .stat strong,
         .stat-card .value,
         .stat-value { font-size: 19px !important; }
     }
 
     @media (max-width: 390px) {
-        .page { padding-inline: 7px !important; }
-        .panel { padding: 11px !important; }
+        .page { padding-inline: 10px !important; }
+        .panel { padding: 14px !important; }
         .stats,
         .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 7px !important; }
         .stat,
@@ -1118,7 +1178,7 @@
         .stat-card .value,
         .stat-value { font-size: 18px !important; }
         .stat > span,
-        .stat-card .stat-label { font-size: 10px !important; }
+        .stat-card .stat-label { font-size: 14px !important; }
     }
 
     @media (prefers-contrast: more) {

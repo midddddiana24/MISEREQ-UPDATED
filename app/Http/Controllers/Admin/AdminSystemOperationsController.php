@@ -34,7 +34,7 @@ class AdminSystemOperationsController extends Controller
         $schedulerDate = $schedulerSeenAt ? Carbon::parse($schedulerSeenAt) : null;
         $schedulerHealthy = $schedulerDate?->greaterThan(now()->subMinutes(5)) ?? false;
 
-        $backupFiles = collect(File::glob(storage_path('app/backups/mis-backup-*.zip')))
+        $backupFiles = collect(File::glob(rtrim((string) config('backup.directory', storage_path('app/backups')), '\\/').DIRECTORY_SEPARATOR.'mis-backup-*.zip'))
             ->map(fn (string $path) => [
                 'name' => basename($path),
                 'size' => File::size($path),

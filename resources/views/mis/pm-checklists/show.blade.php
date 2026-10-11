@@ -283,8 +283,6 @@
                         <small>Checklist Report · West Visayas State University</small>
                     </div>
                     <div class="detail-document-actions">
-                        <a href="{{ route('pm-checklists.pdf', ['pmChecklist' => $checklist, 'v' => $checklist->updated_at?->timestamp]) }}" target="_blank" rel="noopener" class="button">Print PDF</a>
-                        <button onclick="window.print()" class="button" type="button">Print</button>
                         <a href="{{ route('pm-checklists.index') }}" class="button secondary">&larr; Back to Checklists</a>
                     </div>
                 </div>
@@ -300,7 +298,7 @@
                 <div class="item"><strong>System Owner</strong>{{ $checklist->system_owner }}</div>
                 <div class="item"><strong>Date Inspected</strong>{{ optional($checklist->date_inspected)->format('M d, Y') }}</div>
                 <div class="item"><strong>Office/Department</strong>{{ $checklist->office_department ?? 'N/A' }}</div>
-                <div class="item"><strong>Status</strong>{{ ucfirst(str_replace('_', ' ', $checklist->status)) }}</div>
+                <div class="item"><strong>Status</strong>{{ str($checklist->stage_status)->title() }}</div>
             </div>
 
             <div class="grid" style="margin-top:12px;">

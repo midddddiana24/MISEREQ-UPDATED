@@ -3,9 +3,14 @@
 namespace Tests\Feature;
 
 use App\Exceptions\Handler;
+use App\Mail\SecurityAlertMail;
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use PragmaRX\Google2FAQRCode\Google2FA as Google2FAService;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -25,10 +30,46 @@ class AuthenticationAndSecurityTest extends TestCase
         }
     }
 
+    public function test_registration_requires_twelve_characters_and_accepts_exactly_twelve(): void
+    {
+        Mail::fake();
+        $suffix = Str::lower(Str::random(10));
+        $details = [
+            'first_name' => 'Password',
+            'last_name' => 'Boundary',
+            'office' => 'MIS Office',
+            'email' => "password_{$suffix}@example.test",
+            'username' => "password_{$suffix}",
+        ];
+
+        foreach (['Abcdefghi1!', 'Abcdefgh1!é'] as $shortPassword) {
+            $this->post('/register', $details + [
+                'password' => $shortPassword,
+                'password_confirmation' => $shortPassword,
+            ])->assertSessionHasErrors('password');
+
+            $this->assertDatabaseMissing('users', ['email' => $details['email']]);
+        }
+
+        $validPassword = 'Abcdefghij1!';
+        $this->post('/register', $details + [
+            'password' => $validPassword,
+            'password_confirmation' => $validPassword,
+        ])->assertRedirect('/dashboard')->assertSessionHasNoErrors();
+
+        $user = User::where('email', $details['email'])->firstOrFail();
+        $this->assertTrue(Hash::check($validPassword, $user->password));
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_client_can_sign_in_and_remember_option_is_accepted(): void
     {
         Mail::fake();
-        $user = $this->createUser();
+        $user = $this->createUser([
+            'notify_email_enabled' => false,
+            'notify_security_alerts' => false,
+        ]);
+        Setting::set('security_login_alerts', false, 'boolean', 'notifications');
 
         $response = $this->post('/login', [
             'username' => $user->username,
@@ -39,6 +80,9 @@ class AuthenticationAndSecurityTest extends TestCase
         $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->fresh()->remember_token);
+        Mail::assertSent(SecurityAlertMail::class, fn (SecurityAlertMail $mail) => $mail->hasTo($user->email)
+            && $mail->notification->subject === 'New device signed in to your MIS account'
+        );
     }
 
     public function test_administrator_with_two_factor_continues_to_admin_device_verification(): void

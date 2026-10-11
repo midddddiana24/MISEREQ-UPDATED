@@ -25,10 +25,15 @@ class AdminUserController extends Controller
 {
     public function index()
     {
-        // Fetch all users from database
-        $users = User::all();
+        $users = User::query()->orderByDesc('created_at')->orderByDesc('id')->paginate(15);
+        $userCounts = [
+            'total' => User::count(),
+            'admins' => User::where('role', 'admin')->count(),
+            'end_users' => User::where('role', 'user')->count(),
+            'locked' => User::where('locked_until', '>', now())->count(),
+        ];
 
-        return view('admin.users.index', ['users' => $users]);
+        return view('admin.users.index', compact('users', 'userCounts'));
     }
 
     public function create()

@@ -36,6 +36,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->onOneServer();
 
+        // Laptops can sleep through 02:00. Once the scheduler resumes, create
+        // the missed daily archive unless another backup already covers it.
+        $schedule->command('system:backup --if-due --quiet')
+            ->everyFifteenMinutes()
+            ->unlessBetween('01:45', '02:14')
+            ->withoutOverlapping()
+            ->onOneServer();
+
         $schedule->command('queue:prune-failed --hours=168')
             ->dailyAt('03:00')
             ->withoutOverlapping()

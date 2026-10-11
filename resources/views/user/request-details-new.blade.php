@@ -1226,7 +1226,7 @@
                         <h1>Service Request Details</h1>
                         <small>Request Information · West Visayas State University</small>
                     </div>
-                    <div class="request-header-actions" aria-label="Request document actions">
+                <div class="request-header-actions" role="group" aria-label="Request document actions">
                         <a href="{{ route('user.messenger', ['request' => $request->id]) }}" class="button secondary">Open Messages</a>
                         <a href="{{ route('request.pdf', $request->id) }}" target="_blank" rel="noopener" class="button" data-pdf-action>Print PDF</a>
                         <a href="{{ route('requests.index') }}" class="button secondary">&larr; Back to Requests</a>
@@ -1343,7 +1343,7 @@
                                 <textarea id="clarification_answer_{{ $clarification->id }}" name="answer" maxlength="3000" required>{{ old('answer') }}</textarea>
                                 <label for="clarification_files_{{ $clarification->id }}" class="info-label" style="display:block;margin-top:10px;">Supporting files (optional)</label>
                                 <input id="clarification_files_{{ $clarification->id }}" type="file" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
-                                <small>Up to 3 files, maximum 10MB each.</small>
+                                <small>Up to 3 files, maximum {{ (int) \App\Models\Setting::get('max_upload_size', 10) }}MB each.</small>
                                 <button type="submit" class="button" style="margin-top:8px;">Send Response</button>
                             </form>
                             @endif
@@ -1423,6 +1423,18 @@
                             <li>No specific services selected</li>
                             @endif
                         </ul>
+                    </div>
+                </div>
+                @endif
+
+                @if($request->office_location || $request->network_others || $request->ict_others || $request->mis_others)
+                <div class="section">
+                    <h2>Service details</h2>
+                    <div class="info-grid two-col">
+                        @if($request->office_location)<div class="info-item"><div class="info-label">Location</div><div class="info-value">{{ $request->office_location }}</div></div>@endif
+                        @if($request->network_others)<div class="info-item"><div class="info-label">Other network service</div><div class="info-value">{{ $request->network_others }}</div></div>@endif
+                        @if($request->ict_others)<div class="info-item"><div class="info-label">Other ICT equipment service</div><div class="info-value">{{ $request->ict_others }}</div></div>@endif
+                        @if($request->mis_others)<div class="info-item"><div class="info-label">Other MIS software service</div><div class="info-value">{{ $request->mis_others }}</div></div>@endif
                     </div>
                 </div>
                 @endif
@@ -1602,7 +1614,7 @@
             </div>
 
             <!-- Request Actions -->
-            <div class="request-footer-actions" aria-label="Request actions">
+            <div class="request-footer-actions" role="group" aria-label="Request actions">
                 <div class="request-navigation-actions">
                     @if($canEdit)
                     <a href="{{ route('requests.edit', $request) }}" class="btn btn-primary">Edit request</a>

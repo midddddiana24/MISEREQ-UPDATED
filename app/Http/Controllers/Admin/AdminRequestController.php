@@ -24,6 +24,7 @@ class AdminRequestController extends Controller
             'search_id' => 'nullable|string|max:100',
             'search_name' => 'nullable|string|max:150',
             'search_status' => ['nullable', Rule::in(ServiceRequest::STATUSES)],
+            'search_stage' => ['nullable', Rule::in(array_keys(ServiceRequest::ADMIN_STAGES))],
             'search_category' => 'nullable|string|max:100',
             'search_technician' => 'nullable|integer|exists:technicians,id',
             'search_queue' => 'nullable|in:attention,triage,unassigned,awaiting_requester_info,awaiting_confirmation,reopened,feedback,archived',
@@ -69,6 +70,10 @@ class AdminRequestController extends Controller
 
         if (! empty($filters['search_status'])) {
             $query->where('status', $filters['search_status']);
+        }
+
+        if (! empty($filters['search_stage'])) {
+            $query->whereIn('status', ServiceRequest::ADMIN_STAGES[$filters['search_stage']]);
         }
 
         if (! empty($filters['search_category'])) {
@@ -119,11 +124,6 @@ class AdminRequestController extends Controller
 
     public function archive(Request $request, ServiceRequest $serviceRequest)
     {
-        abort_unless(
-            in_array($serviceRequest->status, ['closed', 'completed', 'cancelled', 'rejected'], true),
-            422,
-            'Only finished or cancelled requests can be archived.'
-        );
         $validated = $request->validate([
             'archive_reason' => 'required|string|max:2000',
         ]);

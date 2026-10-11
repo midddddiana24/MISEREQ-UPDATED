@@ -320,7 +320,7 @@
         <table class="header-meta">
             <tr class="header-row-lg">
                 <td rowspan="6" class="logo-box middle center" style="width: 12%;">
-                    <img src="{{ public_path('images/wvsu-janiuay-logo.png') }}" alt="WVSU Logo">
+                    @include('pdf.partials.wvsu-header-logo')
                 </td>
                 <td rowspan="3" class="header-title middle" style="width: 36%;">
                     ICT RELATED INCIDENT<br>REPORT FORM

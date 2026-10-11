@@ -22,7 +22,7 @@
         }
         .settings-command-copy { min-width: 0; }
         .settings-command-copy h2 { margin: 0; color: var(--ink-900); font-size: 16px; }
-        .settings-command-copy p { max-width: 720px; margin: 4px 0 0; color: var(--ink-500); font-size: 11px; line-height: 1.5; }
+        .settings-command-copy p { max-width: 720px; margin: 4px 0 0; color: var(--ink-500); font-size: 13px; line-height: 1.5; }
         .settings-command-actions { display: flex; align-items: center; flex: 0 0 auto; gap: 7px; }
         .settings-grid {
             display: grid;
@@ -39,13 +39,16 @@
             box-shadow: var(--shadow);
         }
         .settings-card-head { margin-bottom: 13px; }
-        .settings-card-kicker { display: block; margin-bottom: 4px; color: var(--brand-800); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-        .settings-card h2 { margin: 0; color: var(--ink-900); font-size: 14px; }
-        .settings-card-head p { margin: 4px 0 0; color: var(--ink-500); font-size: 10px; line-height: 1.45; }
+        .settings-card-kicker { display: block; margin-bottom: 4px; color: var(--brand-800); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .settings-card h2 { margin: 0; color: var(--ink-900); font-size: 17px; }
+        .settings-card h3 { margin: 0 0 5px; color: var(--ink-900); font-size: 15px; }
+        .settings-card-head p { margin: 4px 0 0; color: var(--ink-500); font-size: 12px; line-height: 1.45; }
         .settings-fields { display: grid; gap: 11px; }
-        .setting-field label { display: block; margin-bottom: 5px; color: var(--ink-700); font-size: 10px; font-weight: 750; }
-        .setting-field input, .setting-field select { width: 100%; min-height: 39px; padding: 8px 9px; font-size: 12px; }
-        .setting-help { display: block; margin-top: 5px; color: var(--ink-500); font-size: 9px; line-height: 1.4; }
+        .settings-subsection { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+        .settings-subsection > p { margin: 0 0 12px; color: var(--ink-600); font-size: 12px; line-height: 1.45; }
+        .setting-field label { display: block; margin-bottom: 5px; color: var(--ink-700); font-size: 13px; font-weight: 750; }
+        .setting-field input, .setting-field select { width: 100%; min-height: 40px; padding: 8px 9px; font-size: 14px; }
+        .setting-help { display: block; margin-top: 5px; color: var(--ink-500); font-size: 12px; line-height: 1.4; }
         .setting-error { display: block; margin-top: 5px; color: #a52d2d; font-size: 10px; font-weight: 650; }
         .switch-list { display: grid; gap: 7px; }
         .setting-switch {
@@ -62,33 +65,46 @@
         }
         .setting-switch:hover { border-color: #b8cbd9; background: #f7fafc; }
         .setting-switch-copy { min-width: 0; }
-        .setting-switch-title { display: block; color: var(--ink-800); font-size: 11px; font-weight: 750; }
-        .setting-switch-description { display: block; margin-top: 2px; color: var(--ink-500); font-size: 9px; line-height: 1.35; }
-        .setting-toggle { position: relative; width: 36px; height: 20px; flex: 0 0 auto; }
+        .setting-switch-title { display: block; color: var(--ink-800); font-size: 13px; font-weight: 750; }
+        .setting-switch-description { display: block; margin-top: 3px; color: var(--ink-600); font-size: 12px; line-height: 1.45; }
+        .setting-toggle { position: relative; width: 72px; height: 34px; flex: 0 0 auto; }
         .setting-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
         .setting-toggle-track {
             position: absolute;
             inset: 0;
-            border: 1px solid #a9b4bd;
+            border: 2px solid #718391;
             border-radius: 999px;
             background: #dfe5ea;
             transition: .18s ease;
+        }
+        .setting-toggle-track::before {
+            content: 'OFF';
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            color: #243744;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .03em;
         }
         .setting-toggle-track::after {
             content: "";
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 14px;
-            height: 14px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             background: #fff;
             box-shadow: 0 1px 3px rgba(15, 23, 42, .25);
             transition: .18s ease;
         }
         .setting-toggle input:checked + .setting-toggle-track { border-color: var(--brand-800); background: var(--brand-800); }
-        .setting-toggle input:checked + .setting-toggle-track::after { transform: translateX(16px); }
-        .setting-toggle input:focus-visible + .setting-toggle-track { outline: 3px solid rgba(31, 111, 168, .25); outline-offset: 2px; }
+        .setting-toggle input:checked + .setting-toggle-track::before { content: 'ON'; right: auto; left: 11px; color: #fff; }
+        .setting-toggle input:checked + .setting-toggle-track::after { transform: translateX(38px); }
+        .setting-toggle input:focus-visible + .setting-toggle-track { outline: 3px solid #17689f; outline-offset: 3px; }
+        @media (prefers-reduced-motion: reduce) { .setting-toggle-track, .setting-toggle-track::after { transition: none; } }
         .security-summary { display: grid; gap: 7px; margin-top: 10px; }
         .security-stat, .delivery-row {
             display: flex;
@@ -100,10 +116,10 @@
             border-radius: 7px;
             color: var(--ink-600);
             background: #f6f8fa;
-            font-size: 10px;
+            font-size: 12px;
         }
-        .security-stat strong, .delivery-row strong { color: var(--ink-800); font-size: 10px; }
-        .security-note { margin: 9px 0 0; padding: 8px 9px; border-left: 3px solid #d59a2f; color: #704713; background: #fff9e9; font-size: 9px; line-height: 1.45; }
+        .security-stat strong, .delivery-row strong { color: var(--ink-800); font-size: 12px; }
+        .security-note { margin: 9px 0 0; padding: 8px 9px; border-left: 3px solid #d59a2f; color: #704713; background: #fff9e9; font-size: 12px; line-height: 1.45; }
         .settings-status {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
@@ -117,7 +133,7 @@
         }
         .delivery-row { min-width: 0; }
         .delivery-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .settings-footnote { margin: 0; color: var(--ink-500); font-size: 9px; line-height: 1.45; }
+        .settings-footnote { margin: 0; color: var(--ink-600); font-size: 12px; line-height: 1.45; }
         @media (max-width: 1120px) {
             .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .settings-card-security { grid-column: 1 / -1; }
@@ -151,8 +167,11 @@
             : 'Not saved yet';
         $twoFactorRequired = (bool) old('require_2fa_admins', $securitySettings['require_2fa_admins'] ?? false);
         $clientTwoFactorRequired = (bool) old('require_2fa_clients', $securitySettings['require_2fa_clients'] ?? false);
-        $clientSessionTimeout = (int) old('client_session_timeout', $securitySettings['client_session_timeout'] ?? 120);
+        $savedClientSessionTimeout = (int) ($securitySettings['client_session_timeout'] ?? 120);
+        $clientSessionTimeout = min((int) old('client_session_timeout', $savedClientSessionTimeout), max($clientTimeoutOptions));
         $maxClientSessions = (int) old('max_active_client_sessions', $securitySettings['max_active_client_sessions'] ?? 3);
+        $clientLockAttempts = (int) old('client_login_lock_attempts', $securitySettings['client_login_lock_attempts'] ?? 5);
+        $clientLockMinutes = (int) old('client_login_lock_minutes', $securitySettings['client_login_lock_minutes'] ?? 30);
     @endphp
 
     <div class="settings-workspace">
@@ -165,7 +184,7 @@
         <header class="settings-command">
             <div class="settings-command-copy">
                 <h2>System-wide controls</h2>
-                <p>Changes apply to client requests, walk-in records, Messenger attachments, email notifications, and administrator access.</p>
+                <p>Changes apply to client requests, walk-in records, Messenger attachments, email notifications, and sign-in security.</p>
             </div>
             <div class="settings-command-actions">
                 <button type="submit" form="systemSettingsForm" class="btn-primary">Save Settings</button>
@@ -228,7 +247,7 @@
                             'notify_request_updates' => ['Request and Messenger updates', 'Email clients about workflow changes and new MIS messages.'],
                             'notify_completed_requests' => ['Completion confirmations', 'Email clients when requested work is completed.'],
                             'notify_admin_alerts' => ['Administrator action alerts', 'Create alerts for new requests and work requiring attention.'],
-                            'security_login_alerts' => ['Account security alerts', 'Notify clients about password, 2FA, session, and new-device activity.'],
+                            'security_login_alerts' => ['Optional security emails', 'Email alerts for account locks, 2FA setup, and session changes. Password changes, 2FA removal, new devices, and email changes always send an email.'],
                         ] as $key => [$label, $description])
                             @php $enabled = (bool) old($key, $notificationSettings[$key] ?? true); @endphp
                             <label class="setting-switch">
@@ -289,9 +308,14 @@
                                 <label for="client_session_timeout">Client inactivity timeout</label>
                                 <select id="client_session_timeout" name="client_session_timeout" required>
                                     @foreach([15 => '15 minutes', 30 => '30 minutes', 60 => '1 hour', 120 => '2 hours', 240 => '4 hours'] as $minutes => $label)
+                                        @continue(!in_array($minutes, $clientTimeoutOptions, true))
                                         <option value="{{ $minutes }}" @selected($clientSessionTimeout === $minutes)>{{ $label }}</option>
                                     @endforeach
                                 </select>
+                                <span class="setting-help">Limited by the server session lifetime ({{ $sessionLifetimeMinutes }} minutes).</span>
+                                @if($savedClientSessionTimeout > max($clientTimeoutOptions))
+                                    <span class="setting-help">The previously saved {{ $savedClientSessionTimeout }}-minute choice cannot take effect here. Saving will use {{ max($clientTimeoutOptions) }} minutes.</span>
+                                @endif
                             </div>
                             <div class="setting-field form-col-6">
                                 <label for="max_active_client_sessions">Maximum active devices</label>
@@ -300,8 +324,35 @@
                                         <option value="{{ $count }}" @selected($maxClientSessions === $count)>{{ $count }} device{{ $count === 1 ? '' : 's' }}</option>
                                     @endforeach
                                 </select>
+                                <span class="setting-help">The limit is applied when a client signs in on a new device.</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="settings-subsection" aria-labelledby="clientLockTitle">
+                        <h3 id="clientLockTitle">Client sign-in protection</h3>
+                        <p>Limit incorrect passwords within a 30-minute window. Administrator accounts keep the fixed rule of 5 attempts and a 30-minute lock.</p>
+                        <div class="form-grid">
+                            <div class="setting-field form-col-6">
+                                <label for="client_login_lock_attempts">Attempts before client lock</label>
+                                <select id="client_login_lock_attempts" name="client_login_lock_attempts" required>
+                                    @foreach(\App\Models\User::CLIENT_LOGIN_ATTEMPT_OPTIONS as $attempts)
+                                        <option value="{{ $attempts }}" @selected($clientLockAttempts === $attempts)>{{ $attempts }} failed attempts</option>
+                                    @endforeach
+                                </select>
+                                @error('client_login_lock_attempts')<span class="setting-error">{{ $message }}</span>@enderror
+                            </div>
+                            <div class="setting-field form-col-6">
+                                <label for="client_login_lock_minutes">Client lock duration</label>
+                                <select id="client_login_lock_minutes" name="client_login_lock_minutes" required>
+                                    @foreach(\App\Models\User::CLIENT_LOGIN_LOCK_MINUTE_OPTIONS as $minutes)
+                                        <option value="{{ $minutes }}" @selected($clientLockMinutes === $minutes)>{{ $minutes }} minutes</option>
+                                    @endforeach
+                                </select>
+                                @error('client_login_lock_minutes')<span class="setting-error">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+                        <span class="setting-help">This protects client accounts; it cannot be turned off. New limits apply to future failed sign-ins.</span>
                     </div>
 
                     @if($adminCount > $adminsWithTwoFactor)

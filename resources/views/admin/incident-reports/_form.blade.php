@@ -235,10 +235,14 @@
             <p>{{ $report?->document_number ?: 'Document number will be generated after saving' }}</p>
         </div>
         <div class="incident-sheet-meta" aria-label="Form metadata">
+            @if(!empty($recordEditMode))
+                <div><strong>{{ $report->document_number }}</strong><span>{{ \App\Models\IctIncidentReport::STATUS_OPTIONS[$report->stage_status] ?? ucfirst($report->stage_status) }}</span></div>
+            @else
             <div><strong>Form No.</strong><span>WVSU-MIS-SOI-05-F01</span></div>
             <div><strong>Issue / Revision</strong><span>1 / 0</span></div>
             <div><strong>Effectivity</strong><span>July 6, 2022</span></div>
             <div><strong>Page</strong><span>1 of 1</span></div>
+            @endif
         </div>
     </header>
 
@@ -275,7 +279,7 @@
                 <label for="status">Incident Status</label>
                 <select id="status" name="status">
                     @foreach($statusOptions as $value => $label)
-                        <option value="{{ $value }}" {{ old('status', $report?->status ?? 'open') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $value }}" {{ old('status', $report?->stage_status ?? 'pending') === $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
                 @error('status') <div class="error-text">{{ $message }}</div> @enderror

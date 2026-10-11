@@ -98,6 +98,7 @@ Route::middleware(['auth', 'verified', '2fa', 'throttle:authenticated'])->group(
     Route::post('/user/settings/2fa/disable', [TwoFactorAuthController::class, 'disableSettings'])
         ->middleware('throttle:5,1')->name('settings.2fa.disable');
     Route::delete('/user/settings/sessions/{session}', [ProfileController::class, 'terminateSession'])
+        ->middleware('throttle:5,1')
         ->name('settings.sessions.destroy');
     Route::post('/user/settings/sessions/logout-others', [ProfileController::class, 'terminateOtherSessions'])
         ->middleware('throttle:5,1')->name('settings.sessions.logout-others');
@@ -151,12 +152,13 @@ Route::middleware(['auth', 'verified', '2fa', 'throttle:authenticated'])->group(
     Route::get('incident-reports/{incidentReport}/pdf', [IctIncidentReportController::class, 'generatePdf'])
         ->name('incident-reports.pdf');
 
-    // Preventive Maintenance Checklists are MIS-managed records. Clients may
-    // review them, while new maintenance work starts as a service request.
+    // Requesters submit maintenance details here for MIS review.
     Route::get('pm-checklists', [PreventiveMaintenanceChecklistController::class, 'index'])
         ->name('pm-checklists.index');
     Route::get('pm-checklists/create', [PreventiveMaintenanceChecklistController::class, 'create'])
         ->name('pm-checklists.create');
+    Route::post('pm-checklists', [PreventiveMaintenanceChecklistController::class, 'store'])
+        ->middleware('throttle:forms')->name('pm-checklists.store');
     Route::get('pm-checklists/{pmChecklist}/pdf', [PreventiveMaintenanceChecklistController::class, 'generatePdf'])
         ->name('pm-checklists.pdf');
     Route::get('pm-checklists/{pmChecklist}', [PreventiveMaintenanceChecklistController::class, 'show'])
@@ -298,6 +300,8 @@ Route::middleware(['auth', 'admin', '2fa', 'throttle:authenticated'])
             ->name('notifications.retry');
         Route::delete('/api/notifications', [AdminDashboardController::class, 'clearNotifications'])
             ->name('notifications.clear');
+        Route::post('/api/notifications/read-all', [AdminDashboardController::class, 'markAllNotificationsRead'])
+            ->name('notifications.read-all');
         Route::post('/api/notifications/{notification}/read', [AdminDashboardController::class, 'markNotificationRead'])
             ->name('notifications.read');
         Route::delete('/api/notifications/{notification}', [AdminDashboardController::class, 'deleteNotification'])

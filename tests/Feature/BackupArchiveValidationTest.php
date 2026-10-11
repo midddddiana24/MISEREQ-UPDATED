@@ -12,7 +12,7 @@ class BackupArchiveValidationTest extends TestCase
     public function test_valid_backup_archive_can_be_verified_without_restoring(): void
     {
         $filename = 'mis-backup-test-'.Str::lower(Str::random(10)).'.zip';
-        $path = storage_path('app/backups/'.$filename);
+        $path = rtrim((string) config('backup.directory'), '\\/').DIRECTORY_SEPARATOR.$filename;
         File::ensureDirectoryExists(dirname($path));
 
         $zip = new ZipArchive;
@@ -39,7 +39,7 @@ class BackupArchiveValidationTest extends TestCase
     public function test_incomplete_backup_archive_is_rejected(): void
     {
         $filename = 'mis-backup-test-'.Str::lower(Str::random(10)).'.zip';
-        $path = storage_path('app/backups/'.$filename);
+        $path = rtrim((string) config('backup.directory'), '\\/').DIRECTORY_SEPARATOR.$filename;
         File::ensureDirectoryExists(dirname($path));
 
         $zip = new ZipArchive;

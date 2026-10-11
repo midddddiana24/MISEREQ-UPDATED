@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateServiceRequest;
+use App\DataTransferObjects\ServiceRequestCreationData;
+use App\Http\Requests\CreateServiceRequestRequest;
 use App\Jobs\NotifyAdminNewRequest;
 use App\Jobs\SendRequestCreatedNotification;
 use App\Models\ClarificationAttachment;
@@ -10,7 +13,6 @@ use App\Models\ServiceRequestAttachment;
 use App\Models\ServiceRequestClarification;
 use App\Models\ServiceRequestDraft;
 use App\Models\Setting;
-use App\Models\User;
 use App\Services\AdminActionNotificationService;
 use App\Services\EmailNotificationService;
 use App\Services\FileUploadService;
@@ -27,7 +29,8 @@ class RequestController extends Controller
         private readonly EmailNotificationService $emailNotificationService,
         private readonly ServiceRequestWorkflow $workflow,
         private readonly AdminActionNotificationService $adminActionNotifications,
-        private readonly FileUploadService $fileUploads
+        private readonly FileUploadService $fileUploads,
+        private readonly CreateServiceRequest $createServiceRequest
     ) {}
 
     public function index(Request $request)
@@ -49,70 +52,48 @@ class RequestController extends Controller
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($builder) use ($search) {
                 $builder
-                    ->where('control_number', 'like', '%'.$search.'%')
-                    ->orWhere('description', 'like', '%'.$search.'%')
-                    ->orWhere('category', 'like', '%'.$search.'%');
+                    ->where('control_number', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhere('category', 'like', '%' . $search . '%');
             });
         }
 
         $requests = $query
             ->withCount(['incidentReports', 'preventiveMaintenanceChecklists'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->orderBy('id', 'desc')
+            ->paginate(4);
         $requests->appends($request->query());
 
         return view('user.requests.history-new', compact('requests'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if ($request->query('service') === 'preventive_maintenance') {
+            return redirect()->route('pm-checklists.create');
+        }
+
         return view('user.request-create');
     }
 
-    public function store(Request $request)
+    public function store(CreateServiceRequestRequest $request)
     {
         $this->authorize('create', ServiceRequest::class);
-        $validated = $request->validate($this->rules());
+        $validated = $request->validated();
 
         $user = Auth::user();
-
-        // Generate control number: SR-YYYYMMDDHHMMSS-userId
-        $controlNumber = 'SR-'.now()->format('YmdHis').'-'.$user->id;
-
-        $storedAttachments = $this->storeUploadedAttachments($request);
-        $attachmentPath = $storedAttachments[0]['path'] ?? null;
-
-        // Get validated values with safe null coalescing
-        $timeRequest = $validated['time_request'] ?? null;
-        $dateRequest = $validated['date_request'] ?? null;
-
-        // Create service request
-        $serviceRequest = ServiceRequest::create([
-            'user_id' => $user->id,
-            'control_number' => $controlNumber,
-            'requester_name' => $validated['requester_name'] ?? $user->full_name,
-            'requester_designation' => $validated['designation'] ?? $user->designation,
-            'requester_office' => $validated['requester_office'] ?? $user->office,
-            'office' => $validated['office'] ?? $user->office,
-            'phone' => $validated['phone_local'] ?? $user->phone ?? null,
-            'unit_head_name' => $validated['unit_head_name'] ?? null,
-            'services' => $validated['services'] ?? [],
-            'description' => $validated['description'] ?? null,
-            'property_no' => $validated['property_no'] ?? null,
-            'category' => $validated['category'] ?? $this->inferCategory($validated['services'] ?? []),
-            'attachment' => $attachmentPath,
-            'status' => 'pending', // Status is "pending" when user creates it
-            'date_of_request' => $dateRequest ? Carbon::parse($dateRequest) : now(),
-            'time_of_request' => $timeRequest ? Carbon::parse(($dateRequest ?? now()->toDateString()).' '.$timeRequest) : now(),
-        ]);
-
-        foreach ($storedAttachments as $attachment) {
-            $serviceRequest->attachments()->create($attachment + ['uploaded_by' => $user->id]);
-        }
+        $attachments = array_values(array_filter(array_merge(
+            (array) $request->file('attachments', []),
+            $request->hasFile('attachment') ? [$request->file('attachment')] : []
+        )));
+        $serviceRequest = $this->createServiceRequest->execute(
+            ServiceRequestCreationData::forUser($user, $validated, $attachments)
+        );
 
         // Log the activity
         Log::info('Service request created', [
-            'control_number' => $controlNumber,
+            'control_number' => $serviceRequest->control_number,
             'user_id' => $user->id,
             'status' => 'pending',
         ]);
@@ -124,7 +105,7 @@ class RequestController extends Controller
         $this->notifyAdmins(
             $serviceRequest,
             'New service request submitted',
-            ($serviceRequest->requester_name ?: 'A requester').' submitted a request for MIS review.'
+            ($serviceRequest->requester_name ?: 'A requester') . ' submitted a request for MIS review.'
         );
 
         ServiceRequestDraft::where('user_id', $user->id)
@@ -132,7 +113,7 @@ class RequestController extends Controller
             ->delete();
 
         return redirect()->route('dashboard')
-            ->with('success', "Service request '{$controlNumber}' submitted successfully! The admin team will review it shortly.");
+            ->with('success', "Service request '{$serviceRequest->control_number}' submitted successfully! The admin team will review it shortly.");
     }
 
     public function show(ServiceRequest $request)
@@ -140,11 +121,11 @@ class RequestController extends Controller
         $this->authorize('view', $request);
 
         $request->load([
-            'messages' => fn ($query) => $query->latest(),
-            'incidentReports' => fn ($query) => $query->latest(),
-            'preventiveMaintenanceChecklists' => fn ($query) => $query->latest(),
-            'statusLogs' => fn ($query) => $query->with('updatedBy')->oldest(),
-            'activityLogs' => fn ($query) => $query
+            'messages' => fn($query) => $query->latest(),
+            'incidentReports' => fn($query) => $query->latest(),
+            'preventiveMaintenanceChecklists' => fn($query) => $query->latest(),
+            'statusLogs' => fn($query) => $query->with('updatedBy')->oldest(),
+            'activityLogs' => fn($query) => $query
                 ->whereIn('action', ['incident_created', 'incident_updated', 'maintenance_created', 'maintenance_updated'])
                 ->with('actor')
                 ->oldest(),
@@ -185,12 +166,16 @@ class RequestController extends Controller
             'phone' => $validated['phone_local'] ?? $serviceRequest->phone,
             'unit_head_name' => $validated['unit_head_name'] ?? $serviceRequest->unit_head_name,
             'services' => $validated['services'] ?? [],
+            'office_location' => $validated['network_specify_location'] ?? null,
+            'network_others' => $validated['network_other'] ?? null,
+            'ict_others' => $validated['ict_other'] ?? null,
+            'mis_others' => $validated['mis_other'] ?? null,
             'description' => $validated['description'] ?? null,
             'property_no' => $validated['property_no'] ?? null,
             'category' => $validated['category'] ?? $this->inferCategory($validated['services'] ?? []),
             'attachment' => $attachmentPath,
             'date_of_request' => $dateRequest ? Carbon::parse($dateRequest) : $serviceRequest->date_of_request,
-            'time_of_request' => $timeRequest ? Carbon::parse(($dateRequest ?? now()->toDateString()).' '.$timeRequest) : $serviceRequest->time_of_request,
+            'time_of_request' => $timeRequest ? Carbon::parse(($dateRequest ?? now()->toDateString()) . ' ' . $timeRequest) : $serviceRequest->time_of_request,
         ]);
 
         foreach ($storedAttachments as $attachment) {
@@ -302,11 +287,12 @@ class RequestController extends Controller
     public function answerClarification(Request $httpRequest, ServiceRequest $request, ServiceRequestClarification $clarification)
     {
         $this->authorize('answerClarification', $request);
+        abort_unless($clarification->service_request_id === $request->id, 404);
         abort_unless($request->status === 'awaiting_requester_info', 422, 'This request is no longer waiting for information.');
         $validated = $httpRequest->validate([
             'answer' => 'required|string|max:3000',
             'attachments' => 'nullable|array|max:3',
-            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:' . $this->uploadMaxKilobytes(),
         ]);
 
         $clarification->update([
@@ -346,21 +332,23 @@ class RequestController extends Controller
             'schedule_response' => 'required|in:accepted,reschedule_requested',
             'schedule_response_note' => 'nullable|required_if:schedule_response,reschedule_requested|string|max:2000',
         ]);
+        $responseNote = $validated['schedule_response_note'] ?? null;
         $request->update([
-            ...$validated,
+            'schedule_response' => $validated['schedule_response'],
+            'schedule_response_note' => $responseNote,
             'schedule_responded_at' => now(),
         ]);
         $request->statusLogs()->create([
             'status' => $request->status,
             'remarks' => $validated['schedule_response'] === 'accepted'
                 ? 'Requester accepted the scheduled MIS visit.'
-                : 'Requester requested a schedule change: '.$validated['schedule_response_note'],
+                : 'Requester requested a schedule change: ' . $validated['schedule_response_note'],
             'updated_by' => Auth::id(),
         ]);
         $this->notifyAdmins(
             $request,
             $validated['schedule_response'] === 'accepted' ? 'Schedule accepted' : 'Rescheduling requested',
-            $validated['schedule_response_note'] ?: 'The requester accepted the scheduled MIS visit.'
+            $responseNote ?: 'The requester accepted the scheduled MIS visit.'
         );
 
         return back()->with('success', $validated['schedule_response'] === 'accepted'
@@ -386,7 +374,7 @@ class RequestController extends Controller
         ]);
         $propertyNo = trim((string) ($validated['property_no'] ?? ''));
         $keywords = collect(preg_split('/\s+/', strtolower((string) ($validated['description'] ?? ''))))
-            ->filter(fn ($word) => strlen($word) >= 5)
+            ->filter(fn($word) => strlen($word) >= 5)
             ->unique()
             ->take(3);
 
@@ -407,7 +395,7 @@ class RequestController extends Controller
             ->latest()
             ->limit(3)
             ->get(['id', 'control_number', 'status', 'description'])
-            ->map(fn ($match) => [
+            ->map(fn($match) => [
                 'control_number' => $match->control_number,
                 'status' => $match->status_label,
                 'url' => route('requests.show', $match),
@@ -420,7 +408,7 @@ class RequestController extends Controller
     {
         $this->adminActionNotifications->notify(
             $subject,
-            $request->control_number.': '.$message,
+            $request->control_number . ': ' . $message,
             route('admin.service-requests.show', $request),
             $request->id
         );
@@ -475,12 +463,16 @@ class RequestController extends Controller
             'time_request' => 'nullable',
             'services' => 'required|array|min:1',
             'services.*' => 'string',
+            'network_specify_location' => 'nullable|string|max:255',
+            'network_other' => 'nullable|string|max:255',
+            'ict_other' => 'nullable|string|max:255',
+            'mis_other' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'property_no' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
-            'attachment' => ($attachmentRequired ? 'nullable' : 'nullable').'|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
+            'attachment' => ($attachmentRequired ? 'nullable' : 'nullable') . '|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:' . $this->uploadMaxKilobytes(),
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:'.$this->uploadMaxKilobytes(),
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:' . $this->uploadMaxKilobytes(),
         ];
     }
 
@@ -514,15 +506,15 @@ class RequestController extends Controller
     {
         $serviceSet = collect($services);
 
-        if ($serviceSet->contains(fn ($service) => str_starts_with($service, 'new_') || str_contains($service, 'network') || str_contains($service, 'telephone') || str_contains($service, 'cabling') || str_contains($service, 'location'))) {
+        if ($serviceSet->contains(fn($service) => str_starts_with($service, 'new_') || str_contains($service, 'network') || str_contains($service, 'telephone') || str_contains($service, 'cabling') || str_contains($service, 'location'))) {
             return 'Network';
         }
 
-        if ($serviceSet->contains(fn ($service) => str_contains($service, 'troubleshoot') || str_contains($service, 'hardware') || str_contains($service, 'software_installation') || str_contains($service, 'others_ict'))) {
+        if ($serviceSet->contains(fn($service) => str_contains($service, 'troubleshoot') || str_contains($service, 'hardware') || str_contains($service, 'software_installation') || str_contains($service, 'others_ict'))) {
             return 'ICT';
         }
 
-        if ($serviceSet->contains(fn ($service) => str_contains($service, 'account') || str_contains($service, 'password') || str_contains($service, 'system_access') || str_contains($service, 'others_mis'))) {
+        if ($serviceSet->contains(fn($service) => str_contains($service, 'account') || str_contains($service, 'password') || str_contains($service, 'system_access') || str_contains($service, 'others_mis'))) {
             return 'MIS';
         }
 

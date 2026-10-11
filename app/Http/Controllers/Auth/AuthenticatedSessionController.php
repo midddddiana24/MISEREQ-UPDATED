@@ -42,8 +42,19 @@ class AuthenticatedSessionController extends Controller
         $loginField = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $rateKey = 'login:'.Str::lower($identifier).'|'.$request->ip();
         $user = User::where($loginField, $identifier)->first();
+        $maxAttempts = $user?->loginLockThreshold() ?? 5;
+        $lockMinutes = $user?->loginLockDurationMinutes() ?? 30;
 
-        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
+        if ($user?->isAccountLocked()) {
+            $this->recordAttempt($identifier, $request, false, 'Account locked');
+            $remainingMinutes = max(1, (int) ceil(now()->diffInSeconds($user->locked_until) / 60));
+
+            return back()->withErrors([
+                'username' => 'This account is temporarily locked. Try again in about '.$remainingMinutes.' minute'.($remainingMinutes === 1 ? '' : 's').'. Use Forgot password or contact the MIS Office if you need help.',
+            ])->onlyInput('username')->with('openLogin', true);
+        }
+
+        if (RateLimiter::tooManyAttempts($rateKey, $maxAttempts)) {
             $this->recordAttempt($identifier, $request, false, 'Rate limited');
 
             return back()->withErrors([
@@ -51,19 +62,11 @@ class AuthenticatedSessionController extends Controller
             ])->onlyInput('username')->with('openLogin', true);
         }
 
-        if ($user?->isAccountLocked()) {
-            $this->recordAttempt($identifier, $request, false, 'Account locked');
-
-            return back()->withErrors([
-                'username' => 'This account is temporarily locked. Please try again later.',
-            ])->onlyInput('username')->with('openLogin', true);
-        }
-
         if (! Auth::attempt(
             [$loginField => $identifier, 'password' => $request->password, 'is_active' => true],
             $request->boolean('remember')
         )) {
-            RateLimiter::hit($rateKey, 30 * 60);
+            RateLimiter::hit($rateKey, $lockMinutes * 60);
             $user?->incrementFailedLoginAttempts();
             $this->recordAttempt($identifier, $request, false, $user && ! $user->is_active ? 'Account inactive' : 'Invalid credentials');
             if ($user && $user->fresh()->isAccountLocked()) {
@@ -95,7 +98,8 @@ class AuthenticatedSessionController extends Controller
         RateLimiter::clear($rateKey);
         $this->recordAttempt($user->username, $request, true);
         if (! $knownDevice && ! $user->isAdmin()) {
-            app(SecurityNotificationService::class)->notify(
+            app(SecurityNotificationService::class)->notifyMandatory(
+                SecurityNotificationService::EVENT_NEW_DEVICE,
                 $user,
                 'New device signed in to your MIS account',
                 'A new device signed in from IP '.$request->ip().' at '.now()->format('M d, Y h:i A').'.'

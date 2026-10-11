@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Support\BackupArchiveValidator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
@@ -11,15 +12,27 @@ class BackupSystem extends Command
 {
     protected $signature = 'system:backup
         {--database-only : Exclude uploaded files}
+        {--if-due : Create a backup only when the latest 02:00 daily window is not covered}
         {--retention= : Days to retain local archives}
         {--secondary= : Optional secondary directory or network share for a verified copy}';
 
     protected $description = 'Create and verify a database and secure-file backup archive';
 
+    public function __construct(private readonly BackupArchiveValidator $archiveValidator)
+    {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
-        $backupDirectory = storage_path('app/backups');
+        $backupDirectory = (string) config('backup.directory', storage_path('app/backups'));
         File::ensureDirectoryExists($backupDirectory);
+
+        if ($this->option('if-due') && $this->hasBackupForLatestWindow($backupDirectory)) {
+            $this->info('A verified backup already covers the latest 02:00 daily window.');
+
+            return self::SUCCESS;
+        }
 
         $stamp = now()->format('Ymd-His');
         $archivePath = $backupDirectory.DIRECTORY_SEPARATOR."mis-backup-{$stamp}.zip";
@@ -56,14 +69,14 @@ class BackupSystem extends Command
             if (! $this->option('database-only')) {
                 $this->addDirectory($zip, storage_path('app/secure'), 'files/secure');
                 $this->addDirectory($zip, storage_path('app/private'), 'files/private', [
-                    storage_path('app/backups'),
+                    $backupDirectory,
                 ]);
             }
 
             $zip->close();
             File::delete($sqlPath);
 
-            if (! $this->verifyArchive($archivePath)) {
+            if (! $this->archiveValidator->isValid($archivePath)) {
                 File::delete($archivePath);
                 $this->error('Backup verification failed; the incomplete archive was removed.');
 
@@ -81,7 +94,7 @@ class BackupSystem extends Command
             return self::SUCCESS;
         } catch (\Throwable $exception) {
             File::delete($sqlPath);
-            if (File::exists($archivePath) && ! $this->verifyArchive($archivePath)) {
+            if (File::exists($archivePath) && ! $this->archiveValidator->isValid($archivePath)) {
                 File::delete($archivePath);
             }
             report($exception);
@@ -138,20 +151,6 @@ class BackupSystem extends Command
         }
     }
 
-    private function verifyArchive(string $path): bool
-    {
-        $zip = new ZipArchive;
-        if ($zip->open($path) !== true) {
-            return false;
-        }
-        $valid = $zip->locateName('manifest.json') !== false
-            && $zip->locateName('database.sql') !== false
-            && strlen((string) $zip->getFromName('database.sql')) > 100;
-        $zip->close();
-
-        return $valid;
-    }
-
     private function prune(string $directory, int $days, string $current): void
     {
         foreach (File::glob($directory.DIRECTORY_SEPARATOR.'mis-backup-*.zip') as $archive) {
@@ -159,6 +158,18 @@ class BackupSystem extends Command
                 File::delete($archive);
             }
         }
+    }
+
+    private function hasBackupForLatestWindow(string $directory): bool
+    {
+        $window = now()->startOfDay()->addHours(2);
+        if (now()->lt($window)) {
+            $window->subDay();
+        }
+
+        return collect(File::glob($directory.DIRECTORY_SEPARATOR.'mis-backup-*.zip'))
+            ->contains(fn (string $archive) => File::lastModified($archive) >= $window->timestamp
+                && $this->archiveValidator->isValid($archive));
     }
 
     private function mirrorArchive(string $archivePath): ?string

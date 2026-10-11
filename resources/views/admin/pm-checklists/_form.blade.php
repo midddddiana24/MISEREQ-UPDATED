@@ -269,10 +269,14 @@
             <p>{{ $checklist?->control_number ?: 'Control number will be generated after saving' }}</p>
         </div>
         <div class="pm-sheet-meta" aria-label="Form metadata">
+            @if(!empty($recordEditMode))
+                <div><strong>{{ $checklist->control_number }}</strong><span>{{ \App\Models\PreventiveMaintenanceChecklist::STATUS_OPTIONS[$checklist->stage_status] ?? ucfirst($checklist->stage_status) }}</span></div>
+            @else
             <div><strong>Form No.</strong><span>WVSU-MIS-SOI-03-F02</span></div>
             <div><strong>Issue / Revision</strong><span>1 / 1</span></div>
             <div><strong>Effectivity</strong><span>July 6, 2022</span></div>
             <div><strong>Page</strong><span>1 of 1</span></div>
+            @endif
         </div>
     </header>
 
@@ -309,7 +313,7 @@
                 <label for="status">Checklist Status</label>
                 <select id="status" name="status">
                     @foreach($statusOptions as $value => $label)
-                        <option value="{{ $value }}" @selected(old('status', $checklist?->status ?? 'pending') === $value)>{{ $label }}</option>
+                        <option value="{{ $value }}" @selected(old('status', $checklist?->stage_status ?? 'pending') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
                 @error('status') <div class="error-text">{{ $message }}</div> @enderror

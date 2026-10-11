@@ -129,7 +129,8 @@ class TwoFactorAuthController extends Controller
 
         $user->disable2FA();
         $request->session()->forget(['2fa_pending_secret', '2fa_pending_started_at']);
-        app(SecurityNotificationService::class)->notify(
+        app(SecurityNotificationService::class)->notifyMandatory(
+            SecurityNotificationService::EVENT_TWO_FACTOR_DISABLED,
             $user,
             'Two-factor authentication was disabled',
             '2FA was removed from your MIS account. If this was not you, reset your password and contact the MIS Office immediately.'

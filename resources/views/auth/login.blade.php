@@ -51,7 +51,7 @@
                 <path d="M20 21a8 8 0 0 0-16 0" />
                 <circle cx="12" cy="7" r="4" />
             </svg>
-            <input type="text" id="username" name="username" value="{{ old('username') }}" required autofocus autocomplete="username" placeholder="Enter your username or email">
+            <input type="text" id="username" name="username" value="{{ old('username') }}" required data-desktop-autofocus autocomplete="username" placeholder="Enter your username or email">
         </div>
         @error('username')<div class="error-message">{{ $message }}</div>@enderror
     </div>
@@ -91,7 +91,4 @@
 </form>
 
 <p class="auth-footer">Need a campus service account? <a href="{{ route('register') }}" class="text-link">Create an account</a></p>
-<div class="back-home"><a href="{{ route('home') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m15 18-6-6 6-6" />
-        </svg> Back to home</a></div>
 @endsection

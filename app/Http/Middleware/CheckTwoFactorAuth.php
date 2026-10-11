@@ -53,12 +53,11 @@ class CheckTwoFactorAuth
             return $next($request);
         }
 
-        // Allow API routes
-        if (str_starts_with($currentRoute, 'api.')) {
-            return $next($request);
+        // User has 2FA enabled but hasn't verified yet - protect web and AJAX routes alike.
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Two-factor verification is required.'], 403);
         }
 
-        // User has 2FA enabled but hasn't verified yet - redirect to 2FA
         return redirect()->route('2fa.verify')
             ->with('warning', '🔒 Please verify your 2FA code to continue.');
     }

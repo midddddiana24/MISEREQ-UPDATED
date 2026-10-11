@@ -66,7 +66,7 @@
 @section('content')
     @php
         $selectedServices = collect(old('services', $serviceRequest->services ?? []))->map(fn ($service) => (string) $service)->all();
-        $formLogo = file_exists(public_path('images/wvsu-janiuay-logo.png')) ? asset('images/wvsu-janiuay-logo.png') : asset('images/wvsu-logo.png');
+        $formLogo = asset('images/wvsu-logo.png');
         $requestDate = old('date_of_request', $serviceRequest->date_of_request?->format('Y-m-d'));
         $requestTimeValue = $serviceRequest->time_of_request;
         $requestTime = old('time_of_request', $requestTimeValue ? substr((string) $requestTimeValue, 0, 5) : '');

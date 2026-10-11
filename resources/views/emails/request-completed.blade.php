@@ -270,7 +270,7 @@
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; border-left: 4px solid #95a5a6;">
                 <strong style="display: block; margin-bottom: 8px; color: #2c3e50; font-size: 13px;">📋 Original Request Description:</strong>
                 <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">
-                    {{ Str::limit($request->description, 300) }}
+                    {{ \Illuminate\Support\Str::limit($request->description, 300) }}
                 </p>
             </div>
 
@@ -299,19 +299,20 @@
                     <span class="timeline-date">{{ \Carbon\Carbon::parse($request->assigned_date)->format('F d, Y H:i A') }}</span>
                 </div>
                 @endif
+                @if($request->date_completed)
                 <div class="timeline-item">
                     <span class="timeline-label">Work Completed:</span>
                     <span class="timeline-date">{{ $request->date_completed->format('F d, Y H:i A') }}</span>
                 </div>
+                @endif
             </div>
 
             <!-- Next Steps -->
             <div class="next-steps">
                 <h3>📋 What Happens Next</h3>
                 <ul>
-                    <li>Your request is now archived and marked as complete</li>
-                    <li>Access completed request details anytime through your portal</li>
-                    <li>Download the completion certificate if needed</li>
+                    <li>Review the completed work in your service request</li>
+                    <li>Confirm whether your concern is resolved and leave feedback in the portal</li>
                     <li>For follow-up work, submit a new service request</li>
                     <li>Contact MIS for any clarifications or concerns</li>
                 </ul>
@@ -325,7 +326,7 @@
                     This helps us improve our service quality.
                 </p>
                 <p style="margin-top: 15px;">
-                    <a href="{{ url('/') }}/dashboard/requests/{{ $request->id }}/rate" style="color: #16a085; text-decoration: none; font-weight: 600;">
+                    <a href="{{ route('requests.show', $request) }}" style="color: #16a085; text-decoration: none; font-weight: 600;">
                         → Rate this Service Request
                     </a>
                 </p>

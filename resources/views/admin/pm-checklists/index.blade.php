@@ -5,19 +5,19 @@
 @section('page-subtitle', 'Manage preventive maintenance records submitted from the client side and maintain their admin review status.')
 
 @section('header-actions')
-    <a href="{{ route('admin.pm-checklists.index', ['archived' => $archived ? 0 : 1]) }}" class="btn-ghost">{{ $archived ? 'Active Records' : 'Archived Records' }}</a>
+    <a href="{{ route('admin.pm-checklists.index', array_merge(request()->except('group', 'archived', 'page'), ['group' => $archived ? 'active' : 'archived'])) }}" class="btn-ghost">{{ $archived ? 'Active Records' : 'Archived Records' }}</a>
     @unless($archived)<a href="{{ route('admin.pm-checklists.create') }}" class="btn-primary">New PM Checklist</a>@endunless
 @endsection
 
 @section('content')
     <section class="panel">
         <div class="stats-grid">
-            <a class="stat-card" href="{{ route('admin.pm-checklists.index', ['archived' => $archived ? 1 : 0]) }}">
+            <a class="stat-card" href="{{ route('admin.pm-checklists.index', array_merge(request()->except('status', 'archived', 'page'), ['group' => $group])) }}">
                 <span class="label">Total Records</span>
                 <span class="value">{{ $statusCounts->sum() }}</span>
             </a>
             @foreach($statusOptions as $value => $label)
-                <a class="stat-card {{ $statusFilter === $value ? 'admin' : '' }}" href="{{ route('admin.pm-checklists.index', ['status' => $value, 'archived' => $archived ? 1 : 0]) }}">
+                <a class="stat-card {{ $statusFilter === $value ? 'admin' : '' }}" href="{{ route('admin.pm-checklists.index', array_merge(request()->except('status', 'archived', 'page'), ['status' => $value, 'group' => $group])) }}">
                     <span class="label">{{ $label }}</span>
                     <span class="value">{{ $statusCounts[$value] ?? 0 }}</span>
                 </a>
@@ -25,13 +25,15 @@
         </div>
     </section>
 
+    @include('admin.partials.record-list-filters', ['indexRoute' => 'admin.pm-checklists.index', 'searchPlaceholder' => 'Checklist number, property, owner, or office', 'dateLabel' => 'Inspection date'])
+
     <section class="panel">
         <div class="section-heading">
             <div>
-                <h2>{{ $statusFilter ? ($statusOptions[$statusFilter] . ' Maintenance Records') : ($archived ? 'Archived PM Records' : 'Preventive Maintenance Records') }}</h2>
-                <p>Admin can review, edit, print, and remove preventive maintenance records from this list.</p>
+                <h2>{{ $statusFilter ? ($statusOptions[$statusFilter] . ' Maintenance Records') : ($group === 'active' ? 'Preventive Maintenance Records' : $groupOptions[$group]) }}</h2>
+                <p>Review and edit checklists here, or archive records that no longer belong in the active queue.</p>
             </div>
-            @if($statusFilter)<a href="{{ route('admin.pm-checklists.index', ['archived' => $archived ? 1 : 0]) }}" class="btn-ghost">Show All</a>@endif
+            @if($statusFilter)<a href="{{ route('admin.pm-checklists.index', array_merge(request()->except('status', 'archived', 'page'), ['group' => $group])) }}" class="btn-ghost">All statuses</a>@endif
         </div>
 
         <div class="table-wrap">
@@ -59,12 +61,12 @@
                             </td>
                             <td>{{ $checklist->user?->full_name ?? 'Unassigned' }}</td>
                             <td>{{ optional($checklist->date_inspected)->format('M d, Y') }}</td>
-                            <td><span class="status-badge {{ $checklist->status === 'completed' ? 'completed' : ($checklist->status === 'needs_action' ? 'rejected' : 'pending') }}">{{ str_replace('_', ' ', $checklist->status) }}</span></td>
+                            <td><span class="status-badge {{ $checklist->stage_status }}">{{ str($checklist->stage_status)->title() }}</span></td>
                             <td>
-                                <div class="form-actions" style="margin-top:0;">
+                                <div class="admin-record-actions">
                                     @unless($archived)<a href="{{ route('admin.pm-checklists.show', $checklist) }}" class="btn-ghost">View</a>
-                                    <a href="{{ route('admin.pm-checklists.edit', $checklist) }}" class="btn-ghost">Edit</a>
-                                    <form method="POST" action="{{ route('admin.pm-checklists.destroy', $checklist) }}" onsubmit="return confirm('Delete this PM checklist?');">
+                                    <a href="{{ route('admin.pm-checklists.edit', $checklist) }}" class="btn-primary">Edit</a>
+                                    <form method="POST" action="{{ route('admin.pm-checklists.destroy', $checklist) }}" onsubmit="return confirm('Archive this PM checklist? You can restore it from Archived Records.');">
                                         @csrf
                                         @method('DELETE')
                                         <input type="hidden" name="archive_reason" value="Archived from the maintenance queue by an administrator.">
@@ -84,7 +86,7 @@
         </div>
 
         <div style="margin-top:16px;">
-            {{ $checklists->links() }}
+            {{ $checklists->links('admin.partials.pagination', ['paginationLabel' => 'Maintenance checklist pages']) }}
         </div>
     </section>
 @endsection

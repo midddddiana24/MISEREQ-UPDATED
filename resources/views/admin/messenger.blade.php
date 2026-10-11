@@ -58,7 +58,13 @@
         .bubble-row.admin .bubble-meta { color: rgba(255,255,255,.75); }
         .bubble-text { white-space: pre-wrap; }
         .bubble-attachments { display: grid; gap: 4px; margin-top: 7px; }
-        .bubble-attachment { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 7px; border: 1px solid rgba(127,146,164,.35); border-radius: 6px; color: inherit; font-size: 10px; text-decoration: none; }
+        .bubble-attachment { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 9px; border: 1px solid #abc4d7; border-radius: 8px; color: #123d61; background: #fff; text-decoration: none; }
+        .bubble-attachment:hover, .bubble-attachment:focus-visible { border-color: #1f6fa8; background: #f3f9fc; text-decoration: underline; }
+        .bubble-attachment-icon { flex: 0 0 auto; font-size: 18px; }
+        .bubble-attachment-info { min-width: 0; flex: 1; }
+        .bubble-attachment-name { display: block; overflow-wrap: anywhere; font-size: 12px; font-weight: 700; }
+        .bubble-attachment-size { display: block; color: #526a79; font-size: 11px; }
+        .bubble-attachment-action { flex: 0 0 auto; font-size: 11px; font-weight: 700; }
         .bubble-seen { margin-top: 4px; color: var(--ink-400); font-size: 9px; text-align: right; }
         .compose { padding: 9px 11px 10px; border-top: 1px solid var(--line); background: #fff; }
         .quick-replies { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 7px; }
@@ -67,8 +73,16 @@
         .compose-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 7px; }
         .compose textarea { width: 100%; min-height: 68px; max-height: 150px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 12px; resize: vertical; }
         .compose-side { display: grid; gap: 6px; }
-        .attachment-label { display: flex; align-items: center; justify-content: center; min-height: 32px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink-600); background: #fff; font-size: 10px; font-weight: 700; cursor: pointer; }
+        .attachment-label { display: flex; align-items: center; justify-content: center; min-height: 36px; padding: 5px 8px; border: 1px solid #9dbbd0; border-radius: 7px; color: var(--brand-900); background: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
         .attachment-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .attachment-label:focus-within { outline: 3px solid #1f6fa8; outline-offset: 2px; }
+        .compose-selected-file { display: flex; align-items: center; gap: 9px; min-width: 0; margin-top: 8px; padding: 9px 10px; border: 1px solid #9dc5dc; border-radius: 8px; color: #173e59; background: #f1f8fc; }
+        .compose-selected-file-icon { flex: 0 0 auto; font-size: 18px; }
+        .compose-selected-file-info { min-width: 0; flex: 1; }
+        .compose-selected-file-name { display: block; overflow: hidden; font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+        .compose-selected-file-size { display: block; color: #526a79; font-size: 11px; }
+        .compose-selected-file-remove { flex: 0 0 auto; padding: 5px 7px; border: 0; border-radius: 5px; color: #8b2525; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .compose-selected-file-remove:hover, .compose-selected-file-remove:focus-visible { background: #fbe7e7; }
         .compose-status { min-height: 16px; margin-top: 5px; color: var(--ink-500); font-size: 10px; }
         .compose-status.error { color: #a52d2d; }
         .walkin-contact { padding: 10px; border: 1px solid #efd59a; border-radius: 8px; color: #704713; background: #fff9e9; font-size: 11px; line-height: 1.45; }
@@ -151,7 +165,7 @@
                     <div class="empty-state">No conversations match this view.</div>
                 @endforelse
             </div>
-            <div class="conversation-pagination">{{ $requestPage->links() }}</div>
+            <div class="conversation-pagination">{{ $requestPage->links('admin.partials.pagination', ['compact' => true, 'paginationLabel' => 'Conversation pages']) }}</div>
         </aside>
 
         <section class="thread-pane" aria-label="Active conversation">
@@ -174,6 +188,11 @@
                         <div><label class="sr-only" for="messageInput">Message reply</label><textarea id="messageInput" maxlength="5000" placeholder="Write a concise response…" disabled></textarea><div class="compose-status" id="composeStatus">Select a conversation to reply.</div></div>
                         <div class="compose-side"><label class="attachment-label">Attach file<input id="messageAttachment" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" disabled></label><button type="button" class="btn-primary" id="sendMessageBtn" disabled>Send</button></div>
                     </div>
+                    <div class="compose-selected-file" id="composeSelectedFile" hidden>
+                        <span class="compose-selected-file-icon" aria-hidden="true">&#128206;</span>
+                        <span class="compose-selected-file-info"><span class="compose-selected-file-name" id="composeSelectedFileName"></span><span class="compose-selected-file-size" id="composeSelectedFileSize"></span></span>
+                        <button type="button" class="compose-selected-file-remove" id="removeMessageAttachment" aria-label="Remove selected attachment">Remove</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -195,6 +214,10 @@
             const viewRequest = document.getElementById('viewRequestLink');
             const input = document.getElementById('messageInput');
             const attachment = document.getElementById('messageAttachment');
+            const selectedFile = document.getElementById('composeSelectedFile');
+            const selectedFileName = document.getElementById('composeSelectedFileName');
+            const selectedFileSize = document.getElementById('composeSelectedFileSize');
+            const removeAttachment = document.getElementById('removeMessageAttachment');
             const sendButton = document.getElementById('sendMessageBtn');
             const status = document.getElementById('composeStatus');
             const composer = document.getElementById('messageComposer');
@@ -219,6 +242,13 @@
             function setStatus(message, isError = false) { status.textContent = message || ''; status.classList.toggle('error', isError); }
             function showThreadMessage(message, isError = false) { clearNode(thread); const box = document.createElement('div'); box.className = isError ? 'thread-error' : 'thread-empty'; box.textContent = message; thread.appendChild(box); }
             function fileSize(bytes) { if (!bytes) return ''; if (bytes < 1024) return bytes + ' B'; if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB'; return (bytes / 1048576).toFixed(1) + ' MB'; }
+            function renderSelectedFile() {
+                const file = attachment.files[0];
+                selectedFile.hidden = !file;
+                selectedFileName.textContent = file?.name || '';
+                selectedFileSize.textContent = file ? fileSize(file.size) + ' · Ready to send' : '';
+                if (file) setStatus('Attachment ready. Press Send to share it.');
+            }
 
             function applyConversationSummary(payload) {
                 const conversations = Array.isArray(payload?.conversations) ? payload.conversations : [];
@@ -286,7 +316,15 @@
                 bubble.append(meta, text);
                 if (Array.isArray(message.attachments) && message.attachments.length) {
                     const files = document.createElement('div'); files.className = 'bubble-attachments';
-                    message.attachments.forEach(file => { const link = document.createElement('a'); link.className = 'bubble-attachment'; link.href = file.download_url; const name = document.createElement('span'); name.textContent = file.name; const size = document.createElement('span'); size.textContent = fileSize(file.size); link.append(name, size); files.appendChild(link); });
+                    message.attachments.forEach(file => {
+                        const link = document.createElement('a'); link.className = 'bubble-attachment'; link.href = file.download_url; link.setAttribute('aria-label', 'Download ' + file.name);
+                        const icon = document.createElement('span'); icon.className = 'bubble-attachment-icon'; icon.setAttribute('aria-hidden', 'true'); icon.innerHTML = '&#128206;';
+                        const info = document.createElement('span'); info.className = 'bubble-attachment-info';
+                        const name = document.createElement('span'); name.className = 'bubble-attachment-name'; name.textContent = file.name;
+                        const size = document.createElement('span'); size.className = 'bubble-attachment-size'; size.textContent = fileSize(file.size);
+                        const action = document.createElement('span'); action.className = 'bubble-attachment-action'; action.setAttribute('aria-hidden', 'true'); action.textContent = 'Download';
+                        info.append(name, size); link.append(icon, info, action); files.appendChild(link);
+                    });
                     bubble.appendChild(files);
                 }
                 if (message.is_admin) { const seen = document.createElement('div'); seen.className = 'bubble-seen'; seen.textContent = message.is_read ? 'Seen' : 'Sent'; bubble.appendChild(seen); }
@@ -310,6 +348,13 @@
 
             async function loadConversation(item) {
                 if (loading) return;
+                if (activeId !== null && activeId !== Number(item.dataset.id)) {
+                    input.value = '';
+                    attachment.value = '';
+                    renderSelectedFile();
+                    sendNeedsRetry = false;
+                    sendButton.textContent = 'Send';
+                }
                 loading = true; activeItem = item; activeId = Number(item.dataset.id); lastId = 0; oldestId = null; hasMore = false; renderedIds.clear();
                 items.forEach(entry => { const active = entry === item; entry.classList.toggle('active', active); entry.setAttribute('aria-pressed', active ? 'true' : 'false'); });
                 title.textContent = item.dataset.name; subtitle.textContent = item.dataset.control + ' · ' + item.dataset.status;
@@ -331,31 +376,37 @@
 
             async function loadOlder() {
                 if (!activeId || !oldestId) return;
+                const requestId = activeId;
                 const previousHeight = thread.scrollHeight;
-                try { const data = await fetchJson(messagesBase + '/' + activeId + '?limit=50&before_id=' + oldestId); const messages = data.messages || []; insertMessages(messages, true); oldestId = data.oldest_id || oldestId; hasMore = Boolean(data.has_more); addLoadOlderButton(); thread.scrollTop += thread.scrollHeight - previousHeight; }
-                catch (error) { setStatus(error.message, true); }
+                try { const data = await fetchJson(messagesBase + '/' + requestId + '?limit=50&before_id=' + oldestId); if (activeId !== requestId) return; const messages = data.messages || []; insertMessages(messages, true); oldestId = data.oldest_id || oldestId; hasMore = Boolean(data.has_more); addLoadOlderButton(); thread.scrollTop += thread.scrollHeight - previousHeight; }
+                catch (error) { if (activeId === requestId) setStatus(error.message, true); }
             }
 
             async function poll() {
                 if (!activeId || document.hidden || loading) return;
-                try { const data = await fetchJson(messagesBase + '/' + activeId + '/new?after_id=' + lastId); if (data.messages?.length) { thread.querySelector('.thread-empty')?.remove(); insertMessages(data.messages); thread.scrollTop = thread.scrollHeight; } if (Array.isArray(data.read_message_ids)) { data.read_message_ids.forEach(id => { const seen = thread.querySelector('[data-message-id="' + Number(id) + '"] .bubble-seen'); if (seen) seen.textContent = 'Seen'; }); } }
+                const requestId = activeId;
+                try { const data = await fetchJson(messagesBase + '/' + requestId + '/new?after_id=' + lastId); if (activeId !== requestId) return; if (data.messages?.length) { thread.querySelector('.thread-empty')?.remove(); insertMessages(data.messages); thread.scrollTop = thread.scrollHeight; } if (Array.isArray(data.read_message_ids)) { data.read_message_ids.forEach(id => { const seen = thread.querySelector('[data-message-id="' + Number(id) + '"] .bubble-seen'); if (seen) seen.textContent = 'Seen'; }); } }
                 catch (_) { /* Keep polling quiet; the next successful request recovers. */ }
             }
             function startPolling() { clearInterval(pollTimer); pollTimer = setInterval(poll, 4000); }
             function updateUrl(id) { const url = new URL(window.location.href); url.searchParams.set('request', id); history.replaceState({}, '', url); }
 
             async function sendMessage() {
-                const message = input.value.trim(); if (!activeId || !message || sendButton.disabled) return;
+                const message = input.value.trim(); if (!activeId || sendButton.disabled) return;
+                if (!message && !attachment.files[0]) { setStatus('Write a message or attach a file.', true); return; }
+                const requestId = activeId;
                 sendButton.disabled = true;
                 sendButton.textContent = sendNeedsRetry ? 'Retrying...' : 'Sending...';
                 setStatus(sendNeedsRetry ? 'Retrying message...' : 'Sending message...');
-                const form = new FormData(); form.append('service_request_id', activeId); form.append('message', message); if (attachment.files[0]) form.append('attachment', attachment.files[0]);
+                const form = new FormData(); form.append('service_request_id', requestId); form.append('message', message); if (attachment.files[0]) form.append('attachment', attachment.files[0]);
                 try {
                     const data = await fetchJson(sendUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf }, body: form });
-                    thread.querySelector('.thread-empty')?.remove(); insertMessages([data.message]); input.value = ''; attachment.value = '';
+                    if (activeId !== requestId) return;
+                    thread.querySelector('.thread-empty')?.remove(); insertMessages([data.message]); input.value = ''; attachment.value = ''; renderSelectedFile();
                     sendNeedsRetry = false; sendButton.textContent = 'Send'; setStatus('Message sent.'); thread.scrollTop = thread.scrollHeight;
                 }
                 catch (error) {
+                    if (activeId !== requestId) return;
                     sendNeedsRetry = true;
                     sendButton.textContent = 'Retry';
                     const waitMessage = error.status === 429 && error.retryAfter
@@ -363,7 +414,7 @@
                         : ' Your draft and attachment were kept.';
                     setStatus((error.message || 'Unable to send the message.') + waitMessage, true);
                 }
-                finally { sendButton.disabled = false; }
+                finally { sendButton.disabled = activeItem?.dataset.canMessage !== '1'; }
             }
 
             items.forEach(item => item.addEventListener('click', () => loadConversation(item)));
@@ -372,7 +423,8 @@
             input.addEventListener('input', () => { if (sendNeedsRetry) { sendNeedsRetry = false; sendButton.textContent = 'Send'; } });
             input.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); sendMessage(); } });
             document.querySelectorAll('.quick-reply').forEach(button => button.addEventListener('click', () => { input.value = button.dataset.reply; input.focus(); }));
-            attachment.addEventListener('change', () => { if (attachment.files[0]) setStatus('Attached: ' + attachment.files[0].name); });
+            attachment.addEventListener('change', () => { renderSelectedFile(); if (!attachment.files[0]) setStatus('Ctrl + Enter sends the message.'); });
+            removeAttachment.addEventListener('click', () => { attachment.value = ''; renderSelectedFile(); setStatus('Attachment removed.'); attachment.focus(); });
             document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
             window.addEventListener('admin-messenger-summary', event => applyConversationSummary(event.detail));
             window.addEventListener('beforeunload', () => clearInterval(pollTimer));
